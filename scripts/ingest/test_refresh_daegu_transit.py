@@ -11,6 +11,8 @@ CSV_SAMPLE = """월,일,역번호,역명,승하차,05시-06시,06시-07시,07시
 7,2,131,중앙로,승차,1,1,1,1,1,20,20,20,20,20,20,20,20,20,20,20,20,1,1,250
 7,2,131,중앙로,하차,1,1,1,1,1,10,10,10,10,10,10,10,10,10,10,10,10,1,1,130
 6,30,131,중앙로,승차,9,9,9,9,9,99,99,99,99,99,99,99,99,99,99,99,99,9,9,999
+7,1,1300,반월당1,승차,1,1,1,1,1,10,10,10,10,10,10,10,10,10,10,10,10,1,1,130
+7,1,2300,반월당2,하차,1,1,1,1,1,20,20,20,20,20,20,20,20,20,20,20,20,1,1,250
 """
 
 
@@ -39,12 +41,15 @@ class TransitNormalizationTest(unittest.TestCase):
     def test_defaults_to_latest_month_and_reports_missing_station(self) -> None:
         result = normalize_transit(
             CSV_SAMPLE,
-            station_targets=("중앙로역", "반월당역"),
+            station_targets=("중앙로역", "반월당역", "서문시장역"),
             requested_month=None,
             dataset_version="20260731",
         )
         self.assertEqual(result["month"], 7)
-        self.assertEqual(result["missingStations"], ["반월당역"])
+        self.assertEqual(result["missingStations"], ["서문시장역"])
+        banwoldang = next(record for record in result["records"] if record["station"] == "반월당역")
+        self.assertEqual(banwoldang["stationNumbers"], ["1300", "2300"])
+        self.assertEqual(banwoldang["averageDailyTotal"], 380.0)
 
 
 if __name__ == "__main__":
