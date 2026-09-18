@@ -1,6 +1,6 @@
 import { FormEvent, useEffect, useMemo, useReducer, useRef, useState } from "react";
 import { createApplicationActions } from "./actions";
-import { directSunStudy, formatMinutes, planningMetrics } from "./analysis";
+import { directSunStudy, planningMetrics } from "./analysis";
 import {
   computeShadowPolygon,
   estimateGfa,
@@ -84,6 +84,33 @@ function solarValue(value: number, suffix = "°") {
   return Number.isFinite(value) ? `${value.toFixed(1)}${suffix}` : "—";
 }
 
+function formatMinutesKo(minutes: number) {
+  const hours = Math.floor(minutes / 60);
+  const rest = minutes % 60;
+  if (!hours) return `${rest}분`;
+  return rest ? `${hours}시간 ${rest}분` : `${hours}시간`;
+}
+
+function scenarioName(id: string, name: string) {
+  return /^Option [A-Z]+$/.test(name) ? `대안 ${id}` : name;
+}
+
+function siteName(source: string, name: string) {
+  return source === "demo" ? "부지를 선택하세요" : name;
+}
+
+function osmEmbedUrl(center: GeoPoint) {
+  const lonSpan = 0.012;
+  const latSpan = 0.008;
+  const bbox = [
+    center.lon - lonSpan,
+    center.lat - latSpan,
+    center.lon + lonSpan,
+    center.lat + latSpan,
+  ].join(",");
+  return `https://www.openstreetmap.org/export/embed.html?bbox=${encodeURIComponent(bbox)}&layer=mapnik&marker=${center.lat}%2C${center.lon}`;
+}
+
 function clonePolygon(footprint: Footprint): Footprint {
   return footprint.kind === "polygon"
     ? { kind: "polygon", points: footprint.points.map((point) => ({ ...point })) }
@@ -127,21 +154,21 @@ function FootprintEditor({ footprint, onChange }: { footprint: Footprint; onChan
   };
 
   return <section className="inspector-section footprint-editor">
-    <div className="section-heading"><span>FOOTPRINT</span><b>{footprint.kind === "polygon" ? "FREE POLYGON" : "RECTANGLE"}</b></div>
-    <div className="segmented" role="group" aria-label="Footprint type">
-      <button className={footprint.kind === "rectangle" ? "selected" : ""} onClick={() => onChange(footprint.kind === "rectangle" ? footprint : { kind: "rectangle", widthM: 32, depthM: 24 })}>Rectangle</button>
-      <button className={footprint.kind === "polygon" ? "selected" : ""} onClick={() => onChange(clonePolygon(footprint))}>Free polygon</button>
+    <div className="section-heading"><span>평면 형상</span><b>{footprint.kind === "polygon" ? "자유형" : "사각형"}</b></div>
+    <div className="segmented" role="group" aria-label="평면 형상 유형">
+      <button className={footprint.kind === "rectangle" ? "selected" : ""} onClick={() => onChange(footprint.kind === "rectangle" ? footprint : { kind: "rectangle", widthM: 32, depthM: 24 })}>사각형</button>
+      <button className={footprint.kind === "polygon" ? "selected" : ""} onClick={() => onChange(clonePolygon(footprint))}>자유형</button>
     </div>
     {footprint.kind === "rectangle" ? <div className="two-fields">
-      <label><span>Width</span><input type="number" min={6} max={200} value={footprint.widthM} onChange={(event) => setRectangleDimension("widthM", Number(event.target.value))} /></label>
-      <label><span>Depth</span><input type="number" min={6} max={200} value={footprint.depthM} onChange={(event) => setRectangleDimension("depthM", Number(event.target.value))} /></label>
+      <label><span>가로</span><input type="number" min={6} max={200} value={footprint.widthM} onChange={(event) => setRectangleDimension("widthM", Number(event.target.value))} /></label>
+      <label><span>세로</span><input type="number" min={6} max={200} value={footprint.depthM} onChange={(event) => setRectangleDimension("depthM", Number(event.target.value))} /></label>
     </div> : <div className="polygon-editor">
-      <div className="polygon-toolbar"><span>{footprint.points.length} vertices · local meters</span></div>
+      <div className="polygon-toolbar"><span>꼭짓점 {footprint.points.length}개 · 기준점 상대 좌표(m)</span></div>
       {footprint.points.map((point, index) => <div className="point-row" key={`point-${index}`}>
         <span>P{index + 1}</span>
         <input aria-label={`P${index + 1} east`} type="number" step="1" value={point.xM} onChange={(event) => setPoint(index, "xM", Number(event.target.value))} />
         <input aria-label={`P${index + 1} north`} type="number" step="1" value={point.yM} onChange={(event) => setPoint(index, "yM", Number(event.target.value))} />
-        <button className="remove-point" aria-label={`Remove P${index + 1}`} disabled={footprint.points.length <= 3} onClick={() => removePoint(index)}>×</button>
+        <button className="remove-point" aria-label={`P${index + 1} 삭제`} disabled={footprint.points.length <= 3} onClick={() => removePoint(index)}>×</button>
       </div>)}
     </div>}
   </section>;
@@ -202,12 +229,12 @@ export default function App() {
   const compareContextSunMinutes = combinedDirectSunMinutes(compareSunStudy);
 
   const searchLocation = useMemo(() => async (query: string) => {
-    if (!apiKey) throw new Error("VWorld API key is required for address search.");
+    if (!apiKey) throw new Error("현재 미리보기에서는 VWorld 주소 검색을 사용할 수 없습니다.");
     return searchVWorldAddress(apiKey, query, vworldDomain);
   }, []);
 
   const selectSiteAtPoint = useMemo(() => async (point: GeoPoint, label?: string) => {
-    if (!apiKey) throw new Error("VWorld API key is required for parcel selection.");
+    if (!apiKey) throw new Error("현재 미리보기에서는 실제 지적 필지 선택을 사용할 수 없습니다.");
     return getVWorldParcelAtPoint(apiKey, point, vworldDomain, label);
   }, []);
 
@@ -286,13 +313,13 @@ export default function App() {
     const dispose = setMapPointHandler((point) => {
       if (canvasMode === "pick-site") {
         setSiteBusy(true);
-        setSiteMessage("Resolving cadastral parcel…");
+        setSiteMessage("지적 필지를 불러오는 중…");
         void selectSiteAtPoint(point)
           .then((site) => {
             actions.setSite(site, "human");
             setDraftPoints([]);
             setCanvasMode("inspect");
-            setSiteMessage(site.pnu ? `Selected parcel ${site.pnu}` : "Selected map site");
+            setSiteMessage(site.pnu ? `필지 선택 완료 · PNU ${site.pnu}` : "위치 선택 완료");
           })
           .catch((error) => setSiteMessage(error instanceof Error ? error.message : String(error)))
           .finally(() => setSiteBusy(false));
@@ -336,7 +363,7 @@ export default function App() {
     try {
       const results = await searchLocation(searchQuery);
       setSearchResults(results);
-      if (!results.length) setSiteMessage("No VWorld address results.");
+      if (!results.length) setSiteMessage("검색 결과가 없습니다.");
     } catch (error) {
       setSiteMessage(error instanceof Error ? error.message : String(error));
     } finally {
@@ -346,7 +373,7 @@ export default function App() {
 
   async function selectSearchResult(result: AddressSearchResult) {
     setSiteBusy(true);
-    setSiteMessage("Resolving cadastral parcel…");
+    setSiteMessage("지적 필지를 불러오는 중…");
     try {
       const site = await selectSiteAtPoint(result.point, result.address);
       actions.setSite(site, "human");
@@ -354,7 +381,7 @@ export default function App() {
       setSearchQuery(result.address);
       setDraftPoints([]);
       setCanvasMode("inspect");
-      setSiteMessage(site.pnu ? `Selected parcel ${site.pnu}` : "Selected map site");
+      setSiteMessage(site.pnu ? `필지 선택 완료 · PNU ${site.pnu}` : "위치 선택 완료");
     } catch (error) {
       setSiteMessage(error instanceof Error ? error.message : String(error));
     } finally {
@@ -367,7 +394,7 @@ export default function App() {
       footprint: { kind: "rectangle", widthM: 32, depthM: 24 },
       heightM: 18,
       floors: 5,
-      intent: "New rectangular mass",
+      intent: "새 사각형 매스",
     }, "human");
     setCanvasMode("inspect");
   }
@@ -383,7 +410,7 @@ export default function App() {
       footprint: { kind: "polygon", points: draftPoints },
       heightM: 18,
       floors: 5,
-      intent: "Canvas-drawn polygon mass",
+      intent: "지도에서 작성한 자유형 매스",
     }, "human");
     setDraftPoints([]);
     setCanvasMode("inspect");
@@ -396,139 +423,146 @@ export default function App() {
 
   return <main className={`app-shell ${workspaceMode === "compare" ? "compare-mode" : ""}`}>
     <header className="topbar">
-      <div className="brand"><div className="brand-mark" aria-hidden="true">S</div><div><strong>SpaceLab</strong><span>/ {state.site.name}</span></div></div>
+      <div className="brand"><div className="brand-mark" aria-hidden="true">S</div><div><strong>SpaceLab</strong><span>/ {siteName(state.site.source, state.site.name)}</span></div></div>
       <button
         className="navigator-toggle"
-        aria-label="Open scenario navigator"
+        aria-label="대안 목록 열기"
         aria-expanded={navigatorOpen}
         onClick={() => {
           setNavigatorOpen((open) => !open);
           setInspectorOpen(false);
         }}
       >☰</button>
-      <nav className="mode-switch" aria-label="Workspace mode">
-        <button className={workspaceMode === "design" ? "selected" : ""} onClick={() => setWorkspaceMode("design")}>Design</button>
-        <button className={workspaceMode === "compare" ? "selected" : ""} onClick={() => setWorkspaceMode("compare")} disabled={!active || state.scenarios.length < 2}>Compare</button>
+      <nav className="mode-switch" aria-label="작업 모드">
+        <button className={workspaceMode === "design" ? "selected" : ""} onClick={() => setWorkspaceMode("design")}>설계</button>
+        <button className={workspaceMode === "compare" ? "selected" : ""} onClick={() => setWorkspaceMode("compare")} disabled={!active || state.scenarios.length < 2}>비교</button>
       </nav>
       <div className="top-status">
-        <span className={`runtime-status ${vworldReady ? "live" : mapError ? "attention" : ""}`}><i aria-hidden="true"></i>VWorld <b>{vworldReady ? "Live" : mapError ? "Error" : "Demo"}</b></span>
-        <span className={`runtime-status ${webMcp ? "live" : ""}`}><i aria-hidden="true"></i>Site Tools <b>{webMcp ? "Connected" : "Optional"}</b></span>
+        <span className={`runtime-status ${vworldReady ? "live" : mapError ? "attention" : ""}`}><i aria-hidden="true"></i>지도 <b>{vworldReady ? "3D 연결" : mapError ? "연결 오류" : "2D 미리보기"}</b></span>
+        <span className={`runtime-status ${webMcp ? "live" : ""}`}><i aria-hidden="true"></i>AI 도구 <b>{webMcp ? "연결됨" : "선택"}</b></span>
       </div>
       <button
         className="inspector-toggle"
-        aria-label="Open inspector"
+        aria-label="설정 열기"
         aria-expanded={inspectorOpen}
         onClick={() => {
           setInspectorOpen((open) => !open);
           setNavigatorOpen(false);
         }}
-      >EDIT</button>
+      >설정</button>
     </header>
 
     <section className="workspace">
       <button
         className={`mobile-scrim ${navigatorOpen || inspectorOpen ? "open" : ""}`}
-        aria-label="Close open panel"
+        aria-label="패널 닫기"
         onClick={() => {
           setNavigatorOpen(false);
           setInspectorOpen(false);
         }}
       />
       <aside className={`left-panel panel ${navigatorOpen ? "open" : ""}`}>
-        <div className="panel-heading"><div><div className="eyebrow">SCENARIOS</div><span className="panel-caption">DESIGN HISTORY</span></div><span className="option-count">{state.scenarios.length} OPTIONS</span></div>
-        <div className="navigator-base site-summary"><strong>REAL SITE</strong><span>{state.site.address || state.site.name}</span>{state.site.pnu && <small>PNU {state.site.pnu}</small>}</div>
+        <div className="panel-heading"><div><div className="eyebrow">설계 대안</div><span className="panel-caption">변경 이력</span></div><span className="option-count">{state.scenarios.length}개</span></div>
+        <div className="navigator-base site-summary"><strong>현재 부지</strong><span>{state.site.address || siteName(state.site.source, state.site.name)}</span>{state.site.pnu && <small>PNU {state.site.pnu}</small>}</div>
         <div className="scenario-navigator">
           {state.scenarios.length ? state.scenarios.map((scenario) => <button key={scenario.id} className={`scenario-row ${scenario.id === active?.id ? "active" : ""}`} data-scenario={scenario.id} onClick={() => { actions.selectScenario(scenario.id); setNavigatorOpen(false); }}>
             <span className="scenario-marker">{scenario.id}</span>
-            <span className="scenario-copy"><strong>{scenario.name}</strong><small>{scenario.mass.heightM}m · {scenario.mass.floors} floors <em>{scenario.createdBy === "agent" ? "✦" : "•"}</em></small></span>
-            <span className="scenario-ancestry">{scenario.parentId ? `↳ ${scenario.parentId}` : "BASE"}</span>
-          </button>) : <div className="navigator-empty">No massing options yet.<br />Create one on the selected site.</div>}
+            <span className="scenario-copy"><strong>{scenarioName(scenario.id, scenario.name)}</strong><small>{scenario.mass.heightM}m · {scenario.mass.floors}층 <em>{scenario.createdBy === "agent" ? "✦" : "•"}</em></small></span>
+            <span className="scenario-ancestry">{scenario.parentId ? `↳ ${scenario.parentId}` : "기준안"}</span>
+          </button>) : <div className="navigator-empty">아직 설계 대안이 없습니다.<br />부지를 선택한 뒤 건물을 만들어보세요.</div>}
         </div>
-        {active ? <button className="primary branch-button" onClick={() => actions.cloneScenario(active.id, undefined, "human")}>＋ Branch current option</button> : <button className="primary branch-button" onClick={createRectangle}>＋ Create first mass</button>}
+        {active ? <button className="primary branch-button" onClick={() => actions.cloneScenario(active.id, undefined, "human")}>＋ 현재 안에서 새 대안 만들기</button> : <button className="primary branch-button" onClick={createRectangle}>＋ 첫 건물 만들기</button>}
       </aside>
 
       <section className={`canvas-wrap canvas-mode-${canvasMode}`}>
         <div id="vworld-map" className={`vworld-canvas ${vworldReady ? "ready" : ""}`}></div>
         {!vworldReady && <div className="fallback-world">
-          <div className="terrain-grid"></div><div className="fake-road road-a"></div><div className="fake-road road-b"></div>
-          <div className="context-building b1"></div><div className="context-building b2"></div><div className="context-building b3"></div>
-          {active && <svg className="analysis-overlay" viewBox="0 0 320 240" aria-label="Solar shadow analysis">
+          <iframe
+            className="fallback-map-frame"
+            src={osmEmbedUrl(state.site.center)}
+            title="OpenStreetMap 배경 지도"
+            loading="eager"
+            referrerPolicy="strict-origin-when-cross-origin"
+          />
+          <div className="fallback-map-shade"></div>
+          {active && <svg className="analysis-overlay" viewBox="0 0 320 240" aria-label="그림자 분석 미리보기">
             {compareShadow && compareShadow.points.length >= 3 && <polygon className="fallback-shadow compare" points={svgPoints(compareShadow.points)} />}
             {activeShadow && activeShadow.points.length >= 3 && <polygon className="fallback-shadow active" points={svgPoints(activeShadow.points)} />}
             {compare && <polygon className="fallback-mass compare" points={svgPoints(massLocalPoints(compare.mass))} />}
             <polygon className="fallback-mass active" points={svgPoints(massLocalPoints(active.mass))} />
           </svg>}
-          <div className="fallback-note">{mapError ? "VWorld unavailable" : apiKey ? "VWorld loading…" : "VITE_VWORLD_API_KEY 미주입"}</div>
+          <div className="fallback-map-attribution">© OpenStreetMap contributors</div>
+          <div className="fallback-note">{mapError ? "3D 지도 연결 오류 · 2D 배경지도로 표시 중" : apiKey ? "VWorld 3D 지도를 불러오는 중…" : "2D 배경지도 · VWorld 연결 시 3D 전환"}</div>
         </div>}
 
         <div className="site-toolbar">
           <form className="site-search" onSubmit={handleSearch}>
-            <input value={searchQuery} onChange={(event) => setSearchQuery(event.target.value)} placeholder="Search Korean address…" aria-label="Search VWorld address" />
-            <button type="submit" disabled={searching || !apiKey}>{searching ? "…" : "Search"}</button>
+            <input value={searchQuery} onChange={(event) => setSearchQuery(event.target.value)} placeholder={apiKey ? "주소나 지번을 검색하세요" : "VWorld 연결 후 주소 검색 가능"} aria-label="주소 검색" />
+            <button type="submit" disabled={searching || !apiKey}>{searching ? "…" : "검색"}</button>
           </form>
           {searchResults.length > 0 && <div className="search-results">
             {searchResults.map((result) => <button key={result.id} onClick={() => void selectSearchResult(result)}><strong>{result.title}</strong><span>{result.address}</span></button>)}
           </div>}
         </div>
 
-        <div className="model-toolbar" aria-label="Canvas modeling tools">
-          <button className={canvasMode === "pick-site" ? "selected" : ""} onClick={() => setCanvasMode("pick-site")}>⌖ Pick parcel</button>
-          <button onClick={createRectangle}>＋ Rectangle</button>
-          <button className={canvasMode === "draw-polygon" ? "selected" : ""} onClick={startPolygon}>✎ Polygon</button>
-          <button className={canvasMode === "move-mass" ? "selected" : ""} onClick={() => active && setCanvasMode("move-mass")} disabled={!active}>↔ Move</button>
-          <button className={canvasMode === "sun-point" ? "selected" : ""} onClick={() => active && setCanvasMode("sun-point")} disabled={!active}>☀ Sun point</button>
-          <button className={canvasMode === "viewpoint" ? "selected" : ""} onClick={() => setCanvasMode("viewpoint")}>◉ Viewpoint</button>
-          <button onClick={() => active && actions.deleteScenario(active.id, "human")} disabled={!active}>Delete</button>
+        <div className="model-toolbar" aria-label="건물 배치 도구">
+          <button className={canvasMode === "pick-site" ? "selected" : ""} onClick={() => setCanvasMode("pick-site")}>⌖ 필지 선택</button>
+          <button onClick={createRectangle}>＋ 사각형</button>
+          <button className={canvasMode === "draw-polygon" ? "selected" : ""} onClick={startPolygon}>✎ 자유형</button>
+          <button className={canvasMode === "move-mass" ? "selected" : ""} onClick={() => active && setCanvasMode("move-mass")} disabled={!active}>↔ 이동</button>
+          <button className={canvasMode === "sun-point" ? "selected" : ""} onClick={() => active && setCanvasMode("sun-point")} disabled={!active}>☀ 일조</button>
+          <button className={canvasMode === "viewpoint" ? "selected" : ""} onClick={() => setCanvasMode("viewpoint")}>◉ 조망</button>
+          <button onClick={() => active && actions.deleteScenario(active.id, "human")} disabled={!active}>삭제</button>
         </div>
 
         {canvasMode !== "inspect" && <div className="canvas-tool-hint">
-          {canvasMode === "pick-site" && "Click the map to select the cadastral parcel."}
-          {canvasMode === "move-mass" && "Click the new center position for the active mass."}
-          {canvasMode === "draw-polygon" && <>{draftPoints.length < 3 ? `Click footprint vertices · ${draftPoints.length} placed` : `${draftPoints.length} vertices ready`} <button onClick={finishPolygon} disabled={draftPoints.length < 3}>Finish</button></>}
-          {canvasMode === "sun-point" && "Click a ground point to estimate direct sun hours for the current option."}
-          {canvasMode === "viewpoint" && "Click where you want to stand and look back at the site."}
-          <button onClick={cancelCanvasTool}>Cancel</button>
+          {canvasMode === "pick-site" && "지도에서 검토할 필지를 선택하세요."}
+          {canvasMode === "move-mass" && "건물을 옮길 위치를 지도에서 선택하세요."}
+          {canvasMode === "draw-polygon" && <>{draftPoints.length < 3 ? `건물 외곽점을 찍어주세요 · ${draftPoints.length}개` : `꼭짓점 ${draftPoints.length}개 · 완료할 수 있습니다`} <button onClick={finishPolygon} disabled={draftPoints.length < 3}>완료</button></>}
+          {canvasMode === "sun-point" && "일조 시간을 확인할 지점을 선택하세요."}
+          {canvasMode === "viewpoint" && "건물을 바라볼 위치를 선택하세요."}
+          <button onClick={cancelCanvasTool}>취소</button>
         </div>}
 
         {siteMessage && <div className={`site-message ${siteBusy ? "busy" : ""}`}>{siteMessage}</div>}
         {mapError && <div className="error-banner">{mapError}</div>}
-        <div className="canvas-title"><span>{state.site.source === "vworld-cadastral" ? "VWORLD PARCEL" : "SITE CONTEXT"}</span><strong>{active ? `${active.id} · ${active.name}` : state.site.name}</strong></div>
-        {active && <div className="canvas-legend"><span><i className="legend-dot active-dot"></i>{active.id} active</span>{compare && <span><i className="legend-dot compare-dot"></i>{compare.id} compare</span>}</div>}
+        <div className="canvas-title"><span>{state.site.source === "vworld-cadastral" ? "실제 필지" : "부지 미리보기"}</span><strong>{active ? `${active.id} · ${scenarioName(active.id, active.name)}` : siteName(state.site.source, state.site.name)}</strong></div>
+        {active && <div className="canvas-legend"><span><i className="legend-dot active-dot"></i>{active.id} 현재안</span>{compare && <span><i className="legend-dot compare-dot"></i>{compare.id} 비교안</span>}</div>}
 
-        <section className="analysis-dock" aria-label="Sun and shadow analysis">
+        <section className="analysis-dock" aria-label="일조와 그림자 분석">
           {active && activeShadow ? <>
             <div className="analysis-topline">
-              <div className="analysis-title"><div className="eyebrow">SUN / SHADOW</div><strong>{activeTime} KST</strong><span>Altitude {solarValue(activeShadow.solar.elevationDeg)} · Azimuth {solarValue(activeShadow.solar.azimuthDeg)} · Shadow {activeShadow.solar.isDaylight ? `${activeShadow.lengthM.toFixed(1)}m` : "—"} · Direct sun {activeSunStudy ? formatMinutes(sceneSunContext?.supported ? activeContextSunMinutes : activeSunStudy.sunMinutes) : "—"}</span></div>
-              <div className="analysis-fields"><label>Date<input aria-label="Shadow date" type="date" value={activeDate} onChange={(event) => actions.setShadowTime(active.id, withDateAndTime(active.analysisTime, event.target.value, activeTime))} /></label><label>Time<input aria-label="Shadow time" type="time" value={activeTime} onChange={(event) => actions.setShadowTime(active.id, withDateAndTime(active.analysisTime, activeDate, event.target.value))} /></label></div>
+              <div className="analysis-title"><div className="eyebrow">일조 · 그림자</div><strong>{activeTime} KST</strong><span>태양고도 {solarValue(activeShadow.solar.elevationDeg)} · 방위각 {solarValue(activeShadow.solar.azimuthDeg)} · 그림자 {activeShadow.solar.isDaylight ? `${activeShadow.lengthM.toFixed(1)}m` : "—"} · 일조 {activeSunStudy ? formatMinutesKo(sceneSunContext?.supported ? activeContextSunMinutes : activeSunStudy.sunMinutes) : "—"}</span></div>
+              <div className="analysis-fields"><label>날짜<input aria-label="그림자 날짜" type="date" value={activeDate} onChange={(event) => actions.setShadowTime(active.id, withDateAndTime(active.analysisTime, event.target.value, activeTime))} /></label><label>시간<input aria-label="그림자 시간" type="time" value={activeTime} onChange={(event) => actions.setShadowTime(active.id, withDateAndTime(active.analysisTime, activeDate, event.target.value))} /></label></div>
             </div>
-            <div className="timeline"><span>09:00</span><input aria-label="Shadow time timeline" type="range" min={540} max={1080} step={15} value={Math.min(1080, Math.max(540, activeMinutes))} onChange={(event) => actions.setShadowTime(active.id, withDateAndTime(active.analysisTime, activeDate, timeFromMinutes(Number(event.target.value))))} /><span>18:00</span></div>
+            <div className="timeline"><span>09:00</span><input aria-label="그림자 시간대" type="range" min={540} max={1080} step={15} value={Math.min(1080, Math.max(540, activeMinutes))} onChange={(event) => actions.setShadowTime(active.id, withDateAndTime(active.analysisTime, activeDate, timeFromMinutes(Number(event.target.value))))} /><span>18:00</span></div>
             {workspaceMode === "compare" && <div className="compare-drawer">
-              <div className="compare-drawer-head"><div><div className="eyebrow">COMPARE</div><strong>Scenario delta</strong></div><select aria-label="Compare scenario" value={state.compareScenarioId ?? ""} onChange={(event) => actions.compareScenarios(active.id, event.target.value || undefined)}><option value="">No comparison</option>{state.scenarios.filter((scenario) => scenario.id !== active.id).map((scenario) => <option key={scenario.id} value={scenario.id}>{scenario.id} · {scenario.name}</option>)}</select></div>
-              {compare && compareShadow ? <div className="compare-grid"><Meter label="Height A / B" value={`${active.mass.heightM} / ${compare.mass.heightM}`} suffix="m" /><Meter label="GFA Δ" value={(estimateGfa(active.mass) - estimateGfa(compare.mass)).toLocaleString()} suffix="㎡" /><Meter label="Shadow Δ" value={(activeShadow.lengthM - compareShadow.lengthM).toFixed(1)} suffix="m" /><Meter label="Direct sun A / B" value={activeSunStudy && compareSunStudy ? `${formatMinutes(sceneSunContext?.supported ? activeContextSunMinutes : activeSunStudy.sunMinutes)} / ${formatMinutes(sceneSunContext?.supported ? compareContextSunMinutes : compareSunStudy.sunMinutes)}` : "—"} /></div> : <p className="muted">Select another scenario to compare.</p>}
+              <div className="compare-drawer-head"><div><div className="eyebrow">대안 비교</div><strong>주요 차이</strong></div><select aria-label="비교할 대안" value={state.compareScenarioId ?? ""} onChange={(event) => actions.compareScenarios(active.id, event.target.value || undefined)}><option value="">비교 안 함</option>{state.scenarios.filter((scenario) => scenario.id !== active.id).map((scenario) => <option key={scenario.id} value={scenario.id}>{scenario.id} · {scenario.name}</option>)}</select></div>
+              {compare && compareShadow ? <div className="compare-grid"><Meter label="높이 A / B" value={`${active.mass.heightM} / ${compare.mass.heightM}`} suffix="m" /><Meter label="연면적 차이" value={(estimateGfa(active.mass) - estimateGfa(compare.mass)).toLocaleString()} suffix="㎡" /><Meter label="그림자 차이" value={(activeShadow.lengthM - compareShadow.lengthM).toFixed(1)} suffix="m" /><Meter label="일조 A / B" value={activeSunStudy && compareSunStudy ? `${formatMinutesKo(sceneSunContext?.supported ? activeContextSunMinutes : activeSunStudy.sunMinutes)} / ${formatMinutesKo(sceneSunContext?.supported ? compareContextSunMinutes : compareSunStudy.sunMinutes)}` : "—"} /></div> : <p className="muted">비교할 다른 대안을 선택하세요.</p>}
             </div>}
-          </> : <div className="analysis-empty"><strong>Select a site, then create a building mass.</strong><span>Address search or Pick parcel → Rectangle / Polygon → analyze and branch.</span></div>}
+          </> : <div className="analysis-empty"><strong>먼저 부지를 선택해보세요.</strong><span>주소 검색 → 필지 선택 → 건물 배치 → 일조·조망 비교</span></div>}
         </section>
       </section>
 
       <aside className={`right-panel panel ${inspectorOpen ? "open" : ""}`}>
         {active && activeShadow ? <>
-          <div className="inspector-heading"><span className="inspector-scenario" data-scenario={active.id}>{active.id}</span><div><div className="eyebrow">INSPECTOR</div><h2>{active.name}</h2></div></div>
-          <section className="inspector-section"><div className="section-heading"><span>MASS</span><b>{active.mass.footprint.kind === "polygon" ? "POLYGON" : "RECTANGLE"}</b></div>
-            <Slider label="Height" value={active.mass.heightM} min={3} max={80} suffix="m" onChange={(heightM) => actions.editBuildingMass(active.id, { heightM })} />
-            <Slider label="Rotation" value={active.mass.rotationDeg} min={-180} max={180} suffix="°" onChange={(rotationDeg) => actions.editBuildingMass(active.id, { rotationDeg })} />
-            <label className="control"><div className="control-line"><span>Floors</span><span className="value-editor"><input aria-label="Floors" type="number" min={1} max={40} value={active.mass.floors} onChange={(event) => actions.editBuildingMass(active.id, { floors: Number(event.target.value) })} /></span></div></label>
+          <div className="inspector-heading"><span className="inspector-scenario" data-scenario={active.id}>{active.id}</span><div><div className="eyebrow">설계 설정</div><h2>{active.name}</h2></div></div>
+          <section className="inspector-section"><div className="section-heading"><span>건물 규모</span><b>{active.mass.footprint.kind === "polygon" ? "자유형" : "사각형"}</b></div>
+            <Slider label="높이" value={active.mass.heightM} min={3} max={80} suffix="m" onChange={(heightM) => actions.editBuildingMass(active.id, { heightM })} />
+            <Slider label="회전" value={active.mass.rotationDeg} min={-180} max={180} suffix="°" onChange={(rotationDeg) => actions.editBuildingMass(active.id, { rotationDeg })} />
+            <label className="control"><div className="control-line"><span>층수</span><span className="value-editor"><input aria-label="층수" type="number" min={1} max={40} value={active.mass.floors} onChange={(event) => actions.editBuildingMass(active.id, { floors: Number(event.target.value) })} /></span></div></label>
           </section>
-          <section className="inspector-section"><div className="section-heading"><span>POSITION</span><b>LOCAL METERS</b></div>
-            <Slider label="East" value={active.mass.position.eastM} min={-120} max={120} suffix="m" onChange={(eastM) => actions.editBuildingMass(active.id, { position: { eastM } })} />
-            <Slider label="North" value={active.mass.position.northM} min={-120} max={120} suffix="m" onChange={(northM) => actions.editBuildingMass(active.id, { position: { northM } })} />
+          <section className="inspector-section"><div className="section-heading"><span>배치 위치</span><b>기준점 상대(m)</b></div>
+            <Slider label="동쪽" value={active.mass.position.eastM} min={-120} max={120} suffix="m" onChange={(eastM) => actions.editBuildingMass(active.id, { position: { eastM } })} />
+            <Slider label="북쪽" value={active.mass.position.northM} min={-120} max={120} suffix="m" onChange={(northM) => actions.editBuildingMass(active.id, { position: { northM } })} />
           </section>
           <FootprintEditor footprint={active.mass.footprint} onChange={(footprint) => actions.setMassFootprint(active.id, footprint)} />
-          <section className="inspector-section"><div className="section-heading"><span>SHADOW</span><b>{activeTime} KST</b></div><div className="readout-list"><div><span>Solar altitude</span><strong>{solarValue(activeShadow.solar.elevationDeg)}</strong></div><div><span>Azimuth</span><strong>{solarValue(activeShadow.solar.azimuthDeg)}</strong></div><div><span>Shadow length</span><strong>{activeShadow.solar.isDaylight ? `${activeShadow.lengthM.toFixed(1)}m` : "—"}</strong></div><div><span>Shadow bearing</span><strong>{shadowBearing(activeShadow)}{activeShadow.solar.isDaylight ? "°" : ""}</strong></div></div></section>
-          <section className="inspector-section"><div className="section-heading"><span>PLANNING</span><b>CURRENT OPTION</b></div><div className="readout-list"><div><span>Site area</span><strong>{activePlanning ? Math.round(activePlanning.siteAreaM2).toLocaleString() : "—"}㎡</strong></div><div><span>Footprint</span><strong>{Math.round(footprintAreaM2(active.mass.footprint)).toLocaleString()}㎡</strong></div><div><span>Estimated GFA</span><strong>{estimateGfa(active.mass).toLocaleString()}㎡</strong></div><div><span>Planned coverage</span><strong>{activePlanning ? activePlanning.coverageRatioPct.toFixed(1) : "—"}%</strong></div><div><span>Planned FAR</span><strong>{activePlanning ? activePlanning.floorAreaRatioPct.toFixed(1) : "—"}%</strong></div></div></section>
-          <section className="inspector-section"><div className="section-heading"><span>SUN EXPOSURE</span><b>09:00–18:00</b></div><div className="readout-list"><div><span>Study point</span><strong>{state.sunStudyPoint ? "Selected" : "Site center"}</strong></div><div><span>Direct sun</span><strong>{activeSunStudy ? formatMinutes(sceneSunContext?.supported ? activeContextSunMinutes : activeSunStudy.sunMinutes) : "—"}</strong></div><div><span>Planned-mass shadow</span><strong>{activeSunStudy ? formatMinutes(activeSunStudy.shadowMinutes) : "—"}</strong></div><div><span>City context</span><strong>{sceneSunBusy ? "Sampling…" : sceneSunContext?.supported ? "VWorld 3D" : "Planned mass only"}</strong></div></div><button className="quiet-button analysis-action" onClick={() => setCanvasMode("sun-point")}>Set sun study point</button>{state.sunStudyPoint && <button className="quiet-button analysis-action" onClick={() => actions.setSunStudyPoint(undefined, "human")}>Use site center</button>}</section>
-          <section className="inspector-section"><div className="section-heading"><span>VIEWPOINT</span><b>{state.viewpoint ? `${state.viewpoint.eyeHeightM.toFixed(1)}m EYE` : "NOT SET"}</b></div>{state.viewpoint ? <><label className="control"><div className="control-line"><span>Eye height</span><span className="value-editor"><input aria-label="Viewpoint eye height" type="number" min={1.2} max={50} step={0.1} value={state.viewpoint.eyeHeightM} onChange={(event) => actions.setViewpoint({ ...state.viewpoint!, eyeHeightM: Number(event.target.value) }, "human")} /><em>m</em></span></div></label><div className="viewpoint-actions"><button className="quiet-button" onClick={() => flyToViewpoint(state.viewpoint!, state.site, active.mass)}>Open view</button><button className="quiet-button" onClick={() => { actions.setViewpoint(undefined, "human"); flyToSite(state.site); }}>Clear</button></div></> : <button className="quiet-button analysis-action" onClick={() => setCanvasMode("viewpoint")}>Pick viewpoint</button>}</section>
-          <small className="boundary">*Direct sun uses the current planned mass plus VWorld 3D scene height sampling when supported. It remains a geometric pre-check, not a statutory sunlight-right determination.</small>
-        </> : <div className="inspector-empty"><div className="eyebrow">INSPECTOR</div><h2>No mass selected</h2><p>Use Rectangle or Polygon on the map to create the first design option.</p></div>}
+          <section className="inspector-section"><div className="section-heading"><span>그림자</span><b>{activeTime}</b></div><div className="readout-list"><div><span>태양고도</span><strong>{solarValue(activeShadow.solar.elevationDeg)}</strong></div><div><span>방위각</span><strong>{solarValue(activeShadow.solar.azimuthDeg)}</strong></div><div><span>그림자 길이</span><strong>{activeShadow.solar.isDaylight ? `${activeShadow.lengthM.toFixed(1)}m` : "—"}</strong></div><div><span>그림자 방향</span><strong>{shadowBearing(activeShadow)}{activeShadow.solar.isDaylight ? "°" : ""}</strong></div></div></section>
+          <section className="inspector-section"><div className="section-heading"><span>계획 수치</span><b>현재 대안</b></div><div className="readout-list"><div><span>대지면적</span><strong>{activePlanning ? Math.round(activePlanning.siteAreaM2).toLocaleString() : "—"}㎡</strong></div><div><span>건축면적</span><strong>{Math.round(footprintAreaM2(active.mass.footprint)).toLocaleString()}㎡</strong></div><div><span>추정 연면적</span><strong>{estimateGfa(active.mass).toLocaleString()}㎡</strong></div><div><span>계획 건폐율</span><strong>{activePlanning ? activePlanning.coverageRatioPct.toFixed(1) : "—"}%</strong></div><div><span>계획 용적률</span><strong>{activePlanning ? activePlanning.floorAreaRatioPct.toFixed(1) : "—"}%</strong></div></div></section>
+          <section className="inspector-section"><div className="section-heading"><span>일조시간</span><b>09:00–18:00</b></div><div className="readout-list"><div><span>분석 지점</span><strong>{state.sunStudyPoint ? "사용자 지정" : "부지 중심"}</strong></div><div><span>직접 일조</span><strong>{activeSunStudy ? formatMinutesKo(sceneSunContext?.supported ? activeContextSunMinutes : activeSunStudy.sunMinutes) : "—"}</strong></div><div><span>계획 건물 음영</span><strong>{activeSunStudy ? formatMinutesKo(activeSunStudy.shadowMinutes) : "—"}</strong></div><div><span>주변 환경</span><strong>{sceneSunBusy ? "계산 중…" : sceneSunContext?.supported ? "VWorld 3D 반영" : "계획 건물만"}</strong></div></div><button className="quiet-button analysis-action" onClick={() => setCanvasMode("sun-point")}>일조 지점 선택</button>{state.sunStudyPoint && <button className="quiet-button analysis-action" onClick={() => actions.setSunStudyPoint(undefined, "human")}>부지 중심 사용</button>}</section>
+          <section className="inspector-section"><div className="section-heading"><span>조망 위치</span><b>{state.viewpoint ? `눈높이 ${state.viewpoint.eyeHeightM.toFixed(1)}m` : "미설정"}</b></div>{state.viewpoint ? <><label className="control"><div className="control-line"><span>눈높이</span><span className="value-editor"><input aria-label="조망 눈높이" type="number" min={1.2} max={50} step={0.1} value={state.viewpoint.eyeHeightM} onChange={(event) => actions.setViewpoint({ ...state.viewpoint!, eyeHeightM: Number(event.target.value) }, "human")} /><em>m</em></span></div></label><div className="viewpoint-actions"><button className="quiet-button" onClick={() => flyToViewpoint(state.viewpoint!, state.site, active.mass)}>이 위치에서 보기</button><button className="quiet-button" onClick={() => { actions.setViewpoint(undefined, "human"); flyToSite(state.site); }}>해제</button></div></> : <button className="quiet-button analysis-action" onClick={() => setCanvasMode("viewpoint")}>조망 위치 선택</button>}</section>
+          <small className="boundary">*일조·그림자 결과는 초기 공간 검토용입니다. 법적 일조권 판정이나 인허가 판단을 대신하지 않습니다.</small>
+        </> : <div className="inspector-empty"><div className="eyebrow">설계 설정</div><h2>선택된 건물이 없습니다</h2><p>사각형 또는 자유형 도구로 첫 건물을 만들어보세요.</p></div>}
       </aside>
     </section>
   </main>;
