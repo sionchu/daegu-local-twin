@@ -14,6 +14,17 @@ let scriptPromise: Promise<void> | null = null;
 let viewerPromise: Promise<any> | null = null;
 const entities = new Map<string, any>();
 
+function loadExternalScript(src: string) {
+  return new Promise<void>((resolve, reject) => {
+    const script = document.createElement("script");
+    script.src = src;
+    script.async = false;
+    script.onload = () => resolve();
+    script.onerror = () => reject(new Error(`Failed to load VWorld dependency: ${new URL(src).pathname}`));
+    document.head.appendChild(script);
+  });
+}
+
 export function loadVWorld(apiKey: string) {
   if (scriptPromise) return scriptPromise;
   scriptPromise = new Promise<void>((resolve, reject) => {
@@ -30,14 +41,44 @@ export function loadVWorld(apiKey: string) {
       }
       window.setTimeout(waitForGlobals, 100);
     };
+    const childScripts: string[] = [];
+    const originalWrite = document.write.bind(document);
+    const originalWriteln = document.writeln.bind(document);
+    const captureMarkup = (markup: string) => {
+      const template = document.createElement("template");
+      template.innerHTML = markup;
+      template.content.querySelectorAll("script[src]").forEach((child) => {
+        const src = child.getAttribute("src");
+        if (src) childScripts.push(new URL(src, document.baseURI).href);
+      });
+    };
+    document.write = captureMarkup;
+    document.writeln = captureMarkup;
     const script = document.createElement("script");
     const params = new URLSearchParams({ version: "3.0", apiKey });
     const domain = import.meta.env.VITE_VWORLD_DOMAIN as string | undefined;
     if (domain) params.set("domain", domain);
     script.src = `https://map.vworld.kr/js/webglMapInit.js.do?${params.toString()}`;
-    script.async = true;
-    script.onload = waitForGlobals;
-    script.onerror = () => reject(new Error("Failed to load VWorld WebGL SDK"));
+    script.async = false;
+    script.onload = () => {
+      void (async () => {
+        for (let index = 0; index < childScripts.length; index += 1) {
+          await loadExternalScript(childScripts[index]);
+        }
+        document.write = originalWrite;
+        document.writeln = originalWriteln;
+        waitForGlobals();
+      })().catch((error) => {
+        document.write = originalWrite;
+        document.writeln = originalWriteln;
+        reject(error);
+      });
+    };
+    script.onerror = () => {
+      document.write = originalWrite;
+      document.writeln = originalWriteln;
+      reject(new Error("Failed to load VWorld WebGL SDK"));
+    };
     document.head.appendChild(script);
   }).catch((error) => {
     scriptPromise = null;
@@ -80,7 +121,7 @@ export async function startVWorld(containerId: string, apiKey: string, lon: numb
       };
       vw.ws3dInitCallBack = () => { finish(); };
       map = new vw.Map();
-      const camera = new vw.CameraPosition(new vw.CoordZ(lon, lat, 1100), new vw.Direction(0, -72, 0));
+      const camera = new vw.CameraPosition(new vw.CoordZ(lon, lat, 220), new vw.Direction(0, -72, 0));
       map.setOption({ mapId: containerId, initPosition: camera, logo: false, navigation: true });
       map.setMapId(containerId);
       map.setInitPosition(camera);
@@ -127,29 +168,38 @@ export function renderScenario(scenario: Scenario, active: boolean, timeZoneOffs
   const old = entities.get(scenario.id);
   if (old?.building) viewer.entities.remove(old.building);
   if (old?.shadow) viewer.entities.remove(old.shadow);
+  const buildingPolygon: any = {
+    hierarchy: Cesium.Cartesian3.fromDegreesArray(footprintCorners(scenario)),
+    extrudedHeight: scenario.mass.heightM,
+    height: 0,
+    material: Cesium.Color.fromCssColorString(active ? "#68f3c2" : "#7aa7ff").withAlpha(active ? 0.72 : 0.38),
+    outline: true,
+    outlineColor: Cesium.Color.WHITE.withAlpha(active ? 0.9 : 0.45),
+  };
+  if (Cesium.HeightReference) {
+    buildingPolygon.heightReference = Cesium.HeightReference.CLAMP_TO_GROUND;
+    buildingPolygon.extrudedHeightReference = Cesium.HeightReference.RELATIVE_TO_GROUND;
+  }
   const building = viewer.entities.add({
     name: scenario.name,
-    polygon: {
-      hierarchy: Cesium.Cartesian3.fromDegreesArray(footprintCorners(scenario)),
-      extrudedHeight: scenario.mass.heightM,
-      height: 0,
-      material: Cesium.Color.fromCssColorString(active ? "#68f3c2" : "#7aa7ff").withAlpha(active ? 0.72 : 0.38),
-      outline: true,
-      outlineColor: Cesium.Color.WHITE.withAlpha(active ? 0.9 : 0.45),
-    },
+    polygon: buildingPolygon,
   });
   const shadow = computeShadowPolygon(scenario.mass, scenario.analysisTime, timeZoneOffsetMinutes);
-  const shadowEntity = shadow.points.length >= 3 ? viewer.entities.add({
-    name: `${scenario.name} solar shadow`,
-    polygon: {
+  const shadowEntity = shadow.points.length >= 3 ? (() => {
+    const shadowPolygon: any = {
       hierarchy: Cesium.Cartesian3.fromDegreesArray(localPointsToDegrees(scenario.mass.center, shadow.points)),
       height: 0,
       extrudedHeight: 0.25,
       material: Cesium.Color.fromCssColorString(active ? "#68f3c2" : "#7aa7ff").withAlpha(active ? 0.22 : 0.14),
       outline: true,
       outlineColor: Cesium.Color.fromCssColorString(active ? "#68f3c2" : "#7aa7ff").withAlpha(active ? 0.55 : 0.38),
-    },
-  }) : undefined;
+    };
+    if (Cesium.HeightReference) {
+      shadowPolygon.heightReference = Cesium.HeightReference.CLAMP_TO_GROUND;
+      shadowPolygon.extrudedHeightReference = Cesium.HeightReference.RELATIVE_TO_GROUND;
+    }
+    return viewer.entities.add({ name: `${scenario.name} solar shadow`, polygon: shadowPolygon });
+  })() : undefined;
   entities.set(scenario.id, { building, shadow: shadowEntity });
 }
 
