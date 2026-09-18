@@ -1,4 +1,7 @@
-import type { ApplicationActions, SpatialWorkspace } from "./types";
+import type {
+  AddressSearchResult,
+} from "./vworld-api";
+import type { ApplicationActions, GeoPoint, Site, SpatialWorkspace } from "./types";
 
 declare global {
   interface Document {
@@ -10,6 +13,8 @@ declare global {
 
 type ToolBridge = ApplicationActions & {
   getState: () => SpatialWorkspace;
+  searchLocation: (query: string) => Promise<AddressSearchResult[]>;
+  selectSiteAtPoint: (point: GeoPoint, label?: string) => Promise<Site>;
 };
 
 const pointSchema = {
@@ -42,10 +47,91 @@ export function registerSpaceLabTools(bridge: ToolBridge) {
   register({
     name: "get_spatial_workspace",
     title: "Read SpaceLab spatial workspace",
-    description: "Read the current site, scenario branches, active option, comparison option, footprints, and model parameters.",
+    description: "Read the selected real-world site, scenario branches, active option, comparison option, footprints, and model parameters.",
     inputSchema: { type: "object", properties: {}, additionalProperties: false },
     annotations: { readOnlyHint: true },
     execute: async () => bridge.getState(),
+  });
+
+  register({
+    name: "search_location",
+    title: "Search a Korean location in VWorld",
+    description: "Search VWorld address data before selecting a real site. Returns coordinates only; selecting the parcel is a separate action.",
+    inputSchema: {
+      type: "object",
+      properties: { query: { type: "string", minLength: 2 } },
+      required: ["query"],
+      additionalProperties: false,
+    },
+    annotations: { readOnlyHint: true },
+    execute: async (input: { query: string }) => bridge.searchLocation(input.query),
+  });
+
+  register({
+    name: "select_site",
+    title: "Select a real SpaceLab site",
+    description: "Resolve the VWorld cadastral parcel containing a coordinate and make it the canonical SpaceLab site. Selecting a new site clears old design scenarios.",
+    inputSchema: {
+      type: "object",
+      properties: {
+        lon: { type: "number", minimum: 124, maximum: 132 },
+        lat: { type: "number", minimum: 33, maximum: 39.5 },
+        label: { type: "string" },
+      },
+      required: ["lon", "lat"],
+      additionalProperties: false,
+    },
+    execute: async (input: { lon: number; lat: number; label?: string }) => {
+      const site = await bridge.selectSiteAtPoint({ lon: input.lon, lat: input.lat }, input.label);
+      bridge.setSite(site, "agent");
+      return bridge.getState();
+    },
+  });
+
+  register({
+    name: "create_building_mass",
+    title: "Create a new SpaceLab building mass",
+    description: "Create the first or next early-stage massing scenario on the selected site. This is conceptual massing, not BIM.",
+    inputSchema: {
+      type: "object",
+      properties: {
+        name: { type: "string" },
+        intent: { type: "string" },
+        heightM: { type: "number", minimum: 3, maximum: 120 },
+        floors: { type: "number", minimum: 1, maximum: 40 },
+        rotationDeg: { type: "number", minimum: -180, maximum: 180 },
+        position: {
+          type: "object",
+          properties: {
+            eastM: { type: "number", minimum: -300, maximum: 300 },
+            northM: { type: "number", minimum: -300, maximum: 300 },
+          },
+          additionalProperties: false,
+        },
+        footprint: footprintSchema,
+      },
+      additionalProperties: false,
+    },
+    execute: async (input: any) => {
+      bridge.createBuildingMass(input, "agent");
+      return bridge.getState();
+    },
+  });
+
+  register({
+    name: "delete_scenario",
+    title: "Delete a SpaceLab scenario",
+    description: "Delete one conceptual scenario from the current site.",
+    inputSchema: {
+      type: "object",
+      properties: { scenarioId: { type: "string" } },
+      required: ["scenarioId"],
+      additionalProperties: false,
+    },
+    execute: async (input: { scenarioId: string }) => {
+      bridge.deleteScenario(input.scenarioId, "agent");
+      return bridge.getState();
+    },
   });
 
   register({
@@ -78,8 +164,8 @@ export function registerSpaceLabTools(bridge: ToolBridge) {
         position: {
           type: "object",
           properties: {
-            eastM: { type: "number", minimum: -200, maximum: 200 },
-            northM: { type: "number", minimum: -200, maximum: 200 },
+            eastM: { type: "number", minimum: -300, maximum: 300 },
+            northM: { type: "number", minimum: -300, maximum: 300 },
           },
           additionalProperties: false,
         },
@@ -114,7 +200,7 @@ export function registerSpaceLabTools(bridge: ToolBridge) {
   register({
     name: "set_shadow_time",
     title: "Set SpaceLab shadow preview time",
-    description: "Set the local scenario date/time used for a qualitative shadow preview, not a statutory sunlight-right determination.",
+    description: "Set the local scenario date/time used for a geometric solar shadow preview, not a statutory sunlight-right determination.",
     inputSchema: {
       type: "object",
       properties: {
