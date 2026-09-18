@@ -6,8 +6,11 @@ SpaceLab is a small browser-native V0 for non-specialists. It places conceptual 
 
 ## V0 scope
 
+- VWorld address search and real cadastral parcel selection (`LP_PA_CBND_BUBUN`)
+- Empty-site start with direct rectangle / free-polygon mass creation
 - Rectangular and free-polygon `BuildingMass` footprints
 - Height, floors, footprint, position, and rotation editing
+- Canvas parcel pick, polygon drawing, and click-to-move mass placement
 - Scenario clone/branch with parent relationships
 - A/B comparison with GFA, height, and solar-geometry shadow deltas
 - Geolocation/date/time solar position and ground shadow polygon preview
@@ -22,6 +25,7 @@ This is early-stage massing exploration. It is not a legal sunlight-right determ
 Human UI ───────┐
                 ├─ application actions → canonical SpatialWorkspace
 WebMCP adapter ─┘             │
+                              ├─ Site (real parcel + boundary)
                               ├─ BuildingMass
                               ├─ Scenario branches
                               └─ analysis selectors
@@ -45,6 +49,10 @@ For a local project `.env`, copy `.env.example` to `.env` and set `VITE_VWORLD_A
 ## WebMCP tools
 
 - `get_spatial_workspace`
+- `search_location`
+- `select_site`
+- `create_building_mass`
+- `delete_scenario`
 - `clone_scenario`
 - `edit_building_mass`
 - `set_mass_footprint`
