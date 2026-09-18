@@ -175,11 +175,18 @@ def clean_number(value: str | None) -> int:
     return int(cleaned) if cleaned not in ("", "-") else 0
 
 
+STATION_ALIASES = {
+    "반월당1": "반월당",
+    "반월당2": "반월당",
+}
+
+
 def clean_station(value: str) -> str:
     value = re.sub(r"\([^)]*\)", "", value or "")
     value = re.sub(r"\[[^]]*\]", "", value)
     value = value.replace(" ", "").strip()
-    return value[:-1] if value.endswith("역") else value
+    value = value[:-1] if value.endswith("역") else value
+    return STATION_ALIASES.get(value, value)
 
 
 def clean_row(row: dict[str, str]) -> dict[str, str]:
