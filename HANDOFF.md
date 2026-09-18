@@ -14,9 +14,9 @@ Build a public `spacelab-ai` V0: a VWorld-backed Spatial Decision Canvas for ear
 
 ## Current checkpoint
 
-- The design-pass changes are in the working tree and have not yet been committed or published.
+- Design-pass commit `25e60e6dbcc852caa9d340c6dfc2035f61a6dad2` is pushed to the public GitHub repository and the connected Sites source repository.
+- The matching private Sites version is deployed at `https://spacelab-ai.leeje92.chatgpt.site`.
 - `src/webmcp.ts` was not changed; the design pass only changes presentation and local UI mode state.
-- The last published Sites version remains the prior source revision until this checkpoint is committed and deployed.
 
 ## Verification evidence
 
@@ -35,4 +35,4 @@ Build a public `spacelab-ai` V0: a VWorld-backed Spatial Decision Canvas for ear
 
 ## Next concrete action
 
-Review the final diff, commit the design pass, push the exact commit to the existing public repository, package that commit, and deploy the matching private Sites version. Then inspect the deployed Site in an authenticated browser before any WebMCP changes.
+Open the deployed Site in an authenticated Aside/browser session for the final production visual pass. Keep WebMCP and feature scope unchanged until that visual gate is completed.
