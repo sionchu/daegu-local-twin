@@ -14,3 +14,9 @@ python vision/analyze_footfall.py --input .\permitted-demo.mp4 --output public/d
 ```
 
 The public V0 can consume a committed aggregate snapshot even when local GPU inference is unavailable. That snapshot must remain labelled `demo`.
+
+## Versioned implementation
+
+The current optional stack is pinned in `vision/requirements.txt`: RF-DETR 1.10.1, Supervision 0.30.4, and `trackers` 2.6.0. Tracking uses `trackers.ByteTrackTracker.update()`; Supervision provides `LineZone` counting. This keeps the V0 off the deprecated legacy `sv.ByteTrack` integration path.
+
+The repository verifies Python syntax in CI, but it does **not** claim an observed footfall result until this script is executed on a permitted video and the generated aggregate is reviewed.
