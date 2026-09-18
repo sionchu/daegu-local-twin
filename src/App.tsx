@@ -155,6 +155,7 @@ export default function App() {
   const [webMcp, setWebMcp] = useState(false);
   const [workspaceMode, setWorkspaceMode] = useState<"design" | "compare">("design");
   const [navigatorOpen, setNavigatorOpen] = useState(false);
+  const [inspectorOpen, setInspectorOpen] = useState(false);
   const [canvasMode, setCanvasMode] = useState<CanvasMode>("inspect");
   const [draftPoints, setDraftPoints] = useState<LocalPoint[]>([]);
   const [searchQuery, setSearchQuery] = useState("");
@@ -396,7 +397,15 @@ export default function App() {
   return <main className={`app-shell ${workspaceMode === "compare" ? "compare-mode" : ""}`}>
     <header className="topbar">
       <div className="brand"><div className="brand-mark" aria-hidden="true">S</div><div><strong>SpaceLab</strong><span>/ {state.site.name}</span></div></div>
-      <button className="navigator-toggle" aria-label="Open scenario navigator" aria-expanded={navigatorOpen} onClick={() => setNavigatorOpen((open) => !open)}>SCENARIOS</button>
+      <button
+        className="navigator-toggle"
+        aria-label="Open scenario navigator"
+        aria-expanded={navigatorOpen}
+        onClick={() => {
+          setNavigatorOpen((open) => !open);
+          setInspectorOpen(false);
+        }}
+      >☰</button>
       <nav className="mode-switch" aria-label="Workspace mode">
         <button className={workspaceMode === "design" ? "selected" : ""} onClick={() => setWorkspaceMode("design")}>Design</button>
         <button className={workspaceMode === "compare" ? "selected" : ""} onClick={() => setWorkspaceMode("compare")} disabled={!active || state.scenarios.length < 2}>Compare</button>
@@ -405,9 +414,26 @@ export default function App() {
         <span className={`runtime-status ${vworldReady ? "live" : mapError ? "attention" : ""}`}><i aria-hidden="true"></i>VWorld <b>{vworldReady ? "Live" : mapError ? "Error" : "Demo"}</b></span>
         <span className={`runtime-status ${webMcp ? "live" : ""}`}><i aria-hidden="true"></i>Site Tools <b>{webMcp ? "Connected" : "Optional"}</b></span>
       </div>
+      <button
+        className="inspector-toggle"
+        aria-label="Open inspector"
+        aria-expanded={inspectorOpen}
+        onClick={() => {
+          setInspectorOpen((open) => !open);
+          setNavigatorOpen(false);
+        }}
+      >EDIT</button>
     </header>
 
     <section className="workspace">
+      <button
+        className={`mobile-scrim ${navigatorOpen || inspectorOpen ? "open" : ""}`}
+        aria-label="Close open panel"
+        onClick={() => {
+          setNavigatorOpen(false);
+          setInspectorOpen(false);
+        }}
+      />
       <aside className={`left-panel panel ${navigatorOpen ? "open" : ""}`}>
         <div className="panel-heading"><div><div className="eyebrow">SCENARIOS</div><span className="panel-caption">DESIGN HISTORY</span></div><span className="option-count">{state.scenarios.length} OPTIONS</span></div>
         <div className="navigator-base site-summary"><strong>REAL SITE</strong><span>{state.site.address || state.site.name}</span>{state.site.pnu && <small>PNU {state.site.pnu}</small>}</div>
@@ -484,7 +510,7 @@ export default function App() {
         </section>
       </section>
 
-      <aside className="right-panel panel">
+      <aside className={`right-panel panel ${inspectorOpen ? "open" : ""}`}>
         {active && activeShadow ? <>
           <div className="inspector-heading"><span className="inspector-scenario" data-scenario={active.id}>{active.id}</span><div><div className="eyebrow">INSPECTOR</div><h2>{active.name}</h2></div></div>
           <section className="inspector-section"><div className="section-heading"><span>MASS</span><b>{active.mass.footprint.kind === "polygon" ? "POLYGON" : "RECTANGLE"}</b></div>
