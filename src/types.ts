@@ -62,7 +62,7 @@ export type StressPreset =
 
 export const stressPresetLabels: Record<StressPreset, string> = {
   base: "기본",
-  footfallDown: "보행량 -20%",
+  footfallDown: "이동수요 -20%",
   conversionDown: "전환율 -20%",
   costUp: "원가율 +10%p",
   rentUp: "임대료 +10%",
