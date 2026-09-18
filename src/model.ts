@@ -130,13 +130,25 @@ export function reducer(state: LocalTwinState, action: LocalTwinAction): LocalTw
           ? { ...scenario, assumptions: { ...scenario.assumptions, ...action.patch } }
           : scenario),
       };
-    case "SET_SCENARIO_CATEGORY":
+    case "SET_SCENARIO_CATEGORY": {
+      const defaults = defaultAssumptions(action.category);
       return {
         ...state,
         scenarios: state.scenarios.map((scenario) => scenario.id === action.scenarioId
-          ? { ...scenario, assumptions: { ...scenario.assumptions, category: action.category } }
+          ? {
+              ...scenario,
+              assumptions: {
+                ...scenario.assumptions,
+                category: action.category,
+                averageTicketKrw: defaults.averageTicketKrw,
+                variableCostRatio: defaults.variableCostRatio,
+                monthlyPayrollKrw: defaults.monthlyPayrollKrw,
+                equipmentKrw: defaults.equipmentKrw,
+              },
+            }
           : scenario),
       };
+    }
     case "SET_STRESS_PRESET":
       return {
         ...state,
@@ -203,6 +215,8 @@ export type OpportunityScores = {
   poiContext: number | null;
   demandScore: number | null;
   rentRelief: number | null;
+  regeneration: number | null;
+  opportunityScore: number | null;
 };
 
 export function computeOpportunityScores(cell: LocationEvidence, allCells: LocationEvidence[]): OpportunityScores {
@@ -222,8 +236,28 @@ export function computeOpportunityScores(cell: LocationEvidence, allCells: Locat
   const demandScore = availableWeight
     ? weighted.reduce((sum, [value, weight]) => sum + (value === null ? 0 : value * (weight / availableWeight)), 0)
     : null;
-  const rentRelief = normalizeMetric(allCells.map((item) => item.rentBenchmark === null ? null : -item.rentBenchmark), cell.rentBenchmark === null ? null : -cell.rentBenchmark);
-  return { footfall, transit, buzz, spillover, poiContext, demandScore, rentRelief };
+  const rentRelief = normalizeMetric(
+    allCells.map((item) => item.rentBenchmark === null ? null : -item.rentBenchmark),
+    cell.rentBenchmark === null ? null : -cell.rentBenchmark,
+  );
+  const regeneration = cell.regenerationScore === null
+    ? null
+    : Math.max(0, Math.min(100, cell.regenerationScore));
+  const opportunityWeighted = [
+    [demandScore, 0.55],
+    [rentRelief, 0.25],
+    [regeneration, 0.20],
+  ] as Array<[number | null, number]>;
+  const opportunityWeight = opportunityWeighted
+    .filter(([value]) => value !== null)
+    .reduce((sum, [, weight]) => sum + weight, 0);
+  const opportunityScore = opportunityWeight
+    ? opportunityWeighted.reduce(
+        (sum, [value, weight]) => sum + (value === null ? 0 : value * (weight / opportunityWeight)),
+        0,
+      )
+    : null;
+  return { footfall, transit, buzz, spillover, poiContext, demandScore, rentRelief, regeneration, opportunityScore };
 }
 
 function assertAssumptions(assumptions: StartupAssumptions) {
@@ -254,16 +288,20 @@ export function monthlyFixedCost(assumptions: StartupAssumptions) {
     + monthlyDebtPayment(assumptions.assumedFinancingKrw, assumptions.financingAnnualRate, assumptions.financingMonths);
 }
 
-export function startupCapitalNeed(assumptions: StartupAssumptions) {
+export function upfrontUses(assumptions: StartupAssumptions) {
   assertAssumptions(assumptions);
-  const openingWorkingCapitalKrw = monthlyOperatingFixedCost(assumptions) * assumptions.openingBufferMonths;
   return assumptions.depositKrw
     + assumptions.interiorKrw
     + assumptions.equipmentKrw
     + assumptions.initialInventoryKrw
     + assumptions.permitAndSetupKrw
-    + assumptions.openingMarketingKrw
-    + openingWorkingCapitalKrw;
+    + assumptions.openingMarketingKrw;
+}
+
+export function startupCapitalNeed(assumptions: StartupAssumptions) {
+  assertAssumptions(assumptions);
+  const openingWorkingCapitalKrw = monthlyOperatingFixedCost(assumptions) * assumptions.openingBufferMonths;
+  return upfrontUses(assumptions) + openingWorkingCapitalKrw;
 }
 
 export function contributionPerCustomer(assumptions: StartupAssumptions) {
@@ -273,7 +311,7 @@ export function contributionPerCustomer(assumptions: StartupAssumptions) {
 
 export function applyStressPreset(assumptions: StartupAssumptions, preset: StressPreset): StartupAssumptions {
   const next = { ...assumptions };
-  if (["footfallDown", "conversionDown", "combined"].includes(preset)) next.assumedConversionRate *= 0.8;
+  if (["conversionDown", "combined"].includes(preset)) next.assumedConversionRate *= 0.8;
   if (["costUp", "combined"].includes(preset)) next.variableCostRatio = Math.min(0.99, next.variableCostRatio + 0.10);
   if (["rentUp", "combined"].includes(preset)) next.monthlyRentKrw *= 1.10;
   if (["rateUp", "combined"].includes(preset)) next.financingAnnualRate += 0.01;
@@ -294,15 +332,19 @@ export function analyzeFinancials(
   const monthlyBreakEvenCustomers = monthlyFixedCostKrw / contribution;
   const breakEvenCustomersPerDay = monthlyBreakEvenCustomers / assumptions.operatingDaysPerMonth;
   const monthlyBreakEvenRevenueKrw = monthlyFixedCostKrw / (1 - assumptions.variableCostRatio);
-  const requiredConversionRate = relevantDailyFootfall && relevantDailyFootfall > 0
-    ? breakEvenCustomersPerDay / relevantDailyFootfall
+  const effectiveDailyFootfall = relevantDailyFootfall && relevantDailyFootfall > 0
+    ? relevantDailyFootfall * (["footfallDown", "combined"].includes(preset) ? 0.8 : 1)
     : null;
-  const steadyStateRevenueKrw = relevantDailyFootfall && relevantDailyFootfall > 0
-    ? relevantDailyFootfall * assumptions.assumedConversionRate * assumptions.averageTicketKrw * assumptions.operatingDaysPerMonth
+  const requiredConversionRate = effectiveDailyFootfall && effectiveDailyFootfall > 0
+    ? breakEvenCustomersPerDay / effectiveDailyFootfall
+    : null;
+  const steadyStateRevenueKrw = effectiveDailyFootfall && effectiveDailyFootfall > 0
+    ? effectiveDailyFootfall * assumptions.assumedConversionRate * assumptions.averageTicketKrw * assumptions.operatingDaysPerMonth
     : 0;
   const sourceCashKrw = assumptions.ownerCashKrw + assumptions.grantKrw + assumptions.assumedFinancingKrw + assumptions.otherFundingKrw;
   const fundingGapKrw = Math.max(0, startupCapitalNeedKrw - sourceCashKrw);
-  const initialCash = sourceCashKrw - startupCapitalNeedKrw;
+  const upfrontUsesKrw = upfrontUses(assumptions);
+  const initialCash = sourceCashKrw - upfrontUsesKrw;
   const ramp = [0.60, 0.70, 0.80, 0.90, 1, 1, 1, 1, 1, 1, 1, 1];
   let cash = initialCash;
   let cumulativeOperatingCash = 0;
@@ -320,12 +362,14 @@ export function analyzeFinancials(
     : monthlyTimeline.find((_, index) => monthlyTimeline.slice(0, index + 1).reduce((sum, point) => sum + point.operatingCashFlowKrw, 0) >= assumptions.ownerCashKrw)?.month ?? null;
   return {
     startupCapitalNeedKrw,
+    upfrontUsesKrw,
     openingWorkingCapitalKrw,
     monthlyFixedCostKrw,
     monthlyBreakEvenRevenueKrw,
     monthlyBreakEvenCustomers,
     breakEvenCustomersPerDay,
     requiredConversionRate,
+    effectiveDailyFootfall,
     steadyStateRevenueKrw,
     fundingGapKrw,
     breakEvenMonth,
