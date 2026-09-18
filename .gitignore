@@ -5,6 +5,7 @@ dist/
 !.env.example
 .codex/
 .vite/
+.sites-runtime/
 *.tsbuildinfo
 .DS_Store
 *.log
