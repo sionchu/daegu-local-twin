@@ -335,3 +335,12 @@ button:focus-visible, input:focus-visible, select:focus-visible { outline: 2px s
   .model-toolbar { left: 10px; top: 56px; }
   .canvas-tool-hint { left: 10px; top: 96px; }
 }
+
+
+/* Analysis Pack v1 */
+.analysis-action { margin-top: 8px; margin-right: 6px; }
+.viewpoint-actions { display: flex; gap: 6px; margin-top: 8px; }
+.viewpoint-actions .quiet-button { flex: 1; }
+
+.canvas-mode-sun-point .vworld-canvas,
+.canvas-mode-viewpoint .vworld-canvas { cursor: crosshair; }
