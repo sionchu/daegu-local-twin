@@ -364,6 +364,8 @@ export function reducer(state: SpatialWorkspace, action: WorkspaceAction): Spati
         scenarios: [],
         activeScenarioId: undefined,
         compareScenarioId: undefined,
+        sunStudyPoint: undefined,
+        viewpoint: undefined,
       };
     case "CREATE_SCENARIO": {
       const next = createScenario(state.scenarios, action.input, action.createdBy);
@@ -403,6 +405,15 @@ export function reducer(state: SpatialWorkspace, action: WorkspaceAction): Spati
         scenarios: state.scenarios.map((scenario) => scenario.id === action.scenarioId
           ? { ...scenario, mass: applyMassPatch(scenario.mass, action.patch) }
           : scenario),
+      };
+    case "SET_SUN_STUDY_POINT":
+      return { ...state, sunStudyPoint: action.point ? { ...action.point } : undefined };
+    case "SET_VIEWPOINT":
+      return {
+        ...state,
+        viewpoint: action.viewpoint
+          ? { point: { ...action.viewpoint.point }, eyeHeightM: action.viewpoint.eyeHeightM }
+          : undefined,
       };
     case "CLONE_SCENARIO": {
       const source = getScenario(state, action.sourceId);
