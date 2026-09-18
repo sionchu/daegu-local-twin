@@ -40,8 +40,9 @@ The VWorld/Cesium canvas also exposes point picking for parcel selection, free-p
 `src/analysis.ts` is a deterministic analysis layer over canonical `Site` and `BuildingMass` data.
 
 - `planningMetrics` derives parcel area, footprint, estimated GFA, planned coverage, and planned FAR. These are plan metrics, not legal allowances.
-- `directSunStudy` samples solar geometry from 09:00–18:00 and checks whether a selected ground point falls inside the current planned mass shadow. It currently excludes surrounding-building occlusion and is explicitly a pre-check.
+- `directSunStudy` is the deterministic planned-mass layer: it samples solar geometry from 09:00–18:00 and checks whether a selected ground point falls inside the current planned mass shadow.
+- `sampleSceneSunContext` in the VWorld adapter samples the loaded Cesium/VWorld 3D scene along each sun vector with `sampleHeightMostDetailed`. Existing 3D Tiles and terrain can therefore block direct sun. SpaceLab-owned mass/shadow/site entities are excluded from scene sampling so the deterministic planned-mass layer is not double-counted.
 - `sunStudyPoint` and `viewpoint` are canonical workspace state so Human UI and WebMCP operate on the same analysis targets.
 - VWorld/Cesium remains an adapter: it renders analysis markers and moves the camera to a saved viewpoint, but does not own analysis state.
 
-This phase intentionally does not implement zoning/legal compliance, statutory sunlight-right determination, or surrounding-building solar obstruction.
+This phase intentionally does not implement zoning/legal compliance or statutory sunlight-right determination. City-context direct-sun results are runtime geometric estimates that depend on the VWorld 3D scene and available scene-height sampling.
