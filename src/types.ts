@@ -115,12 +115,14 @@ export type MonthlyTimelinePoint = {
 
 export type FinancialAnalysis = {
   startupCapitalNeedKrw: number;
+  upfrontUsesKrw: number;
   openingWorkingCapitalKrw: number;
   monthlyFixedCostKrw: number;
   monthlyBreakEvenRevenueKrw: number;
   monthlyBreakEvenCustomers: number;
   breakEvenCustomersPerDay: number;
   requiredConversionRate: number | null;
+  effectiveDailyFootfall: number | null;
   steadyStateRevenueKrw: number;
   fundingGapKrw: number;
   breakEvenMonth: number | null;
