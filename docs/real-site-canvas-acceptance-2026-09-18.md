@@ -47,6 +47,34 @@ Therefore, production VWorld/A-B/solar/compare and production WebMCP results are
 
 The requested calls `get_spatial_workspace`, `edit_building_mass`, and `compare_scenarios` were not invoked because no page-provided tool registration was available. No tool name or result was fabricated. Production Site Tools could not be checked because production is behind the observed owner login gate.
 
+## Final production acceptance — 2026-09-18
+
+The final gate was re-run against the deployed production URL after the reported audience change. The Sites access metadata still returned `access_mode=custom`, and a fresh Codex In-app Browser tab opened the production URL without a logged-in session.
+
+### Production acceptance
+
+* Public access: **BLOCKED** — the browser showed `로그인 필요`, `거의 다 됐습니다`, and `ChatGPT로 계속`; the SpaceLab application DOM did not render.
+* VWorld: **NOT RUN** — the public session did not reach the application.
+* Address search: **NOT RUN** — the public session did not reach the application.
+* Parcel: **NOT RUN** — the public session did not reach the application.
+* Rectangle: **NOT RUN** — the public session did not reach the application.
+* Polygon: **NOT RUN** — the public session did not reach the application.
+* Move: **NOT RUN** — the public session did not reach the application.
+* Branch: **NOT RUN** — the public session did not reach the application.
+* Shadow: **NOT RUN** — the public session did not reach the application.
+* Compare: **NOT RUN** — the public session did not reach the application.
+
+### WebMCP acceptance
+
+* Tool discovery: **BLOCKED** — the production tab remained on the login gate, so the Site Tools surface was not available for the application.
+* `get_spatial_workspace`: **NOT RUN**
+* `edit_building_mass`: **NOT RUN**
+* `compare_scenarios`: **NOT RUN**
+
+### Final candidate disposition
+
+**BLOCKED — no competition baseline tag was created.** The unauthenticated production gate must pass before production runtime and WebMCP results can be accepted as competition evidence.
+
 ## Aside execution note
 
 Aside was attempted as requested. The installed CLI was `1.26.916.1741`; `aside --update`, `aside repl`, and `aside host list` all failed with `fetch failed` / daemon unavailable, so the same acceptance was executed in the Codex in-app browser. No credentials, API keys, or login codes were entered.
