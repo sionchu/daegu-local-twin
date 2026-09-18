@@ -60,5 +60,11 @@ export function createApplicationActions(
       requireScenario(scenarioId);
       dispatch({ type: "SET_SHADOW_TIME", scenarioId, value, source });
     },
+    setSunStudyPoint: (point, source = "human") => {
+      dispatch({ type: "SET_SUN_STUDY_POINT", point, source });
+    },
+    setViewpoint: (viewpoint, source = "human") => {
+      dispatch({ type: "SET_VIEWPOINT", viewpoint, source });
+    },
   };
 }

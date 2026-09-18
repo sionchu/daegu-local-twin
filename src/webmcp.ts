@@ -1,3 +1,6 @@
+import { directSunStudy } from "./analysis";
+import type { SunStudySample } from "./analysis";
+import { getScenario } from "./model";
 import type {
   AddressSearchResult,
 } from "./vworld-api";
@@ -15,6 +18,7 @@ type ToolBridge = ApplicationActions & {
   getState: () => SpatialWorkspace;
   searchLocation: (query: string) => Promise<AddressSearchResult[]>;
   selectSiteAtPoint: (point: GeoPoint, label?: string) => Promise<Site>;
+  sampleSunContext: (point: GeoPoint, samples: SunStudySample[]) => Promise<{ supported: boolean; blockedTimes: string[]; source: string }>;
 };
 
 const pointSchema = {
@@ -194,6 +198,105 @@ export function registerSpaceLabTools(bridge: ToolBridge) {
     execute: async (input: any) => {
       bridge.setMassFootprint(input.scenarioId, input.footprint, "agent");
       return bridge.getState();
+    },
+  });
+
+  register({
+    name: "set_sun_study_point",
+    title: "Set SpaceLab direct-sun study point",
+    description: "Set the ground point used for deterministic direct-sun estimates against the planned mass.",
+    inputSchema: {
+      type: "object",
+      properties: {
+        lon: { type: "number", minimum: 124, maximum: 132 },
+        lat: { type: "number", minimum: 33, maximum: 39.5 },
+      },
+      required: ["lon", "lat"],
+      additionalProperties: false,
+    },
+    execute: async (input: { lon: number; lat: number }) => {
+      bridge.setSunStudyPoint({ lon: input.lon, lat: input.lat }, "agent");
+      return bridge.getState();
+    },
+  });
+
+  register({
+    name: "set_viewpoint",
+    title: "Set SpaceLab viewpoint",
+    description: "Save a repeatable observation point for comparing scenarios from the same place.",
+    inputSchema: {
+      type: "object",
+      properties: {
+        lon: { type: "number", minimum: 124, maximum: 132 },
+        lat: { type: "number", minimum: 33, maximum: 39.5 },
+        eyeHeightM: { type: "number", minimum: 1.2, maximum: 50 },
+      },
+      required: ["lon", "lat"],
+      additionalProperties: false,
+    },
+    execute: async (input: { lon: number; lat: number; eyeHeightM?: number }) => {
+      bridge.setViewpoint({
+        point: { lon: input.lon, lat: input.lat },
+        eyeHeightM: input.eyeHeightM ?? 1.7,
+      }, "agent");
+      return bridge.getState();
+    },
+  });
+
+  register({
+    name: "run_direct_sun_study",
+    title: "Run SpaceLab direct-sun study",
+    description: "Estimate direct-sun duration from 09:00 to 18:00 at a ground point against one planned mass. This is a geometric pre-check, not a statutory sunlight-right determination.",
+    inputSchema: {
+      type: "object",
+      properties: {
+        scenarioId: { type: "string" },
+        date: { type: "string", description: "YYYY-MM-DD" },
+        lon: { type: "number", minimum: 124, maximum: 132 },
+        lat: { type: "number", minimum: 33, maximum: 39.5 },
+        stepMinutes: { type: "number", minimum: 5, maximum: 60 },
+      },
+      additionalProperties: false,
+    },
+    annotations: { readOnlyHint: true },
+    execute: async (input: { scenarioId?: string; date?: string; lon?: number; lat?: number; stepMinutes?: number }) => {
+      const state = bridge.getState();
+      const scenarioId = input.scenarioId ?? state.activeScenarioId;
+      if (!scenarioId) throw new Error("No active SpaceLab scenario.");
+      const scenario = getScenario(state, scenarioId);
+      const point = input.lon !== undefined && input.lat !== undefined
+        ? { lon: input.lon, lat: input.lat }
+        : state.sunStudyPoint ?? state.site.center;
+      const study = directSunStudy(
+        scenario.mass,
+        state.site,
+        point,
+        input.date ?? scenario.analysisTime.slice(0, 10),
+        state.timeZoneOffsetMinutes,
+        { stepMinutes: input.stepMinutes },
+      );
+      const context = await bridge.sampleSunContext(point, study.samples);
+      const blockedByContext = new Set(context.blockedTimes);
+      const contextAdjustedSunMinutes = context.supported
+        ? study.samples.reduce((minutes, sample) => sample.state === "sun" && !blockedByContext.has(sample.localDateTime)
+          ? minutes + study.stepMinutes
+          : minutes, 0)
+        : study.sunMinutes;
+      return {
+        scenarioId,
+        point: study.point,
+        date: study.date,
+        stepMinutes: study.stepMinutes,
+        plannedMassSunMinutes: study.sunMinutes,
+        contextAdjustedSunMinutes,
+        shadowMinutes: study.shadowMinutes,
+        daylightMinutes: study.daylightMinutes,
+        plannedMassScope: study.scope,
+        cityContextSupported: context.supported,
+        cityContextSource: context.source,
+        cityContextBlockedTimes: context.blockedTimes,
+        samples: study.samples,
+      };
     },
   });
 
