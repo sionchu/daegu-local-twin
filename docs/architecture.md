@@ -33,3 +33,15 @@ The shadow helper is a qualitative deterministic preview for comparing alternati
 4. UI and WebMCP both call `setSite`; neither mutates renderer state directly.
 
 The VWorld/Cesium canvas also exposes point picking for parcel selection, free-polygon drawing, and click-to-move mass placement. These interactions convert geographic clicks into the site's local meter coordinates before dispatching canonical application actions.
+
+
+## Analysis Pack v1
+
+`src/analysis.ts` is a deterministic analysis layer over canonical `Site` and `BuildingMass` data.
+
+- `planningMetrics` derives parcel area, footprint, estimated GFA, planned coverage, and planned FAR. These are plan metrics, not legal allowances.
+- `directSunStudy` samples solar geometry from 09:00–18:00 and checks whether a selected ground point falls inside the current planned mass shadow. It currently excludes surrounding-building occlusion and is explicitly a pre-check.
+- `sunStudyPoint` and `viewpoint` are canonical workspace state so Human UI and WebMCP operate on the same analysis targets.
+- VWorld/Cesium remains an adapter: it renders analysis markers and moves the camera to a saved viewpoint, but does not own analysis state.
+
+This phase intentionally does not implement zoning/legal compliance, statutory sunlight-right determination, or surrounding-building solar obstruction.
