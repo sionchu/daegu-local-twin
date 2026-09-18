@@ -1,5 +1,5 @@
 import { computeShadowPolygon, localPointToGeo, rotatedFootprintPoints, siteTimeZoneOffsetMinutes } from "./model";
-import type { GeoPoint, LocalPoint, Scenario, Site } from "./types";
+import type { BuildingMass, GeoPoint, LocalPoint, Scenario, Site, Viewpoint } from "./types";
 
 declare global {
   interface Window {
@@ -15,6 +15,8 @@ let viewerPromise: Promise<any> | null = null;
 const entities = new Map<string, any>();
 let siteEntity: any;
 let draftEntity: any;
+let sunStudyEntity: any;
+let viewpointEntity: any;
 
 function loadExternalScript(src: string) {
   return new Promise<void>((resolve, reject) => {
@@ -305,6 +307,94 @@ export function setMapPointHandler(handler?: (point: GeoPoint) => void) {
   };
   viewer.screenSpaceEventHandler.setInputAction(callback, Cesium.ScreenSpaceEventType.LEFT_CLICK);
   return () => viewer.screenSpaceEventHandler.removeInputAction(Cesium.ScreenSpaceEventType.LEFT_CLICK);
+}
+
+
+export function renderAnalysisMarkers(sunStudyPoint?: GeoPoint, viewpoint?: Viewpoint) {
+  const viewer = window.viewer;
+  const Cesium = window.Cesium;
+  if (!viewer?.entities || !Cesium) return;
+
+  if (sunStudyEntity) viewer.entities.remove(sunStudyEntity);
+  if (viewpointEntity) viewer.entities.remove(viewpointEntity);
+  sunStudyEntity = undefined;
+  viewpointEntity = undefined;
+
+  if (sunStudyPoint) {
+    sunStudyEntity = viewer.entities.add({
+      name: "Direct sun study point",
+      position: Cesium.Cartesian3.fromDegrees(sunStudyPoint.lon, sunStudyPoint.lat),
+      point: {
+        pixelSize: 10,
+        color: Cesium.Color.fromCssColorString("#ffcb6b"),
+        outlineColor: Cesium.Color.BLACK.withAlpha(0.75),
+        outlineWidth: 2,
+        heightReference: Cesium.HeightReference?.CLAMP_TO_GROUND,
+      },
+      label: {
+        text: "SUN",
+        font: "11px sans-serif",
+        fillColor: Cesium.Color.fromCssColorString("#ffdf9b"),
+        showBackground: true,
+        backgroundColor: Cesium.Color.BLACK.withAlpha(0.65),
+        pixelOffset: new Cesium.Cartesian2(0, -20),
+        heightReference: Cesium.HeightReference?.CLAMP_TO_GROUND,
+      },
+    });
+  }
+
+  if (viewpoint) {
+    viewpointEntity = viewer.entities.add({
+      name: "Saved viewpoint",
+      position: Cesium.Cartesian3.fromDegrees(viewpoint.point.lon, viewpoint.point.lat),
+      point: {
+        pixelSize: 10,
+        color: Cesium.Color.fromCssColorString("#82a6ff"),
+        outlineColor: Cesium.Color.BLACK.withAlpha(0.75),
+        outlineWidth: 2,
+        heightReference: Cesium.HeightReference?.CLAMP_TO_GROUND,
+      },
+      label: {
+        text: "VIEW",
+        font: "11px sans-serif",
+        fillColor: Cesium.Color.fromCssColorString("#dce5ff"),
+        showBackground: true,
+        backgroundColor: Cesium.Color.BLACK.withAlpha(0.65),
+        pixelOffset: new Cesium.Cartesian2(0, -20),
+        heightReference: Cesium.HeightReference?.CLAMP_TO_GROUND,
+      },
+    });
+  }
+}
+
+function terrainHeight(point: GeoPoint) {
+  const viewer = window.viewer;
+  const Cesium = window.Cesium;
+  if (!viewer?.scene?.globe || !Cesium) return 0;
+  const cartographic = Cesium.Cartographic.fromDegrees(point.lon, point.lat);
+  return viewer.scene.globe.getHeight(cartographic) ?? 0;
+}
+
+export function flyToViewpoint(viewpoint: Viewpoint, site: Site, mass?: BuildingMass) {
+  const viewer = window.viewer;
+  const Cesium = window.Cesium;
+  if (!viewer?.camera || !Cesium) return;
+
+  const eyeHeight = terrainHeight(viewpoint.point) + Math.max(1.2, viewpoint.eyeHeightM);
+  const targetHeight = terrainHeight(site.center) + Math.max(4, (mass?.heightM ?? 12) / 2);
+  const eye = Cesium.Cartesian3.fromDegrees(viewpoint.point.lon, viewpoint.point.lat, eyeHeight);
+  const target = Cesium.Cartesian3.fromDegrees(site.center.lon, site.center.lat, targetHeight);
+  const direction = Cesium.Cartesian3.normalize(
+    Cesium.Cartesian3.subtract(target, eye, new Cesium.Cartesian3()),
+    new Cesium.Cartesian3(),
+  );
+  const up = Cesium.Ellipsoid.WGS84.geodeticSurfaceNormal(eye, new Cesium.Cartesian3());
+
+  viewer.camera.flyTo({
+    destination: eye,
+    orientation: { direction, up },
+    duration: 0.8,
+  });
 }
 
 export function setShadowTime(localDateTime: string, timeZoneOffsetMinutes = siteTimeZoneOffsetMinutes) {
