@@ -16,17 +16,32 @@ const entities = new Map<string, any>();
 
 export function loadVWorld(apiKey: string) {
   if (scriptPromise) return scriptPromise;
-  scriptPromise = new Promise((resolve, reject) => {
+  scriptPromise = new Promise<void>((resolve, reject) => {
     if (window.vw && window.Cesium) return resolve();
+    const waitDeadline = Date.now() + 15000;
+    const waitForGlobals = () => {
+      if (window.vw && window.Cesium) {
+        resolve();
+        return;
+      }
+      if (Date.now() >= waitDeadline) {
+        reject(new Error("VWorld SDK unavailable"));
+        return;
+      }
+      window.setTimeout(waitForGlobals, 100);
+    };
     const script = document.createElement("script");
     const params = new URLSearchParams({ version: "3.0", apiKey });
     const domain = import.meta.env.VITE_VWORLD_DOMAIN as string | undefined;
     if (domain) params.set("domain", domain);
     script.src = `https://map.vworld.kr/js/webglMapInit.js.do?${params.toString()}`;
     script.async = true;
-    script.onload = () => resolve();
+    script.onload = waitForGlobals;
     script.onerror = () => reject(new Error("Failed to load VWorld WebGL SDK"));
     document.head.appendChild(script);
+  }).catch((error) => {
+    scriptPromise = null;
+    throw error;
   });
   return scriptPromise;
 }
