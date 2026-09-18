@@ -1,10 +1,16 @@
 {
   "mode": "demo",
+  "provider": "대구교통공사",
+  "datasetId": "15002503",
+  "latestVerifiedDatasetVersion": "20260731",
+  "latestVerifiedModifiedAt": "2026-09-03",
+  "sourceUrl": "https://www.data.go.kr/data/15002503/fileData.do",
   "formula": "TransitDemand(x)=sum station_passengers(s)*exp(-distance(x,s)/lambda_transit)",
   "lambdaTransitMeters": 450,
   "records": [
-    {"station":"중앙로역","dailyPassengersProxy":92000,"sourceMode":"official-statistical-proxy"},
-    {"station":"반월당역","dailyPassengersProxy":116000,"sourceMode":"official-statistical-proxy"},
-    {"station":"서문시장역","dailyPassengersProxy":51000,"sourceMode":"official-statistical-proxy"}
-  ]
+    {"station":"중앙로역","dailyPassengersProxy":92000,"sourceMode":"demo-proxy"},
+    {"station":"반월당역","dailyPassengersProxy":116000,"sourceMode":"demo-proxy"},
+    {"station":"서문시장역","dailyPassengersProxy":51000,"sourceMode":"demo-proxy"}
+  ],
+  "note": "These committed passenger proxy values are demo-only. Run scripts/ingest/refresh_daegu_transit.py to replace this file with an official station snapshot."
 }
