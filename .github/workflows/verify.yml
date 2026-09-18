@@ -16,8 +16,13 @@ jobs:
         with:
           node-version: 22
           cache: npm
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
       - run: npm ci
       - run: npm run typecheck
       - run: npm test
       - run: npm run build
+      - run: python -m unittest scripts.ingest.test_refresh_daegu_transit
+      - run: python -m py_compile vision/analyze_footfall.py scripts/ingest/refresh_daegu_transit.py
       - run: git diff --check
