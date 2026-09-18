@@ -1,5 +1,6 @@
 import { FormEvent, useEffect, useMemo, useReducer, useRef, useState } from "react";
 import { createApplicationActions } from "./actions";
+import { directSunStudy, formatMinutes, planningMetrics } from "./analysis";
 import {
   computeShadowPolygon,
   estimateGfa,
@@ -18,6 +19,8 @@ import { registerSpaceLabTools } from "./webmcp";
 import {
   clearScenarioEntities,
   flyToSite,
+  flyToViewpoint,
+  renderAnalysisMarkers,
   renderDraftFootprint,
   renderScenario,
   renderSite,
@@ -31,7 +34,7 @@ import "./styles.css";
 const apiKey = import.meta.env.VITE_VWORLD_API_KEY as string | undefined;
 const vworldDomain = import.meta.env.VITE_VWORLD_DOMAIN as string | undefined;
 
-type CanvasMode = "inspect" | "pick-site" | "draw-polygon" | "move-mass";
+type CanvasMode = "inspect" | "pick-site" | "draw-polygon" | "move-mass" | "sun-point" | "viewpoint";
 
 function Meter({ label, value, suffix = "" }: { label: string; value: string | number; suffix?: string }) {
   return <div className="metric"><span>{label}</span><strong>{value}{suffix}</strong></div>;
@@ -173,6 +176,17 @@ export default function App() {
   const compareShadow = compare
     ? computeShadowPolygon(compare.mass, state.site.center, compare.analysisTime, state.timeZoneOffsetMinutes)
     : undefined;
+  const activeDate = active ? datePart(active.analysisTime) : "2026-09-18";
+  const activeTime = active ? timePart(active.analysisTime) : "15:00";
+  const activeMinutes = minutesFromTime(activeTime);
+  const sunStudyPoint = state.sunStudyPoint ?? state.site.center;
+  const activeSunStudy = active
+    ? directSunStudy(active.mass, state.site, sunStudyPoint, activeDate, state.timeZoneOffsetMinutes)
+    : undefined;
+  const compareSunStudy = compare
+    ? directSunStudy(compare.mass, state.site, sunStudyPoint, activeDate, state.timeZoneOffsetMinutes)
+    : undefined;
+  const activePlanning = active ? planningMetrics(state.site, active.mass) : undefined;
 
   const searchLocation = useMemo(() => async (query: string) => {
     if (!apiKey) throw new Error("VWorld API key is required for address search.");
@@ -229,6 +243,11 @@ export default function App() {
   }, [draftPoints, state.site.center, vworldReady]);
 
   useEffect(() => {
+    if (!vworldReady) return;
+    renderAnalysisMarkers(state.sunStudyPoint, state.viewpoint);
+  }, [state.sunStudyPoint, state.viewpoint, vworldReady]);
+
+  useEffect(() => {
     if (!vworldReady || canvasMode === "inspect") return;
     const dispose = setMapPointHandler((point) => {
       if (canvasMode === "pick-site") {
@@ -253,13 +272,27 @@ export default function App() {
         return;
       }
 
+      if (canvasMode === "sun-point" && active) {
+        actions.setSunStudyPoint(point, "human");
+        setCanvasMode("inspect");
+        return;
+      }
+
+      if (canvasMode === "viewpoint") {
+        const viewpoint = { point, eyeHeightM: state.viewpoint?.eyeHeightM ?? 1.7 };
+        actions.setViewpoint(viewpoint, "human");
+        if (vworldReady) flyToViewpoint(viewpoint, state.site, active?.mass);
+        setCanvasMode("inspect");
+        return;
+      }
+
       if (canvasMode === "draw-polygon") {
         const local = geoPointToLocal(state.site.center, point);
         setDraftPoints((points) => [...points, local]);
       }
     });
     return dispose;
-  }, [actions, active, canvasMode, selectSiteAtPoint, state.site.center, vworldReady]);
+  }, [actions, active, canvasMode, selectSiteAtPoint, state.site, state.viewpoint, vworldReady]);
 
   async function handleSearch(event: FormEvent) {
     event.preventDefault();
@@ -327,10 +360,6 @@ export default function App() {
     setCanvasMode("inspect");
   }
 
-  const activeDate = active ? datePart(active.analysisTime) : "2026-09-18";
-  const activeTime = active ? timePart(active.analysisTime) : "15:00";
-  const activeMinutes = minutesFromTime(activeTime);
-
   return <main className={`app-shell ${workspaceMode === "compare" ? "compare-mode" : ""}`}>
     <header className="topbar">
       <div className="brand"><div className="brand-mark" aria-hidden="true">S</div><div><strong>SpaceLab</strong><span>/ {state.site.name}</span></div></div>
@@ -388,6 +417,8 @@ export default function App() {
           <button onClick={createRectangle}>＋ Rectangle</button>
           <button className={canvasMode === "draw-polygon" ? "selected" : ""} onClick={startPolygon}>✎ Polygon</button>
           <button className={canvasMode === "move-mass" ? "selected" : ""} onClick={() => active && setCanvasMode("move-mass")} disabled={!active}>↔ Move</button>
+          <button className={canvasMode === "sun-point" ? "selected" : ""} onClick={() => active && setCanvasMode("sun-point")} disabled={!active}>☀ Sun point</button>
+          <button className={canvasMode === "viewpoint" ? "selected" : ""} onClick={() => setCanvasMode("viewpoint")}>◉ Viewpoint</button>
           <button onClick={() => active && actions.deleteScenario(active.id, "human")} disabled={!active}>Delete</button>
         </div>
 
@@ -395,6 +426,8 @@ export default function App() {
           {canvasMode === "pick-site" && "Click the map to select the cadastral parcel."}
           {canvasMode === "move-mass" && "Click the new center position for the active mass."}
           {canvasMode === "draw-polygon" && <>{draftPoints.length < 3 ? `Click footprint vertices · ${draftPoints.length} placed` : `${draftPoints.length} vertices ready`} <button onClick={finishPolygon} disabled={draftPoints.length < 3}>Finish</button></>}
+          {canvasMode === "sun-point" && "Click a ground point to estimate direct sun hours for the current option."}
+          {canvasMode === "viewpoint" && "Click where you want to stand and look back at the site."}
           <button onClick={cancelCanvasTool}>Cancel</button>
         </div>}
 
@@ -406,13 +439,13 @@ export default function App() {
         <section className="analysis-dock" aria-label="Sun and shadow analysis">
           {active && activeShadow ? <>
             <div className="analysis-topline">
-              <div className="analysis-title"><div className="eyebrow">SUN / SHADOW</div><strong>{activeTime} KST</strong><span>Altitude {solarValue(activeShadow.solar.elevationDeg)} · Azimuth {solarValue(activeShadow.solar.azimuthDeg)} · Shadow {activeShadow.solar.isDaylight ? `${activeShadow.lengthM.toFixed(1)}m` : "—"}</span></div>
+              <div className="analysis-title"><div className="eyebrow">SUN / SHADOW</div><strong>{activeTime} KST</strong><span>Altitude {solarValue(activeShadow.solar.elevationDeg)} · Azimuth {solarValue(activeShadow.solar.azimuthDeg)} · Shadow {activeShadow.solar.isDaylight ? `${activeShadow.lengthM.toFixed(1)}m` : "—"} · Direct sun {activeSunStudy ? formatMinutes(activeSunStudy.sunMinutes) : "—"}</span></div>
               <div className="analysis-fields"><label>Date<input aria-label="Shadow date" type="date" value={activeDate} onChange={(event) => actions.setShadowTime(active.id, withDateAndTime(active.analysisTime, event.target.value, activeTime))} /></label><label>Time<input aria-label="Shadow time" type="time" value={activeTime} onChange={(event) => actions.setShadowTime(active.id, withDateAndTime(active.analysisTime, activeDate, event.target.value))} /></label></div>
             </div>
             <div className="timeline"><span>09:00</span><input aria-label="Shadow time timeline" type="range" min={540} max={1080} step={15} value={Math.min(1080, Math.max(540, activeMinutes))} onChange={(event) => actions.setShadowTime(active.id, withDateAndTime(active.analysisTime, activeDate, timeFromMinutes(Number(event.target.value))))} /><span>18:00</span></div>
             {workspaceMode === "compare" && <div className="compare-drawer">
               <div className="compare-drawer-head"><div><div className="eyebrow">COMPARE</div><strong>Scenario delta</strong></div><select aria-label="Compare scenario" value={state.compareScenarioId ?? ""} onChange={(event) => actions.compareScenarios(active.id, event.target.value || undefined)}><option value="">No comparison</option>{state.scenarios.filter((scenario) => scenario.id !== active.id).map((scenario) => <option key={scenario.id} value={scenario.id}>{scenario.id} · {scenario.name}</option>)}</select></div>
-              {compare && compareShadow ? <div className="compare-grid"><Meter label="Height A / B" value={`${active.mass.heightM} / ${compare.mass.heightM}`} suffix="m" /><Meter label="GFA Δ" value={(estimateGfa(active.mass) - estimateGfa(compare.mass)).toLocaleString()} suffix="㎡" /><Meter label="Shadow A / B" value={`${activeShadow.lengthM.toFixed(1)} / ${compareShadow.lengthM.toFixed(1)}`} suffix="m" /><Meter label="Shadow Δ" value={(activeShadow.lengthM - compareShadow.lengthM).toFixed(1)} suffix="m" /></div> : <p className="muted">Select another scenario to compare.</p>}
+              {compare && compareShadow ? <div className="compare-grid"><Meter label="Height A / B" value={`${active.mass.heightM} / ${compare.mass.heightM}`} suffix="m" /><Meter label="GFA Δ" value={(estimateGfa(active.mass) - estimateGfa(compare.mass)).toLocaleString()} suffix="㎡" /><Meter label="Shadow Δ" value={(activeShadow.lengthM - compareShadow.lengthM).toFixed(1)} suffix="m" /><Meter label="Direct sun A / B" value={activeSunStudy && compareSunStudy ? `${formatMinutes(activeSunStudy.sunMinutes)} / ${formatMinutes(compareSunStudy.sunMinutes)}` : "—"} /></div> : <p className="muted">Select another scenario to compare.</p>}
             </div>}
           </> : <div className="analysis-empty"><strong>Select a site, then create a building mass.</strong><span>Address search or Pick parcel → Rectangle / Polygon → analyze and branch.</span></div>}
         </section>
@@ -432,8 +465,10 @@ export default function App() {
           </section>
           <FootprintEditor footprint={active.mass.footprint} onChange={(footprint) => actions.setMassFootprint(active.id, footprint)} />
           <section className="inspector-section"><div className="section-heading"><span>SHADOW</span><b>{activeTime} KST</b></div><div className="readout-list"><div><span>Solar altitude</span><strong>{solarValue(activeShadow.solar.elevationDeg)}</strong></div><div><span>Azimuth</span><strong>{solarValue(activeShadow.solar.azimuthDeg)}</strong></div><div><span>Shadow length</span><strong>{activeShadow.solar.isDaylight ? `${activeShadow.lengthM.toFixed(1)}m` : "—"}</strong></div><div><span>Shadow bearing</span><strong>{shadowBearing(activeShadow)}{activeShadow.solar.isDaylight ? "°" : ""}</strong></div></div></section>
-          <section className="inspector-section"><div className="section-heading"><span>ANALYSIS</span><b>CANONICAL STATE</b></div><div className="readout-list"><div><span>Estimated GFA</span><strong>{estimateGfa(active.mass).toLocaleString()}㎡</strong></div><div><span>Footprint</span><strong>{Math.round(footprintAreaM2(active.mass.footprint))}㎡</strong></div></div></section>
-          <small className="boundary">*Geometric solar preview. Not a statutory sunlight-right determination.</small>
+          <section className="inspector-section"><div className="section-heading"><span>PLANNING</span><b>CURRENT OPTION</b></div><div className="readout-list"><div><span>Site area</span><strong>{activePlanning ? Math.round(activePlanning.siteAreaM2).toLocaleString() : "—"}㎡</strong></div><div><span>Footprint</span><strong>{Math.round(footprintAreaM2(active.mass.footprint)).toLocaleString()}㎡</strong></div><div><span>Estimated GFA</span><strong>{estimateGfa(active.mass).toLocaleString()}㎡</strong></div><div><span>Planned coverage</span><strong>{activePlanning ? activePlanning.coverageRatioPct.toFixed(1) : "—"}%</strong></div><div><span>Planned FAR</span><strong>{activePlanning ? activePlanning.floorAreaRatioPct.toFixed(1) : "—"}%</strong></div></div></section>
+          <section className="inspector-section"><div className="section-heading"><span>SUN EXPOSURE</span><b>09:00–18:00</b></div><div className="readout-list"><div><span>Study point</span><strong>{state.sunStudyPoint ? "Selected" : "Site center"}</strong></div><div><span>Direct sun</span><strong>{activeSunStudy ? formatMinutes(activeSunStudy.sunMinutes) : "—"}</strong></div><div><span>Planned-mass shadow</span><strong>{activeSunStudy ? formatMinutes(activeSunStudy.shadowMinutes) : "—"}</strong></div></div><button className="quiet-button analysis-action" onClick={() => setCanvasMode("sun-point")}>Set sun study point</button>{state.sunStudyPoint && <button className="quiet-button analysis-action" onClick={() => actions.setSunStudyPoint(undefined, "human")}>Use site center</button>}</section>
+          <section className="inspector-section"><div className="section-heading"><span>VIEWPOINT</span><b>{state.viewpoint ? `${state.viewpoint.eyeHeightM.toFixed(1)}m EYE` : "NOT SET"}</b></div>{state.viewpoint ? <><label className="control"><div className="control-line"><span>Eye height</span><span className="value-editor"><input aria-label="Viewpoint eye height" type="number" min={1.2} max={50} step={0.1} value={state.viewpoint.eyeHeightM} onChange={(event) => actions.setViewpoint({ ...state.viewpoint!, eyeHeightM: Number(event.target.value) }, "human")} /><em>m</em></span></div></label><div className="viewpoint-actions"><button className="quiet-button" onClick={() => flyToViewpoint(state.viewpoint!, state.site, active.mass)}>Open view</button><button className="quiet-button" onClick={() => { actions.setViewpoint(undefined, "human"); flyToSite(state.site); }}>Clear</button></div></> : <button className="quiet-button analysis-action" onClick={() => setCanvasMode("viewpoint")}>Pick viewpoint</button>}</section>
+          <small className="boundary">*Direct sun is a geometric pre-check against the current planned mass only. Surrounding-building occlusion and statutory sunlight-right review are not included.</small>
         </> : <div className="inspector-empty"><div className="eyebrow">INSPECTOR</div><h2>No mass selected</h2><p>Use Rectangle or Polygon on the map to create the first design option.</p></div>}
       </aside>
     </section>
