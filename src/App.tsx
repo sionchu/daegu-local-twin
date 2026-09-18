@@ -216,6 +216,7 @@ export default function App() {
       getState: () => stateRef.current,
       searchLocation,
       selectSiteAtPoint,
+      sampleSunContext: (point, samples) => sampleSceneSunContext(point, samples),
     });
     setWebMcp(registration.supported);
     return registration.dispose;
