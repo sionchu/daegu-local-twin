@@ -1,16 +1,31 @@
 import type {
   BuildingMass,
+  CreateMassInput,
   Footprint,
   GeoPoint,
   LocalPoint,
   MassPatch,
   Scenario,
+  Site,
   SpatialWorkspace,
   WorkspaceAction,
 } from "./types";
 
-export const siteCenter = { lon: 127.11052, lat: 37.39483 };
 export const siteTimeZoneOffsetMinutes = 540;
+
+const demoCenter = { lon: 127.11052, lat: 37.39483 };
+const demoSite: Site = {
+  id: "demo-pangyo",
+  name: "Select a real site",
+  center: demoCenter,
+  boundary: [
+    { lon: demoCenter.lon - 0.00022, lat: demoCenter.lat - 0.00016 },
+    { lon: demoCenter.lon + 0.00022, lat: demoCenter.lat - 0.00016 },
+    { lon: demoCenter.lon + 0.00022, lat: demoCenter.lat + 0.00016 },
+    { lon: demoCenter.lon - 0.00022, lat: demoCenter.lat + 0.00016 },
+  ],
+  source: "demo",
+};
 
 export type SolarPosition = {
   azimuthDeg: number;
@@ -26,68 +41,24 @@ export type ShadowPolygon = {
   solar: SolarPosition;
 };
 
-const baseRectangle: Footprint = { kind: "rectangle", widthM: 44, depthM: 30 };
-const lowerPolygon: Footprint = {
-  kind: "polygon",
-  points: [
-    { xM: -29, yM: -14 },
-    { xM: 22, yM: -14 },
-    { xM: 29, yM: -3 },
-    { xM: 18, yM: 15 },
-    { xM: -24, yM: 15 },
-  ],
-};
-
-const baseMass: BuildingMass = {
-  id: "mass-a",
-  name: "Office mass",
-  center: siteCenter,
-  footprint: baseRectangle,
-  heightM: 28,
-  floors: 8,
-  position: { eastM: 0, northM: 0 },
-  rotationDeg: 6,
-};
+const defaultRectangle: Footprint = { kind: "rectangle", widthM: 32, depthM: 24 };
 
 export const initialState: SpatialWorkspace = {
-  siteName: "Pangyo sample site",
-  siteCenter,
+  site: demoSite,
   timeZoneOffsetMinutes: siteTimeZoneOffsetMinutes,
-  activeScenarioId: "A",
-  compareScenarioId: "B",
-  scenarios: [
-    {
-      id: "A",
-      name: "Option A · Taller",
-      intent: "Compact office mass under 30 m",
-      createdBy: "human",
-      mass: cloneMass(baseMass),
-      analysisTime: "2026-09-18T15:00",
-    },
-    {
-      id: "B",
-      name: "Option B · Lower",
-      parentId: "A",
-      intent: "Lower polygon alternative",
-      createdBy: "agent",
-      mass: {
-        ...cloneMass(baseMass),
-        id: "mass-b",
-        footprint: cloneFootprint(lowerPolygon),
-        heightM: 18,
-        floors: 5,
-        position: { eastM: 0, northM: -5 },
-        rotationDeg: -8,
-      },
-      analysisTime: "2026-09-18T15:00",
-    },
-  ],
+  scenarios: [],
+  activeScenarioId: undefined,
+  compareScenarioId: undefined,
 };
 
 export function getScenario(state: SpatialWorkspace, id: string): Scenario {
   const found = state.scenarios.find((scenario) => scenario.id === id);
   if (!found) throw new Error(`Unknown scenario: ${id}`);
   return found;
+}
+
+export function getActiveScenario(state: SpatialWorkspace) {
+  return state.activeScenarioId ? state.scenarios.find((scenario) => scenario.id === state.activeScenarioId) : undefined;
 }
 
 export function cloneFootprint(footprint: Footprint): Footprint {
@@ -99,7 +70,6 @@ export function cloneFootprint(footprint: Footprint): Footprint {
 export function cloneMass(mass: BuildingMass): BuildingMass {
   return {
     ...mass,
-    center: { ...mass.center },
     position: { ...mass.position },
     footprint: cloneFootprint(mass.footprint),
   };
@@ -153,6 +123,19 @@ export function estimateGfa(mass: BuildingMass) {
   return Math.round(footprintAreaM2(mass.footprint) * mass.floors);
 }
 
+export function geoPointToLocal(center: GeoPoint, point: GeoPoint): LocalPoint {
+  const northM = (point.lat - center.lat) * 111_320;
+  const eastM = (point.lon - center.lon) * 111_320 * Math.cos((center.lat * Math.PI) / 180);
+  return { xM: eastM, yM: northM };
+}
+
+export function localPointToGeo(center: GeoPoint, point: LocalPoint): GeoPoint {
+  return {
+    lon: center.lon + point.xM / (111_320 * Math.cos((center.lat * Math.PI) / 180)),
+    lat: center.lat + point.yM / 111_320,
+  };
+}
+
 function degreesToRadians(value: number) {
   return (value * Math.PI) / 180;
 }
@@ -182,7 +165,7 @@ function parseLocalDateTime(localDateTime: string, timeZoneOffsetMinutes: number
   return { date, year, month, day, hour, minute, second };
 }
 
-/** NOAA solar position approximation using the scenario site and local KST time. */
+/** NOAA solar position approximation using the selected site and local time. */
 export function solarPosition(
   location: GeoPoint,
   localDateTime: string,
@@ -263,10 +246,11 @@ function convexHull(points: LocalPoint[]) {
 
 export function computeShadowPolygon(
   mass: BuildingMass,
+  location: GeoPoint,
   localDateTime: string,
   timeZoneOffsetMinutes = siteTimeZoneOffsetMinutes,
 ): ShadowPolygon {
-  const solar = solarPosition(mass.center, localDateTime, timeZoneOffsetMinutes);
+  const solar = solarPosition(location, localDateTime, timeZoneOffsetMinutes);
   if (!solar.isDaylight) return { points: [], lengthM: 0, solar };
 
   const elevationRadians = degreesToRadians(solar.elevationDeg);
@@ -290,8 +274,8 @@ function clamp(value: number, min: number, max: number) {
 
 function normalizePoint(point: LocalPoint): LocalPoint {
   return {
-    xM: clamp(Number(point.xM) || 0, -200, 200),
-    yM: clamp(Number(point.yM) || 0, -200, 200),
+    xM: clamp(Number(point.xM) || 0, -300, 300),
+    yM: clamp(Number(point.yM) || 0, -300, 300),
   };
 }
 
@@ -306,7 +290,7 @@ function normalizeFootprint(footprint: Footprint): Footprint {
   const points = Array.isArray(footprint.points) ? footprint.points.map(normalizePoint) : [];
   return {
     kind: "polygon",
-    points: points.length >= 3 ? points : footprintPoints(baseRectangle),
+    points: points.length >= 3 ? points : footprintPoints(defaultRectangle),
   };
 }
 
@@ -317,8 +301,8 @@ function normalizePatch(patch: MassPatch): MassPatch {
   if (patch.rotationDeg !== undefined) normalized.rotationDeg = clamp(Number(patch.rotationDeg) || 0, -180, 180);
   if (patch.position) {
     const position: Partial<BuildingMass["position"]> = {};
-    if (patch.position.eastM !== undefined) position.eastM = clamp(Number(patch.position.eastM) || 0, -200, 200);
-    if (patch.position.northM !== undefined) position.northM = clamp(Number(patch.position.northM) || 0, -200, 200);
+    if (patch.position.eastM !== undefined) position.eastM = clamp(Number(patch.position.eastM) || 0, -300, 300);
+    if (patch.position.northM !== undefined) position.northM = clamp(Number(patch.position.northM) || 0, -300, 300);
     normalized.position = position;
   }
   if (patch.footprint) normalized.footprint = normalizeFootprint(patch.footprint);
@@ -337,11 +321,66 @@ function applyMassPatch(mass: BuildingMass, patch: MassPatch) {
 
 function nextScenarioId(scenarios: Scenario[]) {
   const ids = new Set(scenarios.map((scenario) => scenario.id));
-  return ["C", "D", "E", "F", "G", "H"].find((id) => !ids.has(id)) ?? `S${scenarios.length + 1}`;
+  for (const letter of "ABCDEFGHIJKLMNOPQRSTUVWXYZ") {
+    if (!ids.has(letter)) return letter;
+  }
+  return `S${scenarios.length + 1}`;
+}
+
+function createScenario(scenarios: Scenario[], input: CreateMassInput = {}, createdBy: "human" | "agent" = "human"): Scenario {
+  const id = nextScenarioId(scenarios);
+  const footprint = normalizeFootprint(input.footprint ?? defaultRectangle);
+  return {
+    id,
+    name: input.name?.trim() || `Option ${id}`,
+    intent: input.intent?.trim() || "Early massing option",
+    createdBy,
+    mass: {
+      id: `mass-${id.toLowerCase()}`,
+      name: input.name?.trim() || `Building mass ${id}`,
+      footprint,
+      heightM: clamp(Number(input.heightM) || 18, 3, 120),
+      floors: Math.round(clamp(Number(input.floors) || 5, 1, 40)),
+      position: {
+        eastM: clamp(Number(input.position?.eastM) || 0, -300, 300),
+        northM: clamp(Number(input.position?.northM) || 0, -300, 300),
+      },
+      rotationDeg: clamp(Number(input.rotationDeg) || 0, -180, 180),
+    },
+    analysisTime: "2026-09-18T15:00",
+  };
 }
 
 export function reducer(state: SpatialWorkspace, action: WorkspaceAction): SpatialWorkspace {
   switch (action.type) {
+    case "SET_SITE":
+      return {
+        ...state,
+        site: {
+          ...action.site,
+          center: { ...action.site.center },
+          boundary: action.site.boundary.map((point) => ({ ...point })),
+        },
+        scenarios: [],
+        activeScenarioId: undefined,
+        compareScenarioId: undefined,
+      };
+    case "CREATE_SCENARIO": {
+      const next = createScenario(state.scenarios, action.input, action.createdBy);
+      return {
+        ...state,
+        scenarios: [...state.scenarios, next],
+        activeScenarioId: next.id,
+        compareScenarioId: undefined,
+      };
+    }
+    case "DELETE_SCENARIO": {
+      getScenario(state, action.scenarioId);
+      const scenarios = state.scenarios.filter((scenario) => scenario.id !== action.scenarioId);
+      const activeScenarioId = state.activeScenarioId === action.scenarioId ? scenarios[0]?.id : state.activeScenarioId;
+      const compareScenarioId = state.compareScenarioId === action.scenarioId ? undefined : state.compareScenarioId;
+      return { ...state, scenarios, activeScenarioId, compareScenarioId };
+    }
     case "SELECT_SCENARIO":
       getScenario(state, action.scenarioId);
       return { ...state, activeScenarioId: action.scenarioId };
