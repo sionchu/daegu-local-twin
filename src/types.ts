@@ -2,6 +2,16 @@ export type GeoPoint = { lon: number; lat: number };
 
 export type LocalPoint = { xM: number; yM: number };
 
+export type Site = {
+  id: string;
+  name: string;
+  center: GeoPoint;
+  boundary: GeoPoint[];
+  pnu?: string;
+  address?: string;
+  source: "vworld-cadastral" | "manual-point" | "demo";
+};
+
 export type RectangleFootprint = {
   kind: "rectangle";
   widthM: number;
@@ -24,7 +34,6 @@ export type MassPosition = {
 export type BuildingMass = {
   id: string;
   name: string;
-  center: GeoPoint;
   footprint: Footprint;
   heightM: number;
   floors: number;
@@ -44,12 +53,11 @@ export type Scenario = {
 };
 
 export type SpatialWorkspace = {
-  siteName: string;
-  siteCenter: GeoPoint;
+  site: Site;
   /** Local scenario datetimes are interpreted with this fixed site offset. */
   timeZoneOffsetMinutes: number;
   scenarios: Scenario[];
-  activeScenarioId: string;
+  activeScenarioId?: string;
   compareScenarioId?: string;
 };
 
@@ -57,9 +65,22 @@ export type MassPatch = Partial<Pick<BuildingMass, "heightM" | "floors" | "rotat
   position?: Partial<MassPosition>;
 };
 
+export type CreateMassInput = {
+  name?: string;
+  intent?: string;
+  footprint?: Footprint;
+  heightM?: number;
+  floors?: number;
+  position?: MassPosition;
+  rotationDeg?: number;
+};
+
 export type ActionSource = "human" | "agent";
 
 export type WorkspaceAction =
+  | { type: "SET_SITE"; site: Site; source?: ActionSource }
+  | { type: "CREATE_SCENARIO"; input?: CreateMassInput; createdBy?: ActionSource }
+  | { type: "DELETE_SCENARIO"; scenarioId: string; source?: ActionSource }
   | { type: "SELECT_SCENARIO"; scenarioId: string }
   | { type: "COMPARE_SCENARIOS"; primaryId: string; compareId?: string }
   | { type: "CLONE_SCENARIO"; sourceId: string; name?: string; createdBy?: ActionSource }
@@ -67,6 +88,9 @@ export type WorkspaceAction =
   | { type: "SET_SHADOW_TIME"; scenarioId: string; value: string; source?: ActionSource };
 
 export type ApplicationActions = {
+  setSite: (site: Site, source?: ActionSource) => void;
+  createBuildingMass: (input?: CreateMassInput, createdBy?: ActionSource) => void;
+  deleteScenario: (scenarioId: string, source?: ActionSource) => void;
   selectScenario: (scenarioId: string) => void;
   compareScenarios: (primaryId: string, compareId?: string) => void;
   cloneScenario: (sourceId: string, name?: string, createdBy?: ActionSource) => void;
