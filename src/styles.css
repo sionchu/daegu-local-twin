@@ -194,3 +194,144 @@ button:focus-visible, input:focus-visible, select:focus-visible { outline: 2px s
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { scroll-behavior: auto !important; transition-duration: 0.01ms !important; animation-duration: 0.01ms !important; animation-iteration-count: 1 !important; }
 }
+
+
+/* Real-site + canvas modeling pass */
+.site-summary { display: grid; gap: 4px; }
+.site-summary small { color: var(--muted); font-size: 10px; word-break: break-all; }
+.navigator-empty, .inspector-empty, .analysis-empty {
+  color: var(--muted);
+  font-size: 12px;
+  line-height: 1.55;
+}
+.navigator-empty { padding: 18px 4px; border-top: 1px solid var(--line); border-bottom: 1px solid var(--line); }
+.inspector-empty { padding-top: 6px; }
+.inspector-empty h2 { color: var(--ink); margin: 6px 0 8px; }
+.analysis-empty { display: flex; gap: 8px; align-items: baseline; padding: 4px 0; }
+.analysis-empty strong { color: var(--ink); }
+
+.site-toolbar {
+  position: absolute;
+  z-index: 18;
+  top: 14px;
+  left: 14px;
+  width: min(410px, calc(100% - 28px));
+}
+.site-search {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  border: 1px solid rgba(255, 255, 255, .17);
+  background: rgba(11, 13, 16, .94);
+  box-shadow: 0 10px 28px rgba(0, 0, 0, .24);
+}
+.site-search input,
+.site-search button {
+  min-height: 38px;
+  border: 0;
+  background: transparent;
+  color: var(--ink);
+}
+.site-search input { padding: 0 12px; outline: none; }
+.site-search button { padding: 0 12px; border-left: 1px solid var(--line); cursor: pointer; }
+.site-search button:disabled { color: var(--muted); cursor: default; }
+
+.search-results {
+  margin-top: 6px;
+  display: grid;
+  border: 1px solid var(--line);
+  background: rgba(11, 13, 16, .97);
+  max-height: 280px;
+  overflow: auto;
+  box-shadow: 0 16px 34px rgba(0, 0, 0, .28);
+}
+.search-results button {
+  display: grid;
+  gap: 2px;
+  padding: 9px 11px;
+  text-align: left;
+  border: 0;
+  border-bottom: 1px solid var(--line);
+  background: transparent;
+  color: var(--ink);
+  cursor: pointer;
+}
+.search-results button:last-child { border-bottom: 0; }
+.search-results button:hover { background: rgba(255, 255, 255, .045); }
+.search-results strong { font-size: 12px; font-weight: 650; }
+.search-results span { font-size: 10px; color: var(--muted); }
+
+.model-toolbar {
+  position: absolute;
+  z-index: 17;
+  top: 60px;
+  left: 14px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  padding: 4px;
+  border: 1px solid var(--line);
+  background: rgba(11, 13, 16, .92);
+}
+.model-toolbar button {
+  min-height: 30px;
+  padding: 0 9px;
+  border: 1px solid transparent;
+  background: transparent;
+  color: var(--muted);
+  font-size: 11px;
+  cursor: pointer;
+}
+.model-toolbar button:hover,
+.model-toolbar button.selected {
+  color: var(--ink);
+  border-color: rgba(104, 243, 194, .34);
+  background: rgba(104, 243, 194, .08);
+}
+.model-toolbar button:disabled { opacity: .35; cursor: default; }
+
+.canvas-tool-hint {
+  position: absolute;
+  z-index: 19;
+  top: 102px;
+  left: 14px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  max-width: calc(100% - 28px);
+  padding: 7px 9px;
+  border: 1px solid rgba(255, 203, 107, .34);
+  background: rgba(18, 16, 11, .95);
+  color: #e9ddc4;
+  font-size: 11px;
+}
+.canvas-tool-hint button {
+  border: 1px solid rgba(255, 255, 255, .14);
+  background: transparent;
+  color: inherit;
+  padding: 4px 7px;
+  cursor: pointer;
+}
+.canvas-tool-hint button:disabled { opacity: .4; cursor: default; }
+
+.site-message {
+  position: absolute;
+  z-index: 16;
+  top: 140px;
+  left: 14px;
+  padding: 6px 8px;
+  border: 1px solid var(--line);
+  background: rgba(11, 13, 16, .9);
+  color: var(--muted);
+  font-size: 10px;
+}
+.site-message.busy { color: #ffcb6b; }
+
+.canvas-mode-pick-site .vworld-canvas,
+.canvas-mode-draw-polygon .vworld-canvas,
+.canvas-mode-move-mass .vworld-canvas { cursor: crosshair; }
+
+@media (max-width: 1180px) {
+  .site-toolbar { left: 10px; top: 10px; width: min(360px, calc(100% - 20px)); }
+  .model-toolbar { left: 10px; top: 56px; }
+  .canvas-tool-hint { left: 10px; top: 96px; }
+}
