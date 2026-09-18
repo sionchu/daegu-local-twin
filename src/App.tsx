@@ -183,13 +183,13 @@ export default function App() {
   const activeTime = active ? timePart(active.analysisTime) : "15:00";
   const activeMinutes = minutesFromTime(activeTime);
   const sunStudyPoint = state.sunStudyPoint ?? state.site.center;
-  const activeSunStudy = active
+  const activeSunStudy = useMemo(() => active
     ? directSunStudy(active.mass, state.site, sunStudyPoint, activeDate, state.timeZoneOffsetMinutes)
-    : undefined;
-  const compareSunStudy = compare
+    : undefined, [active, activeDate, state.site, state.timeZoneOffsetMinutes, sunStudyPoint]);
+  const compareSunStudy = useMemo(() => compare
     ? directSunStudy(compare.mass, state.site, sunStudyPoint, activeDate, state.timeZoneOffsetMinutes)
-    : undefined;
-  const activePlanning = active ? planningMetrics(state.site, active.mass) : undefined;
+    : undefined, [compare, activeDate, state.site, state.timeZoneOffsetMinutes, sunStudyPoint]);
+  const activePlanning = useMemo(() => active ? planningMetrics(state.site, active.mass) : undefined, [active, state.site]);
   const sceneBlockedTimes = useMemo(() => new Set(sceneSunContext?.blockedTimes ?? []), [sceneSunContext]);
   const combinedDirectSunMinutes = (study: typeof activeSunStudy) => study
     ? study.samples.reduce((minutes, sample) => {
@@ -277,7 +277,7 @@ export default function App() {
         if (!cancelled) setSceneSunBusy(false);
       });
     return () => { cancelled = true; };
-  }, [active?.id, active?.mass, activeDate, activeSunStudy, sunStudyPoint, vworldReady]);
+  }, [activeSunStudy, sunStudyPoint, vworldReady]);
 
   useEffect(() => {
     if (!vworldReady || canvasMode === "inspect") return;
