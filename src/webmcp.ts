@@ -1,4 +1,5 @@
 import { directSunStudy } from "./analysis";
+import type { SunStudySample } from "./analysis";
 import { getScenario } from "./model";
 import type {
   AddressSearchResult,
@@ -17,6 +18,7 @@ type ToolBridge = ApplicationActions & {
   getState: () => SpatialWorkspace;
   searchLocation: (query: string) => Promise<AddressSearchResult[]>;
   selectSiteAtPoint: (point: GeoPoint, label?: string) => Promise<Site>;
+  sampleSunContext: (point: GeoPoint, samples: SunStudySample[]) => Promise<{ supported: boolean; blockedTimes: string[]; source: string }>;
 };
 
 const pointSchema = {
@@ -273,15 +275,26 @@ export function registerSpaceLabTools(bridge: ToolBridge) {
         state.timeZoneOffsetMinutes,
         { stepMinutes: input.stepMinutes },
       );
+      const context = await bridge.sampleSunContext(point, study.samples);
+      const blockedByContext = new Set(context.blockedTimes);
+      const contextAdjustedSunMinutes = context.supported
+        ? study.samples.reduce((minutes, sample) => sample.state === "sun" && !blockedByContext.has(sample.localDateTime)
+          ? minutes + study.stepMinutes
+          : minutes, 0)
+        : study.sunMinutes;
       return {
         scenarioId,
         point: study.point,
         date: study.date,
         stepMinutes: study.stepMinutes,
-        sunMinutes: study.sunMinutes,
+        plannedMassSunMinutes: study.sunMinutes,
+        contextAdjustedSunMinutes,
         shadowMinutes: study.shadowMinutes,
         daylightMinutes: study.daylightMinutes,
-        scope: study.scope,
+        plannedMassScope: study.scope,
+        cityContextSupported: context.supported,
+        cityContextSource: context.source,
+        cityContextBlockedTimes: context.blockedTimes,
         samples: study.samples,
       };
     },
