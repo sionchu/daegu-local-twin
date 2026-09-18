@@ -10,6 +10,7 @@ import {
   reducer,
   spilloverContribution,
   startupCapitalNeed,
+  upfrontUses,
 } from "./model";
 import type { LocationEvidence, StartupAssumptions } from "./types";
 
@@ -61,8 +62,21 @@ const cell = (cellId: string, footfall: number, rent: number): LocationEvidence 
 });
 
 describe("deterministic financial engine", () => {
-  it("calculates startup capital without double-counting financing", () => {
+  it("calculates startup capital and keeps working-capital reserve distinct from upfront uses", () => {
+    expect(upfrontUses(assumptions)).toBe(19_000_000);
     expect(startupCapitalNeed(assumptions)).toBe(23_800_000);
+
+    const fullyFunded = {
+      ...assumptions,
+      ownerCashKrw: 23_800_000,
+      grantKrw: 0,
+      assumedFinancingKrw: 0,
+      otherFundingKrw: 0,
+    };
+    const result = analyzeFinancials(fullyFunded, null);
+    expect(result.openingWorkingCapitalKrw).toBe(4_800_000);
+    expect(result.monthlyTimeline[0].cashBalanceKrw).toBe(2_400_000);
+    expect(result.fundingGapKrw).toBe(0);
   });
 
   it("includes financing payment in monthly fixed cost", () => {
@@ -86,6 +100,19 @@ describe("deterministic financial engine", () => {
     expect(result.paybackMonth).not.toBeNull();
   });
 
+  it("separates footfall stress from conversion stress", () => {
+    const base = analyzeFinancials(assumptions, 2_000, "base");
+    const footfallDown = analyzeFinancials(assumptions, 2_000, "footfallDown");
+    const conversionDown = analyzeFinancials(assumptions, 2_000, "conversionDown");
+
+    expect(footfallDown.effectiveDailyFootfall).toBe(1_600);
+    expect(conversionDown.effectiveDailyFootfall).toBe(2_000);
+    expect(footfallDown.requiredConversionRate!).toBeGreaterThan(base.requiredConversionRate!);
+    expect(conversionDown.requiredConversionRate).toBeCloseTo(base.requiredConversionRate!, 8);
+    expect(footfallDown.steadyStateRevenueKrw).toBeLessThan(base.steadyStateRevenueKrw);
+    expect(conversionDown.steadyStateRevenueKrw).toBeLessThan(base.steadyStateRevenueKrw);
+  });
+
   it("applies every stress preset through the same engine", () => {
     const base = analyzeFinancials(assumptions, 2_000, "base");
     for (const preset of ["footfallDown", "conversionDown", "costUp", "rentUp", "rateUp", "combined"] as const) {
@@ -103,8 +130,18 @@ describe("spatial normalization and state", () => {
     const b = { ...cell("b", 200, 4_000_000), transitDemand: null, buzzLevel: null };
     const scores = computeOpportunityScores(a, [a, b]);
     expect(scores.demandScore).not.toBeNull();
+    expect(scores.opportunityScore).not.toBeNull();
     expect(scores.transit).toBe(50);
     expect(normalizeMetric([null, null], null)).toBeNull();
+  });
+
+  it("makes opportunity distinct from pure demand by including rent relief and regeneration", () => {
+    const highDemandHighCost = { ...cell("a", 300, 6_000_000), regenerationScore: 0 };
+    const middle = { ...cell("b", 200, 3_000_000), regenerationScore: 50 };
+    const lowDemandLowCost = { ...cell("c", 100, 1_000_000), regenerationScore: 100 };
+    const scores = computeOpportunityScores(highDemandHighCost, [highDemandHighCost, middle, lowDemandLowCost]);
+    expect(scores.demandScore).toBeCloseTo(100, 6);
+    expect(scores.opportunityScore).toBeCloseTo(55, 6);
   });
 
   it("has monotonic distance decay and spillover", () => {
@@ -126,6 +163,27 @@ describe("spatial normalization and state", () => {
     const edited = reducer(cloned, { type: "SET_SCENARIO_ASSUMPTIONS", scenarioId: originalA.id, patch: { monthlyRentKrw: 9_000_000 } });
     expect(edited.scenarios.find((item) => item.id === originalA.id)!.assumptions.monthlyRentKrw).toBe(9_000_000);
     expect(edited.scenarios.find((item) => item.id === originalB.id)!.assumptions.monthlyRentKrw).toBe(originalB.assumptions.monthlyRentKrw);
+  });
+
+  it("updates category-sensitive defaults without overwriting location-specific rent", () => {
+    const a = cell("a", 100, 2_000_000);
+    const base = initialState([a]);
+    const scenario = base.scenarios[0];
+    const customRent = reducer(base, {
+      type: "SET_SCENARIO_ASSUMPTIONS",
+      scenarioId: scenario.id,
+      patch: { monthlyRentKrw: 1_234_567 },
+    });
+    const changed = reducer(customRent, {
+      type: "SET_SCENARIO_CATEGORY",
+      scenarioId: scenario.id,
+      category: "restaurant",
+    });
+    const updated = changed.scenarios.find((item) => item.id === scenario.id)!;
+    expect(updated.assumptions.monthlyRentKrw).toBe(1_234_567);
+    expect(updated.assumptions.averageTicketKrw).toBe(12_000);
+    expect(updated.assumptions.variableCostRatio).toBe(0.40);
+    expect(updated.assumptions.equipmentKrw).toBe(25_000_000);
   });
 
   it("can create a scenario through the shared scenario concept", () => {
