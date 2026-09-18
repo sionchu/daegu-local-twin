@@ -1,4 +1,5 @@
 import { computeShadowPolygon, localPointToGeo, rotatedFootprintPoints, siteTimeZoneOffsetMinutes } from "./model";
+import type { SunStudySample } from "./analysis";
 import type { BuildingMass, GeoPoint, LocalPoint, Scenario, Site, Viewpoint } from "./types";
 
 declare global {
@@ -395,6 +396,104 @@ export function flyToViewpoint(viewpoint: Viewpoint, site: Site, mass?: Building
     orientation: { direction, up },
     duration: 0.8,
   });
+}
+
+
+export type SceneSunContextResult = {
+  supported: boolean;
+  blockedTimes: string[];
+  maxDistanceM: number;
+  sampleStepM: number;
+  source: "vworld-3d-scene" | "unsupported";
+};
+
+function analysisObjectsToExclude() {
+  const excluded: any[] = [];
+  entities.forEach((value) => {
+    if (value?.building) excluded.push(value.building);
+    if (value?.shadow) excluded.push(value.shadow);
+  });
+  if (siteEntity) excluded.push(siteEntity);
+  if (draftEntity) excluded.push(draftEntity);
+  if (sunStudyEntity) excluded.push(sunStudyEntity);
+  if (viewpointEntity) excluded.push(viewpointEntity);
+  return excluded;
+}
+
+/**
+ * Samples the loaded VWorld/Cesium 3D scene along each sun vector.
+ * Existing 3D Tiles and terrain become context occluders while SpaceLab's own
+ * planned entities are excluded and handled by the deterministic mass engine.
+ */
+export async function sampleSceneSunContext(
+  point: GeoPoint,
+  samples: SunStudySample[],
+  options: { observerHeightM?: number; maxDistanceM?: number; sampleStepM?: number } = {},
+): Promise<SceneSunContextResult> {
+  const viewer = window.viewer;
+  const Cesium = window.Cesium;
+  const scene = viewer?.scene;
+  const maxDistanceM = Math.max(50, options.maxDistanceM ?? 350);
+  const sampleStepM = Math.max(5, options.sampleStepM ?? 10);
+  const observerHeightM = Math.max(0.1, options.observerHeightM ?? 1.2);
+
+  if (!scene || !Cesium || !scene.sampleHeightSupported || typeof scene.sampleHeightMostDetailed !== "function") {
+    return { supported: false, blockedTimes: [], maxDistanceM, sampleStepM, source: "unsupported" };
+  }
+
+  const groundCartographic = Cesium.Cartographic.fromDegrees(point.lon, point.lat);
+  const terrainHeight = scene.globe?.getHeight?.(groundCartographic);
+  const originHeight = Number.isFinite(terrainHeight) ? terrainHeight : 0;
+  const positions: any[] = [];
+  const ranges: { sample: SunStudySample; start: number; end: number; elevationRad: number }[] = [];
+
+  for (const sample of samples) {
+    if (sample.state === "night" || !Number.isFinite(sample.elevationDeg) || sample.elevationDeg <= 0) continue;
+    const start = positions.length;
+    const azimuthRad = (sample.azimuthDeg * Math.PI) / 180;
+    const elevationRad = (sample.elevationDeg * Math.PI) / 180;
+    for (let distanceM = sampleStepM; distanceM <= maxDistanceM; distanceM += sampleStepM) {
+      const geo = localPointToGeo(point, {
+        xM: Math.sin(azimuthRad) * distanceM,
+        yM: Math.cos(azimuthRad) * distanceM,
+      });
+      const cartographic = Cesium.Cartographic.fromDegrees(geo.lon, geo.lat);
+      (cartographic as any).__spaceLabDistanceM = distanceM;
+      positions.push(cartographic);
+    }
+    ranges.push({ sample, start, end: positions.length, elevationRad });
+  }
+
+  if (!positions.length) {
+    return { supported: true, blockedTimes: [], maxDistanceM, sampleStepM, source: "vworld-3d-scene" };
+  }
+
+  const sampled = await scene.sampleHeightMostDetailed(positions, analysisObjectsToExclude(), 0.5);
+  const blockedTimes: string[] = [];
+
+  for (const range of ranges) {
+    let blocked = false;
+    for (let index = range.start; index < range.end; index += 1) {
+      const samplePosition = sampled[index];
+      const sampledHeight = samplePosition?.height;
+      const distanceM = Number((positions[index] as any).__spaceLabDistanceM);
+      if (!Number.isFinite(sampledHeight) || !Number.isFinite(distanceM)) continue;
+      const sunRayHeight = originHeight + observerHeightM + Math.tan(range.elevationRad) * distanceM;
+      if (sampledHeight > sunRayHeight + 0.75) {
+        blocked = true;
+        break;
+      }
+    }
+    if (blocked) blockedTimes.push(range.sample.localDateTime);
+  }
+
+  return {
+    supported: true,
+    blockedTimes,
+    maxDistanceM,
+    sampleStepM,
+    source: "vworld-3d-scene",
+  };
 }
 
 export function setShadowTime(localDateTime: string, timeZoneOffsetMinutes = siteTimeZoneOffsetMinutes) {
