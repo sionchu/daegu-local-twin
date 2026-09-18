@@ -52,6 +52,11 @@ export type Scenario = {
   analysisTime: string;
 };
 
+export type Viewpoint = {
+  point: GeoPoint;
+  eyeHeightM: number;
+};
+
 export type SpatialWorkspace = {
   site: Site;
   /** Local scenario datetimes are interpreted with this fixed site offset. */
@@ -59,6 +64,10 @@ export type SpatialWorkspace = {
   scenarios: Scenario[];
   activeScenarioId?: string;
   compareScenarioId?: string;
+  /** Ground point used for deterministic direct-sun study. Defaults to site center in the UI. */
+  sunStudyPoint?: GeoPoint;
+  /** Saved camera observation point for repeatable scenario viewing. */
+  viewpoint?: Viewpoint;
 };
 
 export type MassPatch = Partial<Pick<BuildingMass, "heightM" | "floors" | "rotationDeg" | "footprint">> & {
@@ -85,7 +94,9 @@ export type WorkspaceAction =
   | { type: "COMPARE_SCENARIOS"; primaryId: string; compareId?: string }
   | { type: "CLONE_SCENARIO"; sourceId: string; name?: string; createdBy?: ActionSource }
   | { type: "EDIT_BUILDING_MASS"; scenarioId: string; patch: MassPatch; source?: ActionSource }
-  | { type: "SET_SHADOW_TIME"; scenarioId: string; value: string; source?: ActionSource };
+  | { type: "SET_SHADOW_TIME"; scenarioId: string; value: string; source?: ActionSource }
+  | { type: "SET_SUN_STUDY_POINT"; point?: GeoPoint; source?: ActionSource }
+  | { type: "SET_VIEWPOINT"; viewpoint?: Viewpoint; source?: ActionSource };
 
 export type ApplicationActions = {
   setSite: (site: Site, source?: ActionSource) => void;
@@ -97,4 +108,6 @@ export type ApplicationActions = {
   editBuildingMass: (scenarioId: string, patch: MassPatch, source?: ActionSource) => void;
   setMassFootprint: (scenarioId: string, footprint: Footprint, source?: ActionSource) => void;
   setShadowTime: (scenarioId: string, value: string, source?: ActionSource) => void;
+  setSunStudyPoint: (point?: GeoPoint, source?: ActionSource) => void;
+  setViewpoint: (viewpoint?: Viewpoint, source?: ActionSource) => void;
 };
