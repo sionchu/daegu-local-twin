@@ -9,3 +9,5 @@ dist/
 *.tsbuildinfo
 .DS_Store
 *.log
+.venv/
+data/raw/

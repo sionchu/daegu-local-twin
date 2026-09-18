@@ -32,16 +32,17 @@ def main() -> int:
         import cv2
         import supervision as sv
         from rfdetr import RFDETRNano
+        from trackers import ByteTrackTracker
     except ImportError as exc:
         raise SystemExit("Install vision/requirements.txt before running the offline pipeline.") from exc
 
     zone = json.loads(Path(args.zone).read_text(encoding="utf-8"))
     model = RFDETRNano()
-    tracker = sv.ByteTrack()
     line = zone["line"]
     line_zone = sv.LineZone(start=sv.Point(*line["start"]), end=sv.Point(*line["end"]))
     capture = cv2.VideoCapture(str(input_path))
     fps = capture.get(cv2.CAP_PROP_FPS) or 30.0
+    tracker = ByteTrackTracker(frame_rate=fps, track_activation_threshold=0.45)
     bucket_seconds = int(zone.get("bucket_seconds", 300))
     buckets: dict[int, dict[str, float]] = defaultdict(lambda: {"in_count": 0, "out_count": 0, "occupancy_sum": 0, "frames": 0})
     frame_index = 0
@@ -49,13 +50,15 @@ def main() -> int:
         ok, frame = capture.read()
         if not ok:
             break
-        detections = model.predict(frame, threshold=0.45)
+        frame_rgb = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
+        detections = model.predict(frame_rgb, threshold=0.45)
         detections = detections[detections.class_id == int(zone.get("person_class_id", 0))]
-        tracked = tracker.update_with_detections(detections)
+        tracked = tracker.update(detections)
+        tracked = tracked[tracked.tracker_id != -1]
         crossed_in, crossed_out = line_zone.trigger(tracked)
         bucket = int((frame_index / fps) // bucket_seconds)
-        buckets[bucket]["in_count"] += int(crossed_in)
-        buckets[bucket]["out_count"] += int(crossed_out)
+        buckets[bucket]["in_count"] += int(crossed_in.sum())
+        buckets[bucket]["out_count"] += int(crossed_out.sum())
         buckets[bucket]["occupancy_sum"] += len(tracked)
         buckets[bucket]["frames"] += 1
         frame_index += 1

@@ -62,7 +62,7 @@ export type StressPreset =
 
 export const stressPresetLabels: Record<StressPreset, string> = {
   base: "기본",
-  footfallDown: "보행량 -20%",
+  footfallDown: "이동수요 -20%",
   conversionDown: "전환율 -20%",
   costUp: "원가율 +10%p",
   rentUp: "임대료 +10%",
@@ -115,12 +115,14 @@ export type MonthlyTimelinePoint = {
 
 export type FinancialAnalysis = {
   startupCapitalNeedKrw: number;
+  upfrontUsesKrw: number;
   openingWorkingCapitalKrw: number;
   monthlyFixedCostKrw: number;
   monthlyBreakEvenRevenueKrw: number;
   monthlyBreakEvenCustomers: number;
   breakEvenCustomersPerDay: number;
   requiredConversionRate: number | null;
+  effectiveDailyFootfall: number | null;
   steadyStateRevenueKrw: number;
   fundingGapKrw: number;
   breakEvenMonth: number | null;

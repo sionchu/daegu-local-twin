@@ -1,9 +1,11 @@
 # LocalTwin Daegu architecture
 
 ```text
-official/public references + permitted local video
+official/public mobility + commercial references
             ↓ offline adapters
 provenance-stamped snapshots in public/data/*.json
+            ↑
+permitted local video → optional CV micro-footfall
             ↓
 Vite static build → React opportunity map / A-B compare / funding plan
             ↓
@@ -20,6 +22,8 @@ DemandScore is a transparent renormalized weighted index, not a success probabil
 Spillover is an exponential straight-line distance-decay signal around anchors; it is
 not measured cross-shopping or causal uplift.
 
-The optional vision path is offline-only: RF-DETR person detections, a compatible
-tracker, and line/zone aggregation produce only time-bucketed counts. No faces,
+The primary V0 mobility path is the official Daegu Metro station/day/hour
+boarding-alighting file snapshot. National public-transit O/D is a later key-gated
+enrichment path. The optional vision path is offline-only: RF-DETR person detections,
+ByteTrackTracker, and line/zone aggregation produce only time-bucketed counts. No faces,
 embeddings, names, or persistent cross-camera identity are part of the data model.
