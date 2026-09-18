@@ -1,0 +1,28 @@
+name: mobility-probe
+
+on:
+  pull_request:
+
+jobs:
+  probe:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Probe official Daegu Metro file
+        shell: bash
+        run: |
+          set +e
+          python scripts/ingest/refresh_daegu_transit.py --month 7 --output /tmp/transit.json
+          status=$?
+          echo "adapter_exit_code=$status"
+          if [ -f /tmp/transit.json ]; then
+            echo "===TRANSIT_JSON_BEGIN==="
+            cat /tmp/transit.json
+            echo "===TRANSIT_JSON_END==="
+          fi
+          exit 0
