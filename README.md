@@ -63,17 +63,15 @@ Without a key the fallback map remains usable. Never put provider secrets into s
 
 ## Refresh / vision commands
 
-The official Daegu Metro file dataset is published monthly and can be downloaded without an OpenAPI service key. Refresh the station snapshot with:
+Browser crawling/downloading is handled outside this repository by the Codex Aside browser. Git-side code only consumes the resulting official artifact and normalizes it deterministically.
+
+For a crawled official Daegu Metro CSV/ZIP:
 
 ```powershell
-python scripts/ingest/refresh_daegu_transit.py
+python scripts/ingest/refresh_daegu_transit.py --input .\path\to\official-daegu-metro.csv --dataset-version 20260731
 ```
 
-If the portal changes its download-page contract, download the official CSV manually and use the same parser:
-
-```powershell
-python scripts/ingest/refresh_daegu_transit.py --input .\data\raw\daegu-metro.csv
-```
+The crawler should commit only the normalized snapshot and its provenance metadata; raw HTML dumps and browser-session artifacts do not belong in the repository. See [`docs/CRAWL_HANDOFF.md`](./docs/CRAWL_HANDOFF.md).
 
 The latest verified catalog entry at implementation time is `20260731` (modified 2026-09-03). The portal's auto-converted XML/JSON API and national public-transit O/D APIs require a data.go.kr service key, so they are not embedded in the static browser build.
 
