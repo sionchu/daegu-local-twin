@@ -1,14 +1,8 @@
-"""Download and normalize the official Daegu Metro ridership file.
+"""Normalize an official Daegu Metro ridership artifact supplied by the crawl step.
 
-The public-data file can be downloaded without an API key. The portal also exposes an
-auto-converted OpenAPI, but that path requires a data.go.kr service key. This adapter
-therefore prefers the official no-login file distribution and keeps the resulting
-snapshot provenance explicit.
-
-Examples:
-    python scripts/ingest/refresh_daegu_transit.py
-    python scripts/ingest/refresh_daegu_transit.py --input path/to/file.csv
-    python scripts/ingest/refresh_daegu_transit.py --month 7
+Browser navigation/download is intentionally out of scope here. The Codex Aside
+browser step obtains the official file and commits or hands off the artifact.
+This script only parses a local CSV/ZIP and writes the canonical public snapshot.
 """
 
 from __future__ import annotations
@@ -18,8 +12,6 @@ import csv
 import io
 import json
 import re
-import urllib.parse
-import urllib.request
 import zipfile
 from collections import defaultdict
 from datetime import datetime, timezone
@@ -28,124 +20,40 @@ from typing import Any
 
 DATASET_ID = "15002503"
 SOURCE_URL = f"https://www.data.go.kr/data/{DATASET_ID}/fileData.do?recommendDataYn=Y"
-SELECT_DOWNLOAD_URL = "https://www.data.go.kr/tcs/dss/selectFileDataDownload.do"
-FILE_DOWNLOAD_URL = "https://www.data.go.kr/cmm/cmm/fileDownload.do"
 DEFAULT_STATIONS = ("중앙로", "반월당", "서문시장", "대구역")
 BUSINESS_HOUR_COLUMNS = tuple(f"{hour:02d}시-{hour + 1:02d}시" for hour in range(10, 22))
 ALL_HOUR_COLUMNS = tuple(f"{hour:02d}시-{hour + 1:02d}시" for hour in range(5, 24))
 
+STATION_ALIASES = {
+    "반월당1": "반월당",
+    "반월당2": "반월당",
+}
+
 
 def parse_args() -> argparse.Namespace:
-    parser = argparse.ArgumentParser(description="Refresh official Daegu Metro ridership snapshot.")
-    parser.add_argument("--input", type=Path, help="Optional manually downloaded CSV/ZIP. Skips network download.")
+    parser = argparse.ArgumentParser(description="Normalize crawled Daegu Metro ridership data.")
+    parser.add_argument(
+        "--input",
+        type=Path,
+        required=True,
+        help="Official CSV or ZIP obtained by the browser/crawl step.",
+    )
     parser.add_argument("--output", type=Path, default=Path("public/data/transit.json"))
-    parser.add_argument("--raw-dir", type=Path, default=Path("data/raw"))
-    parser.add_argument("--month", type=int, help="Month to aggregate. Defaults to the latest month in the file.")
+    parser.add_argument("--month", type=int, help="Month to aggregate. Defaults to latest month present.")
     parser.add_argument(
         "--stations",
         default=",".join(DEFAULT_STATIONS),
         help="Comma-separated station names. A trailing 역 is optional.",
     )
-    parser.add_argument("--dataset-version", help="Override YYYYMMDD version when using a manually named file.")
-    parser.add_argument("--keep-raw", action="store_true", help="Keep the downloaded source under data/raw.")
+    parser.add_argument("--dataset-version", help="Official dataset version, e.g. 20260731.")
+    parser.add_argument("--source-sha256", help="Optional SHA256 recorded by the crawl step.")
+    parser.add_argument("--retrieved-at", help="Optional ISO-8601 timestamp from the crawl step.")
     return parser.parse_args()
-
-
-def request_bytes(url: str, *, referer: str | None = None) -> tuple[bytes, dict[str, str]]:
-    headers = {
-        "User-Agent": "Mozilla/5.0 (compatible; LocalTwinDaegu/0.1; public-data research)",
-        "Accept": "*/*",
-    }
-    if referer:
-        headers["Referer"] = referer
-    request = urllib.request.Request(url, headers=headers)
-    with urllib.request.urlopen(request, timeout=45) as response:
-        return response.read(), dict(response.headers.items())
-
-
-def request_text(url: str) -> str:
-    body, _ = request_bytes(url)
-    for encoding in ("utf-8", "utf-8-sig", "cp949"):
-        try:
-            return body.decode(encoding)
-        except UnicodeDecodeError:
-            continue
-    return body.decode("utf-8", errors="replace")
-
-
-def quoted_args(fragment: str) -> list[str]:
-    return [left or right for left, right in re.findall(r"'([^']*)'|\"([^\"]*)\"", fragment)]
-
-
-def resolve_download_descriptor(page_html: str) -> tuple[str, str]:
-    """Return (publicDataPk, uddi) from the portal's download onclick contract."""
-    for match in re.finditer(r"fn_fileDataDown\s*\(([^)]*)\)", page_html, flags=re.IGNORECASE):
-        args = quoted_args(match.group(1))
-        uddi = next((item.split("uddi:", 1)[1] for item in args if item.startswith("uddi:")), None)
-        if not uddi:
-            continue
-        public_data_pk = next((item for item in args if item.isdigit() and len(item) >= 6), DATASET_ID)
-        return public_data_pk, uddi
-    raise RuntimeError(
-        "Could not resolve the data.go.kr file descriptor from the detail page. "
-        "Download the official CSV manually and rerun with --input."
-    )
-
-
-def find_nested(obj: Any, key: str) -> Any:
-    if isinstance(obj, dict):
-        if key in obj and obj[key] not in (None, ""):
-            return obj[key]
-        for value in obj.values():
-            found = find_nested(value, key)
-            if found not in (None, ""):
-                return found
-    if isinstance(obj, list):
-        for value in obj:
-            found = find_nested(value, key)
-            if found not in (None, ""):
-                return found
-    return None
 
 
 def version_from_text(text: str) -> str | None:
     match = re.search(r"역별일별시간별승하차인원현황[_-]?(20\d{6})", text)
     return match.group(1) if match else None
-
-
-def download_latest() -> tuple[bytes, str, str]:
-    page_html = request_text(SOURCE_URL)
-    version = version_from_text(page_html) or "unknown"
-    public_data_pk, uddi = resolve_download_descriptor(page_html)
-    query = urllib.parse.urlencode(
-        {
-            "publicDataDetailPk": f"uddi:{uddi}",
-            "publicDataPk": public_data_pk,
-            "atchFileId": "",
-            "fileDetailSn": "1",
-            "url": "/tcs/dss/selectFileDataDownload.do",
-        }
-    )
-    metadata_raw, _ = request_bytes(f"{SELECT_DOWNLOAD_URL}?{query}", referer=SOURCE_URL)
-    metadata = json.loads(metadata_raw.decode("utf-8"))
-    atch_file_id = find_nested(metadata, "atchFileId")
-    file_detail_sn = str(find_nested(metadata, "fileDetailSn") or "1")
-    data_name = find_nested(metadata, "dataNm") or f"daegu-metro-ridership-{version}.csv"
-    if not atch_file_id:
-        raise RuntimeError("data.go.kr did not return atchFileId for the official file.")
-
-    file_query = urllib.parse.urlencode(
-        {
-            "atchFileId": atch_file_id,
-            "fileDetailSn": file_detail_sn,
-            "dataNm": data_name,
-        }
-    )
-    body, headers = request_bytes(f"{FILE_DOWNLOAD_URL}?{file_query}", referer=SOURCE_URL)
-    disposition = headers.get("Content-Disposition", "")
-    filename_match = re.search(r"filename\*?=(?:UTF-8''|\")?([^\";]+)", disposition, flags=re.IGNORECASE)
-    filename = urllib.parse.unquote(filename_match.group(1).strip()) if filename_match else str(data_name)
-    return body, filename, version
 
 
 def unpack_source(raw: bytes, filename: str) -> tuple[bytes, str]:
@@ -175,12 +83,6 @@ def clean_number(value: str | None) -> int:
     return int(cleaned) if cleaned not in ("", "-") else 0
 
 
-STATION_ALIASES = {
-    "반월당1": "반월당",
-    "반월당2": "반월당",
-}
-
-
 def clean_station(value: str) -> str:
     value = re.sub(r"\([^)]*\)", "", value or "")
     value = re.sub(r"\[[^]]*\]", "", value)
@@ -203,6 +105,8 @@ def normalize_transit(
     station_targets: tuple[str, ...],
     requested_month: int | None,
     dataset_version: str,
+    source_sha256: str | None = None,
+    retrieved_at: str | None = None,
 ) -> dict[str, Any]:
     reader = csv.DictReader(io.StringIO(csv_text))
     rows = [clean_row(row) for row in reader]
@@ -285,9 +189,10 @@ def normalize_transit(
         "datasetId": DATASET_ID,
         "datasetVersion": dataset_version,
         "sourceUrl": SOURCE_URL,
+        "sourceSha256": source_sha256,
         "month": month,
         "businessHours": "10:00-22:00",
-        "retrievedAt": datetime.now(timezone.utc).replace(microsecond=0).isoformat(),
+        "retrievedAt": retrieved_at or datetime.now(timezone.utc).replace(microsecond=0).isoformat(),
         "records": records,
         "missingStations": missing,
         "limitations": [
@@ -302,32 +207,20 @@ def main() -> int:
     targets = tuple(name.strip() for name in args.stations.split(",") if name.strip())
     if not targets:
         raise SystemExit("At least one station is required.")
+    if not args.input.exists():
+        raise SystemExit(f"input file not found: {args.input}")
 
-    if args.input:
-        raw = args.input.read_bytes()
-        filename = args.input.name
-        version = args.dataset_version or version_from_text(filename) or "unknown"
-    else:
-        try:
-            raw, filename, discovered_version = download_latest()
-        except Exception as exc:
-            raise SystemExit(
-                f"Automatic official-file download failed: {exc}\n"
-                f"Manual fallback: download {SOURCE_URL} and rerun with --input <file>."
-            ) from exc
-        version = args.dataset_version or discovered_version
-        if args.keep_raw:
-            args.raw_dir.mkdir(parents=True, exist_ok=True)
-            (args.raw_dir / filename).write_bytes(raw)
+    raw = args.input.read_bytes()
+    csv_bytes, csv_name = unpack_source(raw, args.input.name)
+    version = args.dataset_version or version_from_text(args.input.name) or version_from_text(csv_name) or "unknown"
 
-    csv_bytes, csv_name = unpack_source(raw, filename)
-    if version == "unknown":
-        version = version_from_text(csv_name) or "unknown"
     snapshot = normalize_transit(
         decode_csv(csv_bytes),
         station_targets=targets,
         requested_month=args.month,
         dataset_version=version,
+        source_sha256=args.source_sha256,
+        retrieved_at=args.retrieved_at,
     )
     args.output.parent.mkdir(parents=True, exist_ok=True)
     args.output.write_text(json.dumps(snapshot, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
