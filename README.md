@@ -11,8 +11,8 @@
 - 동성로–교동–북성로 corridor의 하나의 육각형 셀 체계와 레이어 토글
 - 상권 수요, 교통 접근, Buzz, 거리감쇠 기반 파생수요, 도시재생 맥락, 지역 임대 benchmark, 종합 Opportunity 신호
 - 후보 A/B 선택과 업종별 실제 보증금·월세·창업비용 입력
-- 월 손익분기 매출, 하루 필요 고객, 관련 보행량 proxy 대비 필요 전환율, 12개월 현금흐름, 현금고갈, payback, Funding Gap
-- 기본 / 보행량 -20% / 전환율 -20% / 원가율 +10%p / 임대료 +10% / 금리 +1%p / 복합 악화 stress preset
+- 월 손익분기 매출, 하루 필요 고객, 관련 이동수요 proxy 대비 필요 전환율, 12개월 현금흐름, 현금고갈, payback, Funding Gap
+- 기본 / 이동수요 -20% / 전환율 -20% / 원가율 +10%p / 임대료 +10% / 금리 +1%p / 복합 악화 stress preset
 - 대구 청년창업·북성로 창업클러스터·대구신용보증재단의 상담/공고 검토 항목
 - 선택적 VWorld 브라우저 provider와 항상 사용 가능한 Demo geometry fallback
 - optional offline RF-DETR + tracker + line/zone aggregate pipeline
