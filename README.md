@@ -14,7 +14,7 @@ SpaceLab is a small browser-native V0 for non-specialists. It places conceptual 
 - Scenario clone/branch with parent relationships
 - A/B comparison with GFA, height, solar-geometry shadow deltas, and direct-sun duration
 - Geolocation/date/time solar position and ground shadow polygon preview
-- Selectable ground-point Direct Sun Hours pre-check (planned mass only)
+- Selectable ground-point Direct Sun Hours pre-check with planned-mass shadow plus VWorld 3D scene/terrain occlusion when supported
 - Repeatable VWorld viewpoint for scenario viewing
 - Planned site coverage/FAR metrics from parcel area and current mass
 - VWorld WebGL adapter with a no-key fallback geometry canvas
