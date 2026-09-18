@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import unittest
 
-from refresh_daegu_transit import normalize_transit
+from scripts.ingest.refresh_daegu_transit import normalize_transit
 
 
 CSV_SAMPLE = """월,일,역번호,역명,승하차,05시-06시,06시-07시,07시-08시,08시-09시,09시-10시,10시-11시,11시-12시,12시-13시,13시-14시,14시-15시,15시-16시,16시-17시,17시-18시,18시-19시,19시-20시,20시-21시,21시-22시,22시-23시,23시-24시,일계
