@@ -17,6 +17,7 @@ Build a public `spacelab-ai` V0: a VWorld-backed Spatial Decision Canvas for ear
 - Design-pass commit `25e60e6dbcc852caa9d340c6dfc2035f61a6dad2` is pushed to the public GitHub repository and the connected Sites source repository.
 - The matching private Sites version is deployed at `https://spacelab-ai.leeje92.chatgpt.site`.
 - `src/webmcp.ts` was not changed; the design pass only changes presentation and local UI mode state.
+- Competition baseline acceptance is recorded in `docs/competition-baseline-acceptance-2026-09-18.md`; the first gate is blocked because the production access mode is `custom` and a fresh browser receives the login gate.
 
 ## Verification evidence
 
@@ -35,4 +36,4 @@ Build a public `spacelab-ai` V0: a VWorld-backed Spatial Decision Canvas for ear
 
 ## Next concrete action
 
-Open the deployed Site in an authenticated Aside/browser session for the final production visual pass. Keep WebMCP and feature scope unchanged until that visual gate is completed.
+The Site owner must decide whether to make the production audience public. Then rerun the unauthenticated visual gate and the three requested Site Tools calls without changing features, architecture, or UI.
