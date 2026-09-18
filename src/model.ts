@@ -1,6 +1,7 @@
 import type {
   BuildingMass,
   Footprint,
+  GeoPoint,
   LocalPoint,
   MassPatch,
   Scenario,
@@ -9,6 +10,21 @@ import type {
 } from "./types";
 
 export const siteCenter = { lon: 127.11052, lat: 37.39483 };
+export const siteTimeZoneOffsetMinutes = 540;
+
+export type SolarPosition = {
+  azimuthDeg: number;
+  elevationDeg: number;
+  declinationDeg: number;
+  equationOfTimeMinutes: number;
+  isDaylight: boolean;
+};
+
+export type ShadowPolygon = {
+  points: LocalPoint[];
+  lengthM: number;
+  solar: SolarPosition;
+};
 
 const baseRectangle: Footprint = { kind: "rectangle", widthM: 44, depthM: 30 };
 const lowerPolygon: Footprint = {
@@ -36,6 +52,7 @@ const baseMass: BuildingMass = {
 export const initialState: SpatialWorkspace = {
   siteName: "Pangyo sample site",
   siteCenter,
+  timeZoneOffsetMinutes: siteTimeZoneOffsetMinutes,
   activeScenarioId: "A",
   compareScenarioId: "B",
   scenarios: [
@@ -136,18 +153,135 @@ export function estimateGfa(mass: BuildingMass) {
   return Math.round(footprintAreaM2(mass.footprint) * mass.floors);
 }
 
-export function shadowPreview(mass: BuildingMass, analysisTime: string) {
-  const hour = Number(analysisTime.slice(11, 13));
-  const minute = Number(analysisTime.slice(14, 16));
-  const localHour = Number.isFinite(hour) ? hour + (Number.isFinite(minute) ? minute / 60 : 0) : 12;
-  const distanceFromNoon = Math.abs(localHour - 12);
-  const lengthM = Math.round(mass.heightM * (0.58 + distanceFromNoon * 0.34) * 10) / 10;
-  const bearingDeg = ((localHour - 12) * 15 + 180 + 360) % 360;
-  return { lengthM, bearingDeg };
+function degreesToRadians(value: number) {
+  return (value * Math.PI) / 180;
 }
 
-export function estimatedShadowLengthM(mass: BuildingMass, analysisTime: string) {
-  return shadowPreview(mass, analysisTime).lengthM;
+function radiansToDegrees(value: number) {
+  return (value * 180) / Math.PI;
+}
+
+function normalizeDegrees(value: number) {
+  return ((value % 360) + 360) % 360;
+}
+
+function clampUnit(value: number) {
+  return Math.min(1, Math.max(-1, value));
+}
+
+function parseLocalDateTime(localDateTime: string, timeZoneOffsetMinutes: number) {
+  const match = /^(\d{4})-(\d{2})-(\d{2})T(\d{2}):(\d{2})(?::(\d{2}))?$/.exec(localDateTime);
+  if (!match) return { date: new Date(Number.NaN), year: 0, month: 0, day: 0, hour: 0, minute: 0, second: 0 };
+  const year = Number(match[1]);
+  const month = Number(match[2]);
+  const day = Number(match[3]);
+  const hour = Number(match[4]);
+  const minute = Number(match[5]);
+  const second = Number(match[6] ?? 0);
+  const date = new Date(Date.UTC(year, month - 1, day, hour, minute, second) - timeZoneOffsetMinutes * 60_000);
+  return { date, year, month, day, hour, minute, second };
+}
+
+/** NOAA solar position approximation using the scenario site and local KST time. */
+export function solarPosition(
+  location: GeoPoint,
+  localDateTime: string,
+  timeZoneOffsetMinutes = siteTimeZoneOffsetMinutes,
+): SolarPosition {
+  const parsed = parseLocalDateTime(localDateTime, timeZoneOffsetMinutes);
+  if (Number.isNaN(parsed.date.getTime())) {
+    return { azimuthDeg: Number.NaN, elevationDeg: Number.NaN, declinationDeg: Number.NaN, equationOfTimeMinutes: Number.NaN, isDaylight: false };
+  }
+
+  const julianDay = parsed.date.getTime() / 86_400_000 + 2_440_587.5;
+  const julianCentury = (julianDay - 2_451_545) / 36_525;
+  const geomMeanLongSun = normalizeDegrees(280.46646 + julianCentury * (36_000.76983 + julianCentury * 0.0003032));
+  const geomMeanAnomSun = 357.52911 + julianCentury * (35_999.05029 - 0.0001537 * julianCentury);
+  const eccentricity = 0.016708634 - julianCentury * (0.000042037 + 0.0000001267 * julianCentury);
+  const anomalyRadians = degreesToRadians(geomMeanAnomSun);
+  const sunEquationOfCenter = Math.sin(anomalyRadians) * (1.914602 - julianCentury * (0.004817 + 0.000014 * julianCentury))
+    + Math.sin(2 * anomalyRadians) * (0.019993 - 0.000101 * julianCentury)
+    + Math.sin(3 * anomalyRadians) * 0.000289;
+  const sunTrueLongitude = geomMeanLongSun + sunEquationOfCenter;
+  const omega = degreesToRadians(125.04 - 1_934.136 * julianCentury);
+  const sunApparentLongitude = sunTrueLongitude - 0.00569 - 0.00478 * Math.sin(omega);
+  const meanObliquity = 23 + (26 + ((21.448 - julianCentury * (46.815 + julianCentury * (0.00059 - julianCentury * 0.001813))) / 60)) / 60;
+  const correctedObliquity = meanObliquity + 0.00256 * Math.cos(omega);
+  const obliquityRadians = degreesToRadians(correctedObliquity);
+  const apparentLongitudeRadians = degreesToRadians(sunApparentLongitude);
+  const declinationRadians = Math.asin(Math.sin(obliquityRadians) * Math.sin(apparentLongitudeRadians));
+  const declinationDeg = radiansToDegrees(declinationRadians);
+  const variance = Math.tan(obliquityRadians / 2) ** 2;
+  const equationOfTimeMinutes = 4 * radiansToDegrees(
+    variance * Math.sin(2 * degreesToRadians(geomMeanLongSun))
+      - 2 * eccentricity * Math.sin(anomalyRadians)
+      + 4 * eccentricity * variance * Math.sin(anomalyRadians) * Math.cos(2 * degreesToRadians(geomMeanLongSun))
+      - 0.5 * variance ** 2 * Math.sin(4 * degreesToRadians(geomMeanLongSun))
+      - 1.25 * eccentricity ** 2 * Math.sin(2 * anomalyRadians),
+  );
+
+  const localMinutes = parsed.hour * 60 + parsed.minute + parsed.second / 60;
+  const trueSolarTime = ((localMinutes + equationOfTimeMinutes + 4 * location.lon - timeZoneOffsetMinutes) % 1_440 + 1_440) % 1_440;
+  const hourAngleDeg = trueSolarTime / 4 - 180;
+  const latitudeRadians = degreesToRadians(location.lat);
+  const hourAngleRadians = degreesToRadians(hourAngleDeg);
+  const zenithRadians = Math.acos(clampUnit(
+    Math.sin(latitudeRadians) * Math.sin(declinationRadians)
+      + Math.cos(latitudeRadians) * Math.cos(declinationRadians) * Math.cos(hourAngleRadians),
+  ));
+  const elevationDeg = 90 - radiansToDegrees(zenithRadians);
+  const azimuthDeg = normalizeDegrees(radiansToDegrees(Math.atan2(
+    Math.sin(hourAngleRadians),
+    Math.cos(hourAngleRadians) * Math.sin(latitudeRadians) - Math.tan(declinationRadians) * Math.cos(latitudeRadians),
+  )) + 180);
+
+  return { azimuthDeg, elevationDeg, declinationDeg, equationOfTimeMinutes, isDaylight: elevationDeg > 0 };
+}
+
+function cross(origin: LocalPoint, a: LocalPoint, b: LocalPoint) {
+  return (a.xM - origin.xM) * (b.yM - origin.yM) - (a.yM - origin.yM) * (b.xM - origin.xM);
+}
+
+function convexHull(points: LocalPoint[]) {
+  const sorted = points
+    .map((point) => ({ xM: Number(point.xM.toFixed(6)), yM: Number(point.yM.toFixed(6)) }))
+    .filter((point, index, all) => all.findIndex((candidate) => candidate.xM === point.xM && candidate.yM === point.yM) === index)
+    .sort((a, b) => a.xM - b.xM || a.yM - b.yM);
+  if (sorted.length <= 2) return sorted;
+  const lower: LocalPoint[] = [];
+  for (const point of sorted) {
+    while (lower.length >= 2 && cross(lower[lower.length - 2], lower[lower.length - 1], point) <= 0) lower.pop();
+    lower.push(point);
+  }
+  const upper: LocalPoint[] = [];
+  for (const point of [...sorted].reverse()) {
+    while (upper.length >= 2 && cross(upper[upper.length - 2], upper[upper.length - 1], point) <= 0) upper.pop();
+    upper.push(point);
+  }
+  return [...lower.slice(0, -1), ...upper.slice(0, -1)];
+}
+
+export function computeShadowPolygon(
+  mass: BuildingMass,
+  localDateTime: string,
+  timeZoneOffsetMinutes = siteTimeZoneOffsetMinutes,
+): ShadowPolygon {
+  const solar = solarPosition(mass.center, localDateTime, timeZoneOffsetMinutes);
+  if (!solar.isDaylight) return { points: [], lengthM: 0, solar };
+
+  const elevationRadians = degreesToRadians(solar.elevationDeg);
+  const lengthM = mass.heightM / Math.tan(elevationRadians);
+  if (!Number.isFinite(lengthM) || lengthM <= 0) return { points: [], lengthM: 0, solar };
+
+  const basePoints = rotatedFootprintPoints(mass).map((point) => ({
+    xM: point.xM + mass.position.eastM,
+    yM: point.yM + mass.position.northM,
+  }));
+  const azimuthRadians = degreesToRadians(solar.azimuthDeg);
+  const shadowEastM = -Math.sin(azimuthRadians) * lengthM;
+  const shadowNorthM = -Math.cos(azimuthRadians) * lengthM;
+  const shadowPoints = basePoints.map((point) => ({ xM: point.xM + shadowEastM, yM: point.yM + shadowNorthM }));
+  return { points: convexHull([...basePoints, ...shadowPoints]), lengthM, solar };
 }
 
 function clamp(value: number, min: number, max: number) {

@@ -1,9 +1,10 @@
-import { rotatedFootprintPoints } from "./model";
+import { computeShadowPolygon, rotatedFootprintPoints, siteTimeZoneOffsetMinutes } from "./model";
 import type { Scenario } from "./types";
 
 declare global {
   interface Window {
     vw?: any;
+    ws3d?: { viewer?: any };
     Cesium?: any;
     viewer?: any;
   }
@@ -18,7 +19,10 @@ export function loadVWorld(apiKey: string) {
   scriptPromise = new Promise((resolve, reject) => {
     if (window.vw && window.Cesium) return resolve();
     const script = document.createElement("script");
-    script.src = `https://map.vworld.kr/js/webglMapInit.js.do?version=3.0&apiKey=${encodeURIComponent(apiKey)}`;
+    const params = new URLSearchParams({ version: "3.0", apiKey });
+    const domain = import.meta.env.VITE_VWORLD_DOMAIN as string | undefined;
+    if (domain) params.set("domain", domain);
+    script.src = `https://map.vworld.kr/js/webglMapInit.js.do?${params.toString()}`;
     script.async = true;
     script.onload = () => resolve();
     script.onerror = () => reject(new Error("Failed to load VWorld WebGL SDK"));
@@ -28,7 +32,12 @@ export function loadVWorld(apiKey: string) {
 }
 
 function resolveViewer(map: any) {
-  return map?.getViewer?.() ?? map?.getCesiumViewer?.() ?? map?.viewer ?? window.viewer ?? (map?.entities ? map : undefined);
+  return window.ws3d?.viewer
+    ?? map?.getViewer?.()
+    ?? map?.getCesiumViewer?.()
+    ?? map?.viewer
+    ?? window.viewer
+    ?? (map?.entities ? map : undefined);
 }
 
 export async function startVWorld(containerId: string, apiKey: string, lon: number, lat: number) {
@@ -40,19 +49,21 @@ export async function startVWorld(containerId: string, apiKey: string, lon: numb
     const vw = window.vw;
     if (!vw) throw new Error("VWorld SDK unavailable");
     return new Promise<any>((resolve, reject) => {
-      const timeout = window.setTimeout(() => reject(new Error("VWorld 3D initialization timed out")), 15000);
+      let settled = false;
+      const timeout = window.setTimeout(() => {
+        if (!settled) reject(new Error("VWorld 3D initialization timed out"));
+      }, 15000);
       let map: any;
       const finish = () => {
-        window.clearTimeout(timeout);
         const viewer = resolveViewer(map);
-        if (!viewer?.entities) {
-          reject(new Error("VWorld initialized without a Cesium viewer"));
-          return;
-        }
+        if (!viewer?.entities) return false;
+        settled = true;
+        window.clearTimeout(timeout);
         window.viewer = viewer;
         resolve(viewer);
+        return true;
       };
-      vw.ws3dInitCallBack = finish;
+      vw.ws3dInitCallBack = () => { finish(); };
       map = new vw.Map();
       const camera = new vw.CameraPosition(new vw.CoordZ(lon, lat, 1100), new vw.Direction(0, -72, 0));
       map.setOption({ mapId: containerId, initPosition: camera, logo: false, navigation: true });
@@ -61,7 +72,7 @@ export async function startVWorld(containerId: string, apiKey: string, lon: numb
       map.setLogoVisible(false);
       map.setNavigationZoomVisible(false);
       map.start();
-      if (resolveViewer(map)?.entities) finish();
+      finish();
     });
   })().catch((error) => {
     viewerPromise = null;
@@ -87,13 +98,21 @@ function footprintCorners(scenario: Scenario) {
   });
 }
 
-export function renderScenario(scenario: Scenario, active: boolean) {
+function localPointsToDegrees(center: { lon: number; lat: number }, points: { xM: number; yM: number }[]) {
+  return points.flatMap(({ xM, yM }) => {
+    const offset = offsetDegrees(center.lat, xM, yM);
+    return [center.lon + offset.dLon, center.lat + offset.dLat];
+  });
+}
+
+export function renderScenario(scenario: Scenario, active: boolean, timeZoneOffsetMinutes = siteTimeZoneOffsetMinutes) {
   const viewer = window.viewer;
   const Cesium = window.Cesium;
   if (!viewer?.entities || !Cesium) return;
   const old = entities.get(scenario.id);
-  if (old) viewer.entities.remove(old);
-  const entity = viewer.entities.add({
+  if (old?.building) viewer.entities.remove(old.building);
+  if (old?.shadow) viewer.entities.remove(old.shadow);
+  const building = viewer.entities.add({
     name: scenario.name,
     polygon: {
       hierarchy: Cesium.Cartesian3.fromDegreesArray(footprintCorners(scenario)),
@@ -104,14 +123,30 @@ export function renderScenario(scenario: Scenario, active: boolean) {
       outlineColor: Cesium.Color.WHITE.withAlpha(active ? 0.9 : 0.45),
     },
   });
-  entities.set(scenario.id, entity);
+  const shadow = computeShadowPolygon(scenario.mass, scenario.analysisTime, timeZoneOffsetMinutes);
+  const shadowEntity = shadow.points.length >= 3 ? viewer.entities.add({
+    name: `${scenario.name} solar shadow`,
+    polygon: {
+      hierarchy: Cesium.Cartesian3.fromDegreesArray(localPointsToDegrees(scenario.mass.center, shadow.points)),
+      height: 0,
+      extrudedHeight: 0.25,
+      material: Cesium.Color.fromCssColorString(active ? "#68f3c2" : "#7aa7ff").withAlpha(active ? 0.22 : 0.14),
+      outline: true,
+      outlineColor: Cesium.Color.fromCssColorString(active ? "#68f3c2" : "#7aa7ff").withAlpha(active ? 0.55 : 0.38),
+    },
+  }) : undefined;
+  entities.set(scenario.id, { building, shadow: shadowEntity });
 }
 
-export function setShadowTime(localDateTime: string) {
+export function setShadowTime(localDateTime: string, timeZoneOffsetMinutes = siteTimeZoneOffsetMinutes) {
   const viewer = window.viewer;
   const Cesium = window.Cesium;
   if (!viewer || !Cesium || !localDateTime) return;
-  const date = new Date(`${localDateTime}:00+09:00`);
+  const sign = timeZoneOffsetMinutes >= 0 ? "+" : "-";
+  const absoluteOffset = Math.abs(timeZoneOffsetMinutes);
+  const offsetHours = String(Math.floor(absoluteOffset / 60)).padStart(2, "0");
+  const offsetMinutes = String(absoluteOffset % 60).padStart(2, "0");
+  const date = new Date(`${localDateTime}:00${sign}${offsetHours}:${offsetMinutes}`);
   if (!Number.isNaN(date.getTime())) viewer.clock.currentTime = Cesium.JulianDate.fromDate(date);
 }
 

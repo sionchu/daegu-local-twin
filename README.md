@@ -9,8 +9,8 @@ SpaceLab is a small browser-native V0 for non-specialists. It places conceptual 
 - Rectangular and free-polygon `BuildingMass` footprints
 - Height, floors, footprint, position, and rotation editing
 - Scenario clone/branch with parent relationships
-- A/B comparison with GFA, height, and qualitative shadow deltas
-- Date/time shadow preview
+- A/B comparison with GFA, height, and solar-geometry shadow deltas
+- Geolocation/date/time solar position and ground shadow polygon preview
 - VWorld WebGL adapter with a no-key fallback geometry canvas
 - WebMCP tools that call the same application action surface as the UI
 
@@ -38,7 +38,7 @@ npm install
 npm run dev
 ```
 
-The Vite config reads `VITE_VWORLD_API_KEY` from the process/hosted environment first, then supports the local `C:\Users\<you>\.codex\.env` variables `VITE_VWORLD_API_KEY` or `VWORLD_API_KEY`. The key is only injected into the browser bundle for the VWorld adapter; it is never stored in this repository. Without a key, the fallback geometry remains fully interactive.
+The Vite config reads `VITE_VWORLD_API_KEY` from the process/hosted environment first, then supports the local `C:\Users\<you>\.codex\.env` variables `VITE_VWORLD_API_KEY` or `VWORLD_API_KEY`. `VITE_VWORLD_DOMAIN` controls the VWorld service-domain parameter and should match the deployed Site host. The key is only injected into the browser bundle for the VWorld adapter; it is never stored in this repository. Without a key, the fallback geometry remains fully interactive.
 
 For a local project `.env`, copy `.env.example` to `.env` and set `VITE_VWORLD_API_KEY`. `.env` files are ignored by Git.
 

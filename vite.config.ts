@@ -11,11 +11,17 @@ export default defineConfig(({ mode }) => {
     || codexEnv.VITE_VWORLD_API_KEY
     || codexEnv.VWORLD_API_KEY
     || "";
+  const vworldDomain = process.env.VITE_VWORLD_DOMAIN
+    || projectEnv.VITE_VWORLD_DOMAIN
+    || codexEnv.VITE_VWORLD_DOMAIN
+    || codexEnv.VWORLD_DOMAIN
+    || "";
 
   return {
     plugins: [react()],
     define: {
       "import.meta.env.VITE_VWORLD_API_KEY": JSON.stringify(vworldApiKey),
+      "import.meta.env.VITE_VWORLD_DOMAIN": JSON.stringify(vworldDomain),
     },
     build: { sourcemap: true },
   };

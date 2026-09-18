@@ -46,6 +46,8 @@ export type Scenario = {
 export type SpatialWorkspace = {
   siteName: string;
   siteCenter: GeoPoint;
+  /** Local scenario datetimes are interpreted with this fixed site offset. */
+  timeZoneOffsetMinutes: number;
   scenarios: Scenario[];
   activeScenarioId: string;
   compareScenarioId?: string;

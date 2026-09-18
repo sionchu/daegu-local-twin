@@ -3,13 +3,12 @@ import { createApplicationActions } from "./actions";
 import {
   estimateGfa,
   footprintAreaM2,
-  footprintBounds,
   footprintPoints,
+  computeShadowPolygon,
   getScenario,
   initialState,
   reducer,
   rotatedFootprintPoints,
-  shadowPreview,
 } from "./model";
 import type { BuildingMass, Footprint, LocalPoint, SpatialWorkspace } from "./types";
 import { registerSpaceLabTools } from "./webmcp";
@@ -45,15 +44,19 @@ function clonePolygon(footprint: Footprint): Footprint {
     : { kind: "polygon", points: footprintPoints(footprint) };
 }
 
-function footprintCssPolygon(mass: BuildingMass) {
-  const points = rotatedFootprintPoints(mass);
-  const xs = points.map((point) => point.xM);
-  const ys = points.map((point) => point.yM);
-  const minX = Math.min(...xs);
-  const minY = Math.min(...ys);
-  const width = Math.max(...xs) - minX || 1;
-  const depth = Math.max(...ys) - minY || 1;
-  return points.map((point) => `${((point.xM - minX) / width) * 100}% ${((point.yM - minY) / depth) * 100}%`).join(", ");
+function massLocalPoints(mass: BuildingMass) {
+  return rotatedFootprintPoints(mass).map((point) => ({
+    xM: point.xM + mass.position.eastM,
+    yM: point.yM + mass.position.northM,
+  }));
+}
+
+function svgPoints(points: LocalPoint[]) {
+  return points.map(({ xM, yM }) => `${160 + xM * 1.15},${120 - yM * 1.15}`).join(" ");
+}
+
+function shadowBearing(shadow: ReturnType<typeof computeShadowPolygon>) {
+  return shadow.solar.isDaylight ? Math.round((shadow.solar.azimuthDeg + 180) % 360) : "—";
 }
 
 function FootprintEditor({ footprint, onChange }: { footprint: Footprint; onChange: (next: Footprint) => void }) {
@@ -140,9 +143,8 @@ export default function App() {
 
   const active = getScenario(state, state.activeScenarioId);
   const compare = state.compareScenarioId ? getScenario(state, state.compareScenarioId) : undefined;
-  const activeShadow = shadowPreview(active.mass, active.analysisTime);
-  const compareShadow = compare ? shadowPreview(compare.mass, compare.analysisTime) : undefined;
-  const activeBounds = footprintBounds(active.mass);
+  const activeShadow = computeShadowPolygon(active.mass, active.analysisTime, state.timeZoneOffsetMinutes);
+  const compareShadow = compare ? computeShadowPolygon(compare.mass, compare.analysisTime, state.timeZoneOffsetMinutes) : undefined;
 
   useEffect(() => {
     const previous = previousStateRef.current;
@@ -167,10 +169,10 @@ export default function App() {
 
   useEffect(() => {
     if (!vworldReady) return;
-    state.scenarios.forEach((scenario) => renderScenario(scenario, scenario.id === state.activeScenarioId));
+    state.scenarios.forEach((scenario) => renderScenario(scenario, scenario.id === state.activeScenarioId, state.timeZoneOffsetMinutes));
     setShadowMode(true);
-    setShadowTime(active.analysisTime);
-  }, [active.analysisTime, state.activeScenarioId, state.scenarios, vworldReady]);
+    setShadowTime(active.analysisTime, state.timeZoneOffsetMinutes);
+  }, [active.analysisTime, state.activeScenarioId, state.scenarios, state.timeZoneOffsetMinutes, vworldReady]);
 
   const statusLabel = vworldReady ? "VWorld 3D live" : mapError ? "VWorld unavailable" : apiKey ? "Connecting VWorld" : "Demo geometry";
 
@@ -202,14 +204,13 @@ export default function App() {
         {!vworldReady && <div className="fallback-world">
           <div className="terrain-grid"></div><div className="fake-road road-a"></div><div className="fake-road road-b"></div>
           <div className="context-building b1"></div><div className="context-building b2"></div><div className="context-building b3"></div>
-          <div className="candidate-mass" style={{
-            width: `${Math.max(116, activeBounds.widthM * 3.1)}px`,
-            height: `${Math.max(96, activeBounds.depthM * 3.1)}px`,
-            clipPath: `polygon(${footprintCssPolygon(active.mass)})`,
-            transform: `translate(calc(-50% + ${active.mass.position.eastM * 2}px), calc(-50% - ${active.mass.position.northM * 2}px))`,
-          }}><span>{active.id}</span></div>
-          <div className="shadow-shape" style={{ width: `${Math.max(80, activeShadow.lengthM * 5)}px`, transform: `translate(-12%, 75%) rotate(${activeShadow.bearingDeg - 90}deg)` }}></div>
-          <div className="fallback-note">{mapError ? "VWorld unavailable · demo geometry" : apiKey ? "VWorld loading…" : "VITE_VWORLD_API_KEY 미주입 · demo geometry"}</div>
+          <svg className="analysis-overlay" viewBox="0 0 320 240" aria-label="Solar shadow analysis">
+            {compareShadow && compareShadow.points.length >= 3 && <polygon className="fallback-shadow compare" points={svgPoints(compareShadow.points)} />}
+            {activeShadow.points.length >= 3 && <polygon className="fallback-shadow active" points={svgPoints(activeShadow.points)} />}
+            {compare && <polygon className="fallback-mass compare" points={svgPoints(massLocalPoints(compare.mass))} />}
+            <polygon className="fallback-mass active" points={svgPoints(massLocalPoints(active.mass))} />
+          </svg>
+          <div className="fallback-note">{mapError ? "VWorld unavailable · solar shadow overlay" : apiKey ? "VWorld loading…" : "VITE_VWORLD_API_KEY 미주입 · solar shadow overlay"}</div>
         </div>}
         {mapError && <div className="error-banner">{mapError}</div>}
         <div className="canvas-title"><span>{state.siteName}</span><strong>{active.name}</strong></div>
@@ -226,8 +227,8 @@ export default function App() {
         <label className="control"><div><span>Floors</span><b>{active.mass.floors}</b></div><input type="number" min={1} max={40} value={active.mass.floors} onChange={(event) => actions.editBuildingMass(active.id, { floors: Number(event.target.value) })} /></label>
         <FootprintEditor footprint={active.mass.footprint} onChange={(footprint) => actions.setMassFootprint(active.id, footprint)} />
         <label className="control"><div><span>Shadow preview time</span><b>KST</b></div><input type="datetime-local" value={active.analysisTime} onChange={(event) => actions.setShadowTime(active.id, event.target.value)} /></label>
-        <div className="metrics-grid"><Meter label="Estimated GFA" value={estimateGfa(active.mass).toLocaleString()} suffix="㎡" /><Meter label="Footprint" value={Math.round(footprintAreaM2(active.mass.footprint))} suffix="㎡" /><Meter label="Shadow length*" value={activeShadow.lengthM} suffix="m" /><Meter label="Shadow bearing" value={Math.round(activeShadow.bearingDeg)} suffix="°" /></div>
-        <small className="boundary">*Qualitative pre-feasibility preview. Not a statutory sunlight-right determination.</small>
+        <div className="metrics-grid"><Meter label="Estimated GFA" value={estimateGfa(active.mass).toLocaleString()} suffix="㎡" /><Meter label="Footprint" value={Math.round(footprintAreaM2(active.mass.footprint))} suffix="㎡" /><Meter label="Shadow length*" value={activeShadow.solar.isDaylight ? activeShadow.lengthM.toFixed(1) : "—"} suffix={activeShadow.solar.isDaylight ? "m" : ""} /><Meter label="Shadow bearing" value={shadowBearing(activeShadow)} suffix={activeShadow.solar.isDaylight ? "°" : ""} /></div>
+        <small className="boundary">*Geometric solar preview. Not a statutory sunlight-right determination.</small>
       </aside>
     </section>
 
