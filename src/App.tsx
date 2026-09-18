@@ -1,569 +1,292 @@
-import { FormEvent, useEffect, useMemo, useReducer, useRef, useState } from "react";
+import { useEffect, useMemo, useReducer, useRef, useState } from "react";
 import { createApplicationActions } from "./actions";
-import { directSunStudy, planningMetrics } from "./analysis";
 import {
-  computeShadowPolygon,
-  estimateGfa,
-  footprintAreaM2,
-  footprintPoints,
-  geoPointToLocal,
+  analyzeFinancials,
+  computeOpportunityScores,
+  getCell,
   getScenario,
   initialState,
   reducer,
-  rotatedFootprintPoints,
 } from "./model";
-import type { AddressSearchResult } from "./vworld-api";
-import { getVWorldParcelAtPoint, searchVWorldAddress } from "./vworld-api";
-import type { BuildingMass, Footprint, GeoPoint, LocalPoint } from "./types";
-import { registerSpaceLabTools } from "./webmcp";
+import { probeVWorld } from "./vworld";
+import { registerLocalTwinTools } from "./webmcp";
 import {
-  clearScenarioEntities,
-  flyToSite,
-  flyToViewpoint,
-  renderAnalysisMarkers,
-  renderDraftFootprint,
-  renderScenario,
-  renderSite,
-  sampleSceneSunContext,
-  setMapPointHandler,
-  setShadowMode,
-  setShadowTime,
-  startVWorld,
-} from "./vworld";
+  businessCategoryLabels,
+  stressPresetLabels,
+  type BusinessCategory,
+  type BusinessScenario,
+  type FinancialAnalysis,
+  type LocalTwinState,
+  type LocationEvidence,
+  type MapLayer,
+  type StartupAssumptions,
+  type StressPreset,
+  type SupportProgram,
+} from "./types";
 import "./styles.css";
+
+type View = "map" | "compare" | "funding";
+type ProviderStatus = "checking" | "live" | "fallback";
+type ProvenanceSource = {
+  id: string;
+  title: string;
+  provider: string;
+  url: string;
+  geographicLevel: string;
+  freshness: string;
+  fieldsUsed: string[];
+  limitations: string;
+  mode: "live" | "snapshot" | "demo";
+};
+type Provenance = {
+  generatedAt: string;
+  grid: { kind: string; resolution: string; note: string };
+  sources: ProvenanceSource[];
+  privacyBoundary: string[];
+};
 
 const apiKey = import.meta.env.VITE_VWORLD_API_KEY as string | undefined;
 const vworldDomain = import.meta.env.VITE_VWORLD_DOMAIN as string | undefined;
 
-type CanvasMode = "inspect" | "pick-site" | "draw-polygon" | "move-mass" | "sun-point" | "viewpoint";
-
-function Meter({ label, value, suffix = "" }: { label: string; value: string | number; suffix?: string }) {
-  return <div className="metric"><span>{label}</span><strong>{value}{suffix}</strong></div>;
-}
-
-type SliderProps = {
-  label: string;
-  value: number;
-  min: number;
-  max: number;
-  step?: number;
-  suffix?: string;
-  onChange: (value: number) => void;
+const layerLabels: Record<MapLayer, string> = {
+  opportunity: "종합 Opportunity",
+  demand: "상권 수요",
+  transit: "교통 접근",
+  buzz: "Buzz / 관심도",
+  spillover: "파생수요",
+  regeneration: "도시재생 맥락",
+  rent: "임대부담 Benchmark",
 };
 
-function Slider({ label, value, min, max, step = 1, suffix = "", onChange }: SliderProps) {
-  return <label className="control">
-    <div className="control-line"><span>{label}</span><span className="value-editor"><input aria-label={`${label} value`} type="number" min={min} max={max} step={step} value={value} onChange={(event) => onChange(Number(event.target.value))} />{suffix && <em>{suffix}</em>}</span></div>
-    <input className="range-input" aria-label={`${label} slider`} type="range" min={min} max={max} step={step} value={value} onChange={(event) => onChange(Number(event.target.value))} />
-  </label>;
+const qualityLabels: Record<LocationEvidence["evidenceQuality"], string> = {
+  observed: "관측",
+  official: "공식",
+  modelled: "모델",
+  demo: "데모",
+};
+
+const currencyFormatter = new Intl.NumberFormat("ko-KR");
+const numberFormatter = new Intl.NumberFormat("ko-KR", { maximumFractionDigits: 0 });
+
+function formatKrw(value: number) {
+  return `${currencyFormatter.format(Math.round(value))}원`;
 }
 
-function datePart(value: string) {
-  return value.slice(0, 10);
+function formatMan(value: number) {
+  return `${numberFormatter.format(Math.round(value / 10_000))}만원`;
 }
 
-function timePart(value: string) {
-  return value.slice(11, 16);
+function formatPercent(value: number | null, digits = 1) {
+  return value === null || !Number.isFinite(value) ? "데이터 부족" : `${(value * 100).toFixed(digits)}%`;
 }
 
-function minutesFromTime(value: string) {
-  const [hours, minutes] = value.split(":").map(Number);
-  return Number.isFinite(hours) && Number.isFinite(minutes) ? hours * 60 + minutes : 900;
+function formatNumber(value: number | null, digits = 0) {
+  return value === null || !Number.isFinite(value) ? "데이터 부족" : value.toLocaleString("ko-KR", { maximumFractionDigits: digits });
 }
 
-function timeFromMinutes(value: number) {
-  const minutes = Math.min(1_080, Math.max(540, value));
-  return `${String(Math.floor(minutes / 60)).padStart(2, "0")}:${String(minutes % 60).padStart(2, "0")}`;
+function scoreColor(score: number | null) {
+  if (score === null) return "#2b3542";
+  const hue = 190 - Math.max(0, Math.min(100, score)) * 1.25;
+  return `hsl(${hue} 78% ${Math.max(38, Math.min(67, 42 + score * 0.18))}%)`;
 }
 
-function withDateAndTime(current: string, date: string, time: string) {
-  return `${date || datePart(current)}T${time || timePart(current)}`;
+function metricScore(cell: LocationEvidence, cells: LocationEvidence[], layer: MapLayer) {
+  const scores = computeOpportunityScores(cell, cells);
+  if (layer === "opportunity") return scores.demandScore;
+  if (layer === "demand") return scores.footfall;
+  if (layer === "transit") return scores.transit;
+  if (layer === "buzz") return scores.buzz;
+  if (layer === "spillover") return scores.spillover;
+  if (layer === "rent") return scores.rentRelief;
+  return cell.regenerationScore;
 }
 
-function solarValue(value: number, suffix = "°") {
-  return Number.isFinite(value) ? `${value.toFixed(1)}${suffix}` : "—";
+function scenarioCell(state: LocalTwinState, scenario?: BusinessScenario) {
+  return scenario ? state.cells.find((cell) => cell.cellId === scenario.locationCellId) : undefined;
 }
 
-function formatMinutesKo(minutes: number) {
-  const hours = Math.floor(minutes / 60);
-  const rest = minutes % 60;
-  if (!hours) return `${rest}분`;
-  return rest ? `${hours}시간 ${rest}분` : `${hours}시간`;
+function Badge({ children, tone = "neutral" }: { children: React.ReactNode; tone?: "neutral" | "teal" | "amber" | "blue" | "red" }) {
+  return <span className={`badge badge-${tone}`}>{children}</span>;
 }
 
-function scenarioName(id: string, name: string) {
-  return /^Option [A-Z]+$/.test(name) ? `대안 ${id}` : name;
+function EvidenceBadge({ quality }: { quality: LocationEvidence["evidenceQuality"] }) {
+  const tone = quality === "official" || quality === "observed" ? "teal" : quality === "modelled" ? "blue" : "amber";
+  return <Badge tone={tone}>{qualityLabels[quality]}</Badge>;
 }
 
-function siteName(source: string, name: string) {
-  return source === "demo" ? "부지를 선택하세요" : name;
+function StatRow({ label, value, note, accent = false }: { label: string; value: React.ReactNode; note?: string; accent?: boolean }) {
+  return <div className="stat-row"><span>{label}</span><strong className={accent ? "accent" : ""}>{value}</strong>{note && <small>{note}</small>}</div>;
 }
 
-function osmEmbedUrl(center: GeoPoint) {
-  const lonSpan = 0.012;
-  const latSpan = 0.008;
-  const bbox = [
-    center.lon - lonSpan,
-    center.lat - latSpan,
-    center.lon + lonSpan,
-    center.lat + latSpan,
-  ].join(",");
-  return `https://www.openstreetmap.org/export/embed.html?bbox=${encodeURIComponent(bbox)}&layer=mapnik&marker=${center.lat}%2C${center.lon}`;
+function FieldBar({ label, value, note }: { label: string; value: number | null; note?: string }) {
+  return <div className="field-bar"><div><span>{label}</span><b>{value === null ? "데이터 부족" : `${Math.round(value)} / 100`}</b></div><div className="bar-track"><i style={{ width: `${Math.max(0, Math.min(100, value ?? 0))}%` }} /></div>{note && <small>{note}</small>}</div>;
 }
 
-function clonePolygon(footprint: Footprint): Footprint {
-  return footprint.kind === "polygon"
-    ? { kind: "polygon", points: footprint.points.map((point) => ({ ...point })) }
-    : { kind: "polygon", points: footprintPoints(footprint) };
+function MapCanvas({ cells, layer, selectedCellId, onSelect, state }: { cells: LocationEvidence[]; layer: MapLayer; selectedCellId?: string; onSelect: (cellId: string) => void; state: LocalTwinState }) {
+  const minLon = 128.582;
+  const maxLon = 128.612;
+  const minLat = 35.861;
+  const maxLat = 35.884;
+  const project = (lon: number, lat: number) => ({ x: ((lon - minLon) / (maxLon - minLon)) * 1000, y: 760 - ((lat - minLat) / (maxLat - minLat)) * 700 });
+  const candidateByCell = new Map(state.scenarios.map((scenario) => [scenario.locationCellId, scenario.id === state.activeScenarioId ? "A" : scenario.id === state.compareScenarioId ? "B" : ""]));
+  return <div className="map-canvas-wrap">
+    <svg className="map-canvas" viewBox="0 0 1000 760" role="img" aria-label="동성로 교동 북성로 기회 신호 지도">
+      <defs>
+        <pattern id="street-grid" width="70" height="70" patternUnits="userSpaceOnUse" patternTransform="rotate(12)">
+          <path d="M 0 0 L 0 70 M 35 0 L 35 70" stroke="#1c2732" strokeWidth="1" />
+        </pattern>
+        <linearGradient id="corridor-gradient" x1="0" x2="1"><stop offset="0" stopColor="#5eead4" stopOpacity=".1" /><stop offset="1" stopColor="#f4b860" stopOpacity=".25" /></linearGradient>
+      </defs>
+      <rect width="1000" height="760" fill="#0e151d" />
+      <rect width="1000" height="760" fill="url(#street-grid)" opacity=".62" />
+      <path d="M110 660 C260 600 330 505 435 430 S640 280 880 125" fill="none" stroke="url(#corridor-gradient)" strokeWidth="76" strokeLinecap="round" opacity=".45" />
+      <path d="M80 646 C270 574 337 496 449 420 S667 265 910 110" fill="none" stroke="#526171" strokeWidth="4" strokeDasharray="10 12" opacity=".7" />
+      <text x="90" y="695" className="map-label muted">북성로</text>
+      <text x="430" y="455" className="map-label">교동</text>
+      <text x="795" y="125" className="map-label">동성로</text>
+      <text x="66" y="96" className="map-caption">CENTRAL DAEGU · 0.5km GRID VIEW</text>
+      <g className="station-markers">
+        <circle cx="305" cy="555" r="7" /><circle cx="510" cy="399" r="7" /><circle cx="700" cy="260" r="7" />
+        <text x="317" y="560">서문시장역</text><text x="522" y="404">중앙로역</text><text x="712" y="265">반월당역</text>
+      </g>
+      {cells.map((cell) => {
+        const score = metricScore(cell, cells, layer);
+        const points = cell.boundary.map((point) => { const projected = project(point.lon, point.lat); return `${projected.x},${projected.y}`; }).join(" ");
+        const center = project(cell.center.lon, cell.center.lat);
+        const slot = candidateByCell.get(cell.cellId);
+        return <g key={cell.cellId} className={`map-cell ${selectedCellId === cell.cellId ? "selected" : ""}`} onClick={() => onSelect(cell.cellId)} role="button" tabIndex={0} onKeyDown={(event) => { if (event.key === "Enter" || event.key === " ") onSelect(cell.cellId); }} aria-label={`${cell.label}, ${layerLabels[layer]} ${score === null ? "데이터 부족" : Math.round(score)}`}>
+          <polygon points={points} fill={scoreColor(score)} fillOpacity={selectedCellId === cell.cellId ? ".86" : ".66"} stroke={selectedCellId === cell.cellId ? "#fff" : "#b7d6d5"} strokeWidth={selectedCellId === cell.cellId ? "4" : "1.5"} />
+          <circle cx={center.x} cy={center.y} r={slot ? 17 : 5} fill={slot === "A" ? "#0b1018" : slot === "B" ? "#f4b860" : "#d6fffa"} stroke={slot ? "#fff" : "none"} strokeWidth="3" />
+          {slot && <text x={center.x} y={center.y + 5} textAnchor="middle" className="candidate-letter">{slot}</text>}
+          <text x={center.x} y={center.y + (slot ? 34 : 19)} textAnchor="middle" className="cell-name">{cell.label.replace(" · ", " ")}</text>
+          {score !== null && <text x={center.x} y={center.y - 16} textAnchor="middle" className="cell-score">{Math.round(score)}</text>}
+        </g>;
+      })}
+      <g className="north-arrow" transform="translate(914 70)"><path d="M0 32 L11 0 L22 32 L11 25 Z" fill="#d8fff8" /><text x="11" y="49" textAnchor="middle">N</text></g>
+    </svg>
+    <div className="map-attribution">육각형 셀 · 거리감쇠 파생수요 · 일부 데모 데이터</div>
+  </div>;
 }
 
-function massLocalPoints(mass: BuildingMass) {
-  return rotatedFootprintPoints(mass).map((point) => ({
-    xM: point.xM + mass.position.eastM,
-    yM: point.yM + mass.position.northM,
-  }));
-}
-
-function svgPoints(points: LocalPoint[]) {
-  return points.map(({ xM, yM }) => `${160 + xM * 1.15},${120 - yM * 1.15}`).join(" ");
-}
-
-function shadowBearing(shadow: ReturnType<typeof computeShadowPolygon>) {
-  return shadow.solar.isDaylight ? Math.round((shadow.solar.azimuthDeg + 180) % 360) : "—";
-}
-
-function FootprintEditor({ footprint, onChange }: { footprint: Footprint; onChange: (next: Footprint) => void }) {
-  const setRectangleDimension = (key: "widthM" | "depthM", value: number) => {
-    const rectangle = footprint.kind === "rectangle"
-      ? footprint
-      : { kind: "rectangle" as const, widthM: 32, depthM: 24 };
-    onChange({ ...rectangle, [key]: value });
-  };
-
-  const setPoint = (index: number, key: keyof LocalPoint, value: number) => {
-    if (footprint.kind !== "polygon") return;
-    onChange({
-      kind: "polygon",
-      points: footprint.points.map((point, pointIndex) => pointIndex === index ? { ...point, [key]: value } : point),
-    });
-  };
-
-  const removePoint = (index: number) => {
-    if (footprint.kind !== "polygon" || footprint.points.length <= 3) return;
-    onChange({ kind: "polygon", points: footprint.points.filter((_, pointIndex) => pointIndex !== index) });
-  };
-
-  return <section className="inspector-section footprint-editor">
-    <div className="section-heading"><span>평면 형상</span><b>{footprint.kind === "polygon" ? "자유형" : "사각형"}</b></div>
-    <div className="segmented" role="group" aria-label="평면 형상 유형">
-      <button className={footprint.kind === "rectangle" ? "selected" : ""} onClick={() => onChange(footprint.kind === "rectangle" ? footprint : { kind: "rectangle", widthM: 32, depthM: 24 })}>사각형</button>
-      <button className={footprint.kind === "polygon" ? "selected" : ""} onClick={() => onChange(clonePolygon(footprint))}>자유형</button>
+function MapView({ state, actions, selectedCellId, setSelectedCellId, providerStatus, provenance }: { state: LocalTwinState; actions: ReturnType<typeof createApplicationActions>; selectedCellId?: string; setSelectedCellId: (id: string) => void; providerStatus: ProviderStatus; provenance?: Provenance }) {
+  const cell = state.cells.find((item) => item.cellId === selectedCellId) ?? state.cells[0];
+  const scores = cell ? computeOpportunityScores(cell, state.cells) : undefined;
+  const active = state.activeScenarioId ? getScenario(state, state.activeScenarioId) : undefined;
+  const compare = state.compareScenarioId ? getScenario(state, state.compareScenarioId) : undefined;
+  return <section className="view map-view">
+    <div className="map-main">
+      <div className="view-kicker"><span>01 / OPPORTUNITY MAP</span><Badge tone={providerStatus === "live" ? "teal" : "amber"}>{providerStatus === "live" ? "VWorld 3D live" : providerStatus === "checking" ? "지도 상태 확인 중" : "Demo geometry"}</Badge></div>
+      <div className="hero-copy"><h1>사람이 많은 곳보다,<br /><em>내가 버틸 수 있는 곳.</em></h1><p>동성로–교동–북성로의 수요 신호를 실제 점포 조건과 함께 비교합니다.</p></div>
+      <div className="map-toolbar" aria-label="지도 레이어 선택">{(Object.keys(layerLabels) as MapLayer[]).map((layer) => <button key={layer} className={state.activeLayer === layer ? "active" : ""} onClick={() => actions.setLayer(layer)}>{layerLabels[layer]}</button>)}</div>
+      <MapCanvas cells={state.cells} layer={state.activeLayer} selectedCellId={selectedCellId} onSelect={setSelectedCellId} state={state} />
+      <div className="legend"><span><i className="legend-low" />낮음</span><span><i className="legend-mid" />중간</span><span><i className="legend-high" />높음</span><small>{state.activeLayer === "rent" ? "임대부담 완화 신호 · 높을수록 부담 낮음" : "정규화 0–100 · 절대 매출/성공확률 아님"}</small></div>
     </div>
-    {footprint.kind === "rectangle" ? <div className="two-fields">
-      <label><span>가로</span><input type="number" min={6} max={200} value={footprint.widthM} onChange={(event) => setRectangleDimension("widthM", Number(event.target.value))} /></label>
-      <label><span>세로</span><input type="number" min={6} max={200} value={footprint.depthM} onChange={(event) => setRectangleDimension("depthM", Number(event.target.value))} /></label>
-    </div> : <div className="polygon-editor">
-      <div className="polygon-toolbar"><span>꼭짓점 {footprint.points.length}개 · 기준점 상대 좌표(m)</span></div>
-      {footprint.points.map((point, index) => <div className="point-row" key={`point-${index}`}>
-        <span>P{index + 1}</span>
-        <input aria-label={`P${index + 1} east`} type="number" step="1" value={point.xM} onChange={(event) => setPoint(index, "xM", Number(event.target.value))} />
-        <input aria-label={`P${index + 1} north`} type="number" step="1" value={point.yM} onChange={(event) => setPoint(index, "yM", Number(event.target.value))} />
-        <button className="remove-point" aria-label={`P${index + 1} 삭제`} disabled={footprint.points.length <= 3} onClick={() => removePoint(index)}>×</button>
-      </div>)}
-    </div>}
+    <aside className="evidence-panel">
+      <div className="panel-heading"><div><span className="eyebrow">SELECTED CELL</span><h2>{cell?.label ?? "셀을 불러오는 중"}</h2></div>{cell && <EvidenceBadge quality={cell.evidenceQuality} />}</div>
+      {cell && scores ? <>
+        <div className="signal-score"><div><span>종합 Opportunity</span><strong>{scores.demandScore === null ? "—" : Math.round(scores.demandScore)}</strong></div><p>가중치가 있는 데이터만 재정규화해 계산합니다.</p></div>
+        <div className="evidence-section"><div className="section-title"><span>수요 분해</span><small>DemandScore</small></div>
+          <FieldBar label="관련 보행량 proxy" value={scores.footfall} note={`${formatNumber(cell.observedFootfall)}명/일 · ${cell.footfallSource ?? "출처 미상"}`} />
+          <FieldBar label="교통 접근" value={scores.transit} note={`${formatNumber(cell.transitDemand)} 승하차 proxy`} />
+          <FieldBar label="Buzz / 관심도" value={scores.buzz} note={`관심도 ${formatNumber(cell.buzzLevel)} · 모멘텀 ${cell.buzzMomentum === null ? "—" : `${cell.buzzMomentum > 0 ? "+" : ""}${(cell.buzzMomentum * 100).toFixed(0)}%`}`} />
+          <FieldBar label="파생수요" value={scores.spillover} note="거리감쇠 기반 · 주변 목적지 영향" />
+          <FieldBar label="POI / 업종 맥락" value={scores.poiContext} note={`${formatNumber(cell.poiCount)}개 POI · 선택 업종 ${cell.sameCategoryCount}개`} />
+        </div>
+        <div className="evidence-grid"><StatRow label="도시재생 맥락" value={cell.regenerationScore === null ? "데이터 부족" : `${cell.regenerationScore}/100`} note="성공 예측 아님" /><StatRow label="임대 benchmark" value={cell.rentBenchmark === null ? "데이터 부족" : formatMan(cell.rentBenchmark)} note="상권/지역 기준" /><StatRow label="공실 benchmark" value={cell.vacancyBenchmark === null ? "데이터 부족" : `${cell.vacancyBenchmark.toFixed(1)}%`} note="점포별 공실 아님" /><StatRow label="동일 업종" value={`${cell.sameCategoryCount}개`} note="snapshot / demo" /></div>
+        <div className="candidate-actions"><p>입지의 신호는 판단이 아니라 입력값입니다. 실제 임대조건을 넣은 뒤 금융 결과를 확인하세요.</p><div><button className="slot-button slot-a" onClick={() => { actions.selectCell(cell.cellId, "A"); setSelectedCellId(cell.cellId); }}>A로 선택</button><button className="slot-button slot-b" onClick={() => { actions.selectCell(cell.cellId, "B"); setSelectedCellId(cell.cellId); }}>B로 선택</button></div></div>
+        <div className="selected-pair"><div><span>A</span><strong>{scenarioCell(state, active)?.label ?? "선택 전"}</strong></div><div><span>B</span><strong>{scenarioCell(state, compare)?.label ?? "선택 전"}</strong></div></div>
+        <details className="provenance-details"><summary>출처와 데이터 경계 보기</summary><p>이 셀의 provenance ID: {cell.provenanceIds.join(", ")}</p>{provenance?.sources.filter((source) => cell.provenanceIds.includes(source.id)).map((source) => <a key={source.id} href={source.url} target="_blank" rel="noreferrer">{source.title} ↗</a>)}<small>공모전 데모 — 일부 데이터는 공개자료 Snapshot 또는 시연용 가정입니다.</small></details>
+      </> : <div className="loading-copy">공간 셀 snapshot을 불러오고 있습니다.</div>}
+    </aside>
   </section>;
 }
 
-export default function App() {
-  const [state, dispatch] = useReducer(reducer, initialState);
-  const stateRef = useRef(state);
-  const [vworldReady, setVworldReady] = useState(false);
-  const [mapError, setMapError] = useState<string | null>(null);
-  const [webMcp, setWebMcp] = useState(false);
-  const [workspaceMode, setWorkspaceMode] = useState<"design" | "compare">("design");
-  const [navigatorOpen, setNavigatorOpen] = useState(false);
-  const [inspectorOpen, setInspectorOpen] = useState(false);
-  const [canvasMode, setCanvasMode] = useState<CanvasMode>("inspect");
-  const [draftPoints, setDraftPoints] = useState<LocalPoint[]>([]);
-  const [searchQuery, setSearchQuery] = useState("");
-  const [searchResults, setSearchResults] = useState<AddressSearchResult[]>([]);
-  const [searching, setSearching] = useState(false);
-  const [siteBusy, setSiteBusy] = useState(false);
-  const [siteMessage, setSiteMessage] = useState<string | null>(null);
-  const [sceneSunBusy, setSceneSunBusy] = useState(false);
-  const [sceneSunContext, setSceneSunContext] = useState<{ supported: boolean; blockedTimes: string[]; source: string } | null>(null);
-  stateRef.current = state;
+function NumberField({ label, value, onChange, suffix = "원", step = 1, min = 0 }: { label: string; value: number; onChange: (value: number) => void; suffix?: string; step?: number; min?: number }) {
+  return <label className="number-field"><span>{label}</span><div><input type="number" value={Number.isFinite(value) ? value : 0} min={min} step={step} onChange={(event) => onChange(Number(event.target.value))} /><small>{suffix}</small></div></label>;
+}
 
-  const actions = useMemo(() => createApplicationActions((action) => {
-    stateRef.current = reducer(stateRef.current, action);
-    dispatch(action);
-  }, () => stateRef.current), []);
+function AssumptionEditor({ scenario, onPatch }: { scenario: BusinessScenario; onPatch: (patch: Partial<StartupAssumptions>) => void }) {
+  const a = scenario.assumptions;
+  return <div className="assumption-editor">
+    <div className="assumption-grid primary-inputs"><NumberField label="실제 보증금" value={a.depositKrw} onChange={(value) => onPatch({ depositKrw: value })} /><NumberField label="실제 월세" value={a.monthlyRentKrw} onChange={(value) => onPatch({ monthlyRentKrw: value })} /><NumberField label="관리비" value={a.managementFeeKrw} onChange={(value) => onPatch({ managementFeeKrw: value })} /></div>
+    <details className="assumptions-more"><summary>창업비용·운영 가정 편집</summary><div className="assumption-grid"><NumberField label="인테리어" value={a.interiorKrw} onChange={(value) => onPatch({ interiorKrw: value })} /><NumberField label="장비" value={a.equipmentKrw} onChange={(value) => onPatch({ equipmentKrw: value })} /><NumberField label="초기재고" value={a.initialInventoryKrw} onChange={(value) => onPatch({ initialInventoryKrw: value })} /><NumberField label="인허가/셋업" value={a.permitAndSetupKrw} onChange={(value) => onPatch({ permitAndSetupKrw: value })} /><NumberField label="오픈 마케팅" value={a.openingMarketingKrw} onChange={(value) => onPatch({ openingMarketingKrw: value })} /><NumberField label="월 인건비" value={a.monthlyPayrollKrw} onChange={(value) => onPatch({ monthlyPayrollKrw: value })} /><NumberField label="월 유틸리티" value={a.monthlyUtilitiesKrw} onChange={(value) => onPatch({ monthlyUtilitiesKrw: value })} /><NumberField label="기타 고정비" value={a.monthlyOtherFixedKrw} onChange={(value) => onPatch({ monthlyOtherFixedKrw: value })} /><NumberField label="객단가" value={a.averageTicketKrw} onChange={(value) => onPatch({ averageTicketKrw: value })} /><NumberField label="월 영업일" value={a.operatingDaysPerMonth} suffix="일" onChange={(value) => onPatch({ operatingDaysPerMonth: value })} /><NumberField label="원가율" value={a.variableCostRatio * 100} suffix="%" step={0.1} onChange={(value) => onPatch({ variableCostRatio: value / 100 })} /><NumberField label="가정 전환율" value={a.assumedConversionRate * 100} suffix="%" step={0.1} onChange={(value) => onPatch({ assumedConversionRate: value / 100 })} /><NumberField label="오픈 버퍼" value={a.openingBufferMonths} suffix="개월" step={0.5} onChange={(value) => onPatch({ openingBufferMonths: value })} /></div></details>
+    <div className="funding-mini"><span>자기자금</span><NumberField label="자기자금" value={a.ownerCashKrw} onChange={(value) => onPatch({ ownerCashKrw: value })} /><span>지원금</span><NumberField label="지원금" value={a.grantKrw} onChange={(value) => onPatch({ grantKrw: value })} /><span>가정 조달</span><NumberField label="가정 조달" value={a.assumedFinancingKrw} onChange={(value) => onPatch({ assumedFinancingKrw: value })} /><span>기타 조달</span><NumberField label="기타 조달" value={a.otherFundingKrw} onChange={(value) => onPatch({ otherFundingKrw: value })} /></div>
+  </div>;
+}
 
+function FinancialMetricGrid({ analysis, footfall }: { analysis: FinancialAnalysis; footfall: number | null }) {
+  return <div className="financial-metric-grid"><div className="signature-chain"><div><span>관련 보행량</span><strong>{footfall === null ? "—" : `${formatNumber(footfall)}명/일`}</strong><small>proxy</small></div><i>↓</i><div><span>필요 고객수</span><strong>{Math.ceil(analysis.breakEvenCustomersPerDay)}명/일</strong><small>손익분기</small></div><i>↓</i><div><span>필요 전환율</span><strong className="accent">{formatPercent(analysis.requiredConversionRate)}</strong><small>보행→구매</small></div></div><div className="metric-side"><StatRow label="월 손익분기 매출" value={formatMan(analysis.monthlyBreakEvenRevenueKrw)} accent /><StatRow label="총 필요 창업자금" value={formatMan(analysis.startupCapitalNeedKrw)} /><StatRow label="Funding Gap" value={formatMan(analysis.fundingGapKrw)} accent={analysis.fundingGapKrw > 0} /></div></div>;
+}
+
+function CashTimeline({ analysis }: { analysis: FinancialAnalysis }) {
+  const max = Math.max(...analysis.monthlyTimeline.map((point) => Math.abs(point.cashBalanceKrw)), 1);
+  return <div className="timeline"><div className="timeline-header"><span>12개월 현금흐름</span><small>월별 가정 ramp · 예측 사실 아님</small></div>{analysis.monthlyTimeline.map((point) => <div className="timeline-row" key={point.month}><span>M{point.month}</span><div className="timeline-bar"><i className={point.cashBalanceKrw < 0 ? "negative" : "positive"} style={{ width: `${Math.min(100, Math.max(3, Math.abs(point.cashBalanceKrw) / max * 100))}%` }} /></div><b>{formatMan(point.cashBalanceKrw)}</b></div>)}</div>;
+}
+
+function ScenarioPanel({ state, scenario, label, actions }: { state: LocalTwinState; scenario?: BusinessScenario; label: "A" | "B"; actions: ReturnType<typeof createApplicationActions> }) {
+  if (!scenario) return <div className="empty-card"><span>후보 {label}</span><h3>지도에서 입지를 선택하세요</h3></div>;
+  const cell = scenarioCell(state, scenario);
+  const analysis = cell ? analyzeFinancials(scenario.assumptions, cell.observedFootfall, scenario.stressPreset) : null;
+  return <article className={`scenario-panel scenario-${label.toLowerCase()}`}><div className="scenario-heading"><div><span className="scenario-letter">{label}</span><div><span className="eyebrow">CANDIDATE {label}</span><h3>{cell?.label ?? "셀 로딩 중"}</h3></div></div>{cell && <EvidenceBadge quality={cell.evidenceQuality} />}</div><div className="scenario-meta"><select aria-label={`후보 ${label} 업종`} value={scenario.assumptions.category} onChange={(event) => actions.setCategory(scenario.id, event.target.value as BusinessCategory)}>{(Object.keys(businessCategoryLabels) as BusinessCategory[]).map((category) => <option key={category} value={category}>{businessCategoryLabels[category]}</option>)}</select><span>{cell?.district}</span><span>동일 업종 {cell ? cell.sameCategoryCounts[scenario.assumptions.category] ?? cell.sameCategoryCount : "—"}개</span></div>{analysis && <FinancialMetricGrid analysis={analysis} footfall={cell?.observedFootfall ?? null} />}<AssumptionEditor scenario={scenario} onPatch={(patch) => actions.setAssumptions(scenario.id, patch)} /><div className="scenario-stress"><label>Stress preset<select value={scenario.stressPreset} onChange={(event) => actions.setStressPreset(scenario.id, event.target.value as StressPreset)}>{(Object.keys(stressPresetLabels) as StressPreset[]).map((preset) => <option key={preset} value={preset}>{stressPresetLabels[preset]}</option>)}</select></label>{analysis && <div className="stress-readout"><span>현금고갈</span><b>{analysis.cashRunwayMonths === null ? "12개월 내 없음" : `${analysis.cashRunwayMonths}개월`}</b><span>손익분기 월</span><b>{analysis.breakEvenMonth === null ? "12개월 내 없음" : `M${analysis.breakEvenMonth}`}</b><span>자기자금 회수</span><b>{analysis.paybackMonth === null ? "12개월 내 미회수" : `M${analysis.paybackMonth}`}</b></div>}</div>{analysis && <CashTimeline analysis={analysis} />}</article>;
+}
+
+function CompareView({ state, actions }: { state: LocalTwinState; actions: ReturnType<typeof createApplicationActions> }) {
   const active = state.activeScenarioId ? getScenario(state, state.activeScenarioId) : undefined;
   const compare = state.compareScenarioId ? getScenario(state, state.compareScenarioId) : undefined;
-  const activeShadow = active
-    ? computeShadowPolygon(active.mass, state.site.center, active.analysisTime, state.timeZoneOffsetMinutes)
-    : undefined;
-  const compareShadow = compare
-    ? computeShadowPolygon(compare.mass, state.site.center, compare.analysisTime, state.timeZoneOffsetMinutes)
-    : undefined;
-  const activeDate = active ? datePart(active.analysisTime) : "2026-09-18";
-  const activeTime = active ? timePart(active.analysisTime) : "15:00";
-  const activeMinutes = minutesFromTime(activeTime);
-  const sunStudyPoint = state.sunStudyPoint ?? state.site.center;
-  const activeSunStudy = useMemo(() => active
-    ? directSunStudy(active.mass, state.site, sunStudyPoint, activeDate, state.timeZoneOffsetMinutes)
-    : undefined, [active, activeDate, state.site, state.timeZoneOffsetMinutes, sunStudyPoint]);
-  const compareSunStudy = useMemo(() => compare
-    ? directSunStudy(compare.mass, state.site, sunStudyPoint, activeDate, state.timeZoneOffsetMinutes)
-    : undefined, [compare, activeDate, state.site, state.timeZoneOffsetMinutes, sunStudyPoint]);
-  const activePlanning = useMemo(() => active ? planningMetrics(state.site, active.mass) : undefined, [active, state.site]);
-  const sceneBlockedTimes = useMemo(() => new Set(sceneSunContext?.blockedTimes ?? []), [sceneSunContext]);
-  const combinedDirectSunMinutes = (study: typeof activeSunStudy) => study
-    ? study.samples.reduce((minutes, sample) => {
-      if (sample.state !== "sun") return minutes;
-      return minutes + (sceneBlockedTimes.has(sample.localDateTime) ? 0 : study.stepMinutes);
-    }, 0)
-    : 0;
-  const activeContextSunMinutes = combinedDirectSunMinutes(activeSunStudy);
-  const compareContextSunMinutes = combinedDirectSunMinutes(compareSunStudy);
+  const activeCell = scenarioCell(state, active);
+  const compareCell = scenarioCell(state, compare);
+  const activeAnalysis = active && activeCell ? analyzeFinancials(active.assumptions, activeCell.observedFootfall, active.stressPreset) : null;
+  const compareAnalysis = compare && compareCell ? analyzeFinancials(compare.assumptions, compareCell.observedFootfall, compare.stressPreset) : null;
+  return <section className="view compare-view"><div className="view-heading"><div><span className="view-kicker">02 / CANDIDATE COMPARE</span><h1>같은 업종, 다른 생존 조건.</h1><p>임대료와 자기자본을 입력하면 입지 신호가 금융 판단으로 연결됩니다.</p></div><button className="secondary-button" onClick={() => active && actions.cloneScenario(active.id)}>현재 후보 복제</button></div><div className="compare-summary"><div><span>Signature metric</span><strong>{activeAnalysis && compareAnalysis ? `필요 전환율 ${formatPercent(activeAnalysis.requiredConversionRate)} vs ${formatPercent(compareAnalysis.requiredConversionRate)}` : "두 후보를 선택하세요"}</strong><small>관련 보행량 proxy를 분모로 사용합니다.</small></div><div><span>Funding Gap</span><strong>{activeAnalysis && compareAnalysis ? `${formatMan(activeAnalysis.fundingGapKrw)} vs ${formatMan(compareAnalysis.fundingGapKrw)}` : "—"}</strong></div></div><div className="scenario-grid"><ScenarioPanel state={state} scenario={active} label="A" actions={actions} /><ScenarioPanel state={state} scenario={compare} label="B" actions={actions} /></div><div className="compare-footnote"><span>해석</span><p>{activeAnalysis && compareAnalysis && activeCell && compareCell ? (activeAnalysis.requiredConversionRate !== null && compareAnalysis.requiredConversionRate !== null && activeAnalysis.requiredConversionRate < compareAnalysis.requiredConversionRate ? `후보 A는 후보 B보다 필요한 보행→구매 전환율이 낮습니다. 단, 이 결과는 현재 입력한 임대·비용·전환 가정에 대한 결정론적 계산입니다.` : `후보 B는 후보 A보다 필요한 보행→구매 전환율이 낮습니다. 단, 이 결과는 현재 입력한 임대·비용·전환 가정에 대한 결정론적 계산입니다.`) : "지도에서 A와 B를 선택한 뒤 실제 점포 조건을 입력하세요."}</p></div></section>;
+}
 
-  const searchLocation = useMemo(() => async (query: string) => {
-    if (!apiKey) throw new Error("현재 미리보기에서는 VWorld 주소 검색을 사용할 수 없습니다.");
-    return searchVWorldAddress(apiKey, query, vworldDomain);
-  }, []);
+function FundingView({ state, actions, programs, provenance }: { state: LocalTwinState; actions: ReturnType<typeof createApplicationActions>; programs: SupportProgram[]; provenance?: Provenance }) {
+  const scenario = state.activeScenarioId ? getScenario(state, state.activeScenarioId) : undefined;
+  const cell = scenarioCell(state, scenario);
+  const analysis = scenario && cell ? analyzeFinancials(scenario.assumptions, cell.observedFootfall, scenario.stressPreset) : null;
+  const a = scenario?.assumptions;
+  const sources = a ? a.ownerCashKrw + a.grantKrw + a.assumedFinancingKrw + a.otherFundingKrw : 0;
+  return <section className="view funding-view"><div className="view-heading"><div><span className="view-kicker">03 / FUNDING PLAN</span><h1>필요 자금과 검토 경로를 한 화면에.</h1><p>조달액은 승인 예측이 아니라, 현재 입력한 가정에 대한 funding stack입니다.</p></div><label className="scenario-picker">기준 후보<select value={scenario?.id ?? ""} onChange={(event) => actions.compareScenarios(event.target.value, state.compareScenarioId)}>{state.scenarios.map((item) => <option key={item.id} value={item.id}>{item.name}</option>)}</select></label></div>{scenario && cell && a && analysis ? <><div className="funding-layout"><div className="funding-card"><div className="card-title"><span>FUNDING STACK</span><Badge tone={analysis.fundingGapKrw > 0 ? "amber" : "teal"}>{analysis.fundingGapKrw > 0 ? "추가 조달 검토" : "현재 가정상 충족"}</Badge></div><div className="funding-stack"><div className="stack-line"><span>총 필요 창업자금</span><strong>{formatMan(analysis.startupCapitalNeedKrw)}</strong><i style={{ width: "100%" }} /></div><div className="stack-line owner"><span>자기자금</span><strong>{formatMan(a.ownerCashKrw)}</strong><i style={{ width: `${Math.min(100, a.ownerCashKrw / Math.max(analysis.startupCapitalNeedKrw, 1) * 100)}%` }} /></div><div className="stack-line grant"><span>지원금 / 사업화지원</span><strong>{formatMan(a.grantKrw)}</strong><i style={{ width: `${Math.min(100, a.grantKrw / Math.max(analysis.startupCapitalNeedKrw, 1) * 100)}%` }} /></div><div className="stack-line financing"><span>보증·정책금융 검토액</span><strong>{formatMan(a.assumedFinancingKrw)}</strong><i style={{ width: `${Math.min(100, a.assumedFinancingKrw / Math.max(analysis.startupCapitalNeedKrw, 1) * 100)}%` }} /></div><div className="stack-line other"><span>기타 조달</span><strong>{formatMan(a.otherFundingKrw)}</strong><i style={{ width: `${Math.min(100, a.otherFundingKrw / Math.max(analysis.startupCapitalNeedKrw, 1) * 100)}%` }} /></div></div><div className="funding-gap"><span>Funding Gap</span><strong>{formatMan(analysis.fundingGapKrw)}</strong><small>총 필요자금 − 입력한 조달원</small></div><div className="funding-inputs"><NumberField label="자기자금" value={a.ownerCashKrw} onChange={(value) => actions.setAssumptions(scenario.id, { ownerCashKrw: value })} /><NumberField label="지원금" value={a.grantKrw} onChange={(value) => actions.setAssumptions(scenario.id, { grantKrw: value })} /><NumberField label="가정 조달" value={a.assumedFinancingKrw} onChange={(value) => actions.setAssumptions(scenario.id, { assumedFinancingKrw: value })} /><NumberField label="기타 조달" value={a.otherFundingKrw} onChange={(value) => actions.setAssumptions(scenario.id, { otherFundingKrw: value })} /></div></div><div className="review-card"><div className="card-title"><span>REVIEW ITEMS</span><small>{cell.label} · {businessCategoryLabels[a.category]}</small></div><p className="review-intro">현재 입력조건과 지역을 기준으로 상담·공고 확인을 시작할 후보입니다. 선정·보증·대출 여부와 한도는 기관 심사에 따릅니다.</p><div className="program-list">{programs.map((program) => <article className="program-item" key={program.id}><div><Badge tone={program.supportType === "guarantee" ? "blue" : program.status === "future" ? "neutral" : "teal"}>{program.status === "future" ? "향후 상담" : "검토 후보"}</Badge><h3>{program.title}</h3><p>{program.provider} · {program.amountText ?? "규모는 원문 확인"}</p></div><ul>{program.notes.slice(0, 2).map((note) => <li key={note}>{note}</li>)}</ul><a href={program.sourceUrl} target="_blank" rel="noreferrer">공식 원문 열기 ↗</a></article>)}</div></div></div><div className="disclaimer"><strong>중요한 경계</strong><span>총 조달 가능액이 아닙니다. 실제 지원·보증·대출 여부와 한도는 기관 심사에 따릅니다.</span><span>iM Bank와의 공식 제휴·승인을 의미하지 않는 독립 공모전 프로토타입입니다.</span><span>현재 입력 조달 합계: {formatMan(sources)} · 자금부족: {formatMan(analysis.fundingGapKrw)}</span></div><details className="source-register"><summary>데이터 출처 레지스터 ({provenance?.sources.length ?? 0})</summary>{provenance?.sources.map((source) => <div key={source.id}><strong>{source.title}</strong><span>{source.provider} · {source.mode} · {source.geographicLevel}</span><a href={source.url} target="_blank" rel="noreferrer">{source.url}</a></div>)}</details></> : <div className="empty-card"><h3>기준 후보를 먼저 선택하세요.</h3><p>기회지도에서 A를 지정하면 자금 스택과 검토 후보가 나타납니다.</p></div>}</section>;
+}
 
-  const selectSiteAtPoint = useMemo(() => async (point: GeoPoint, label?: string) => {
-    if (!apiKey) throw new Error("현재 미리보기에서는 실제 지적 필지 선택을 사용할 수 없습니다.");
-    return getVWorldParcelAtPoint(apiKey, point, vworldDomain, label);
-  }, []);
+export default function App() {
+  const [state, dispatch] = useReducer(reducer, undefined, () => initialState());
+  const stateRef = useRef(state);
+  const [view, setView] = useState<View>("map");
+  const [selectedCellId, setSelectedCellId] = useState<string>();
+  const [providerStatus, setProviderStatus] = useState<ProviderStatus>("checking");
+  const [provenance, setProvenance] = useState<Provenance>();
+  const [programs, setPrograms] = useState<SupportProgram[]>([]);
+  const [dataError, setDataError] = useState<string>();
+  stateRef.current = state;
+  const actions = useMemo(() => createApplicationActions(dispatch, () => stateRef.current), []);
 
   useEffect(() => {
-    const registration = registerSpaceLabTools({
-      ...actions,
-      getState: () => stateRef.current,
-      searchLocation,
-      selectSiteAtPoint,
-      sampleSunContext: (point, samples) => sampleSceneSunContext(point, samples),
-    });
-    setWebMcp(registration.supported);
-    return registration.dispose;
-  }, [actions, searchLocation, selectSiteAtPoint]);
-
-  useEffect(() => {
-    if (!apiKey) return undefined;
-    let cancelled = false;
-    startVWorld("vworld-map", apiKey, state.site.center.lon, state.site.center.lat)
-      .then(() => { if (!cancelled) setVworldReady(true); })
-      .catch((error) => { if (!cancelled) setMapError(error instanceof Error ? error.message : String(error)); });
-    return () => { cancelled = true; };
+    let alive = true;
+    Promise.all([
+      fetch("/data/opportunity_cells.json").then((response) => response.json()),
+      fetch("/data/provenance.json").then((response) => response.json()),
+      fetch("/data/support_programs.json").then((response) => response.json()),
+    ]).then(([cells, sourceRegister, supportPrograms]) => {
+      if (!alive) return;
+      dispatch({ type: "SET_CELLS", cells });
+      setSelectedCellId(cells[0]?.cellId);
+      setProvenance(sourceRegister);
+      setPrograms(supportPrograms);
+    }).catch(() => alive && setDataError("데모 snapshot을 불러오지 못했습니다. 새로고침 후 다시 시도하세요."));
+    return () => { alive = false; };
   }, []);
 
   useEffect(() => {
-    if (!vworldReady) return;
-    clearScenarioEntities();
-    renderSite(state.site);
-    state.scenarios.forEach((scenario) => renderScenario(
-      scenario,
-      state.site,
-      scenario.id === state.activeScenarioId,
-      state.timeZoneOffsetMinutes,
-    ));
-    setShadowMode(true);
-    if (active) setShadowTime(active.analysisTime, state.timeZoneOffsetMinutes);
-  }, [active?.analysisTime, state.activeScenarioId, state.scenarios, state.site, state.timeZoneOffsetMinutes, vworldReady]);
+    let alive = true;
+    probeVWorld(apiKey, vworldDomain).then((live) => alive && setProviderStatus(live ? "live" : "fallback"));
+    return () => { alive = false; };
+  }, []);
 
   useEffect(() => {
-    if (!vworldReady) return;
-    flyToSite(state.site);
-  }, [state.site.id, vworldReady]);
+    const bridge = registerLocalTwinTools({ ...actions, getState: () => stateRef.current });
+    return bridge.dispose;
+  }, [actions]);
 
-  useEffect(() => {
-    if (!vworldReady) return;
-    renderDraftFootprint(state.site.center, draftPoints);
-  }, [draftPoints, state.site.center, vworldReady]);
-
-  useEffect(() => {
-    if (!vworldReady) return;
-    renderAnalysisMarkers(state.sunStudyPoint, state.viewpoint);
-  }, [state.sunStudyPoint, state.viewpoint, vworldReady]);
-
-  useEffect(() => {
-    if (!vworldReady || !activeSunStudy) {
-      setSceneSunContext(null);
-      return;
-    }
-    let cancelled = false;
-    setSceneSunBusy(true);
-    void sampleSceneSunContext(sunStudyPoint, activeSunStudy.samples)
-      .then((result) => {
-        if (!cancelled) setSceneSunContext(result);
-      })
-      .catch(() => {
-        if (!cancelled) setSceneSunContext({ supported: false, blockedTimes: [], source: "unsupported" });
-      })
-      .finally(() => {
-        if (!cancelled) setSceneSunBusy(false);
-      });
-    return () => { cancelled = true; };
-  }, [activeSunStudy, sunStudyPoint, vworldReady]);
-
-  useEffect(() => {
-    if (!vworldReady || canvasMode === "inspect") return;
-    const dispose = setMapPointHandler((point) => {
-      if (canvasMode === "pick-site") {
-        setSiteBusy(true);
-        setSiteMessage("지적 필지를 불러오는 중…");
-        void selectSiteAtPoint(point)
-          .then((site) => {
-            actions.setSite(site, "human");
-            setDraftPoints([]);
-            setCanvasMode("inspect");
-            setSiteMessage(site.pnu ? `필지 선택 완료 · PNU ${site.pnu}` : "위치 선택 완료");
-          })
-          .catch((error) => setSiteMessage(error instanceof Error ? error.message : String(error)))
-          .finally(() => setSiteBusy(false));
-        return;
-      }
-
-      if (canvasMode === "move-mass" && active) {
-        const local = geoPointToLocal(state.site.center, point);
-        actions.editBuildingMass(active.id, { position: { eastM: local.xM, northM: local.yM } }, "human");
-        setCanvasMode("inspect");
-        return;
-      }
-
-      if (canvasMode === "sun-point" && active) {
-        actions.setSunStudyPoint(point, "human");
-        setCanvasMode("inspect");
-        return;
-      }
-
-      if (canvasMode === "viewpoint") {
-        const viewpoint = { point, eyeHeightM: state.viewpoint?.eyeHeightM ?? 1.7 };
-        actions.setViewpoint(viewpoint, "human");
-        if (vworldReady) flyToViewpoint(viewpoint, state.site, active?.mass);
-        setCanvasMode("inspect");
-        return;
-      }
-
-      if (canvasMode === "draw-polygon") {
-        const local = geoPointToLocal(state.site.center, point);
-        setDraftPoints((points) => [...points, local]);
-      }
-    });
-    return dispose;
-  }, [actions, active, canvasMode, selectSiteAtPoint, state.site, state.viewpoint, vworldReady]);
-
-  async function handleSearch(event: FormEvent) {
-    event.preventDefault();
-    if (!searchQuery.trim()) return;
-    setSearching(true);
-    setSiteMessage(null);
-    try {
-      const results = await searchLocation(searchQuery);
-      setSearchResults(results);
-      if (!results.length) setSiteMessage("검색 결과가 없습니다.");
-    } catch (error) {
-      setSiteMessage(error instanceof Error ? error.message : String(error));
-    } finally {
-      setSearching(false);
-    }
-  }
-
-  async function selectSearchResult(result: AddressSearchResult) {
-    setSiteBusy(true);
-    setSiteMessage("지적 필지를 불러오는 중…");
-    try {
-      const site = await selectSiteAtPoint(result.point, result.address);
-      actions.setSite(site, "human");
-      setSearchResults([]);
-      setSearchQuery(result.address);
-      setDraftPoints([]);
-      setCanvasMode("inspect");
-      setSiteMessage(site.pnu ? `필지 선택 완료 · PNU ${site.pnu}` : "위치 선택 완료");
-    } catch (error) {
-      setSiteMessage(error instanceof Error ? error.message : String(error));
-    } finally {
-      setSiteBusy(false);
-    }
-  }
-
-  function createRectangle() {
-    actions.createBuildingMass({
-      footprint: { kind: "rectangle", widthM: 32, depthM: 24 },
-      heightM: 18,
-      floors: 5,
-      intent: "새 사각형 매스",
-    }, "human");
-    setCanvasMode("inspect");
-  }
-
-  function startPolygon() {
-    setDraftPoints([]);
-    setCanvasMode("draw-polygon");
-  }
-
-  function finishPolygon() {
-    if (draftPoints.length < 3) return;
-    actions.createBuildingMass({
-      footprint: { kind: "polygon", points: draftPoints },
-      heightM: 18,
-      floors: 5,
-      intent: "지도에서 작성한 자유형 매스",
-    }, "human");
-    setDraftPoints([]);
-    setCanvasMode("inspect");
-  }
-
-  function cancelCanvasTool() {
-    setDraftPoints([]);
-    setCanvasMode("inspect");
-  }
-
-  return <main className={`app-shell ${workspaceMode === "compare" ? "compare-mode" : ""}`}>
-    <header className="topbar">
-      <div className="brand"><div className="brand-mark" aria-hidden="true">S</div><div><strong>SpaceLab</strong><span>/ {siteName(state.site.source, state.site.name)}</span></div></div>
-      <button
-        className="navigator-toggle"
-        aria-label="대안 목록 열기"
-        aria-expanded={navigatorOpen}
-        onClick={() => {
-          setNavigatorOpen((open) => !open);
-          setInspectorOpen(false);
-        }}
-      >☰</button>
-      <nav className="mode-switch" aria-label="작업 모드">
-        <button className={workspaceMode === "design" ? "selected" : ""} onClick={() => setWorkspaceMode("design")}>설계</button>
-        <button className={workspaceMode === "compare" ? "selected" : ""} onClick={() => setWorkspaceMode("compare")} disabled={!active || state.scenarios.length < 2}>비교</button>
-      </nav>
-      <div className="top-status">
-        <span className={`runtime-status ${vworldReady ? "live" : mapError ? "attention" : ""}`}><i aria-hidden="true"></i>지도 <b>{vworldReady ? "3D 연결" : mapError ? "연결 오류" : "2D 미리보기"}</b></span>
-        <span className={`runtime-status ${webMcp ? "live" : ""}`}><i aria-hidden="true"></i>AI 도구 <b>{webMcp ? "연결됨" : "선택"}</b></span>
-      </div>
-      <button
-        className="inspector-toggle"
-        aria-label="설정 열기"
-        aria-expanded={inspectorOpen}
-        onClick={() => {
-          setInspectorOpen((open) => !open);
-          setNavigatorOpen(false);
-        }}
-      >설정</button>
-    </header>
-
-    <section className="workspace">
-      <button
-        className={`mobile-scrim ${navigatorOpen || inspectorOpen ? "open" : ""}`}
-        aria-label="패널 닫기"
-        onClick={() => {
-          setNavigatorOpen(false);
-          setInspectorOpen(false);
-        }}
-      />
-      <aside className={`left-panel panel ${navigatorOpen ? "open" : ""}`}>
-        <div className="panel-heading"><div><div className="eyebrow">설계 대안</div><span className="panel-caption">변경 이력</span></div><span className="option-count">{state.scenarios.length}개</span></div>
-        <div className="navigator-base site-summary"><strong>현재 부지</strong><span>{state.site.address || siteName(state.site.source, state.site.name)}</span>{state.site.pnu && <small>PNU {state.site.pnu}</small>}</div>
-        <div className="scenario-navigator">
-          {state.scenarios.length ? state.scenarios.map((scenario) => <button key={scenario.id} className={`scenario-row ${scenario.id === active?.id ? "active" : ""}`} data-scenario={scenario.id} onClick={() => { actions.selectScenario(scenario.id); setNavigatorOpen(false); }}>
-            <span className="scenario-marker">{scenario.id}</span>
-            <span className="scenario-copy"><strong>{scenarioName(scenario.id, scenario.name)}</strong><small>{scenario.mass.heightM}m · {scenario.mass.floors}층 <em>{scenario.createdBy === "agent" ? "✦" : "•"}</em></small></span>
-            <span className="scenario-ancestry">{scenario.parentId ? `↳ ${scenario.parentId}` : "기준안"}</span>
-          </button>) : <div className="navigator-empty">아직 설계 대안이 없습니다.<br />부지를 선택한 뒤 건물을 만들어보세요.</div>}
-        </div>
-        {active ? <button className="primary branch-button" onClick={() => actions.cloneScenario(active.id, undefined, "human")}>＋ 현재 안에서 새 대안 만들기</button> : <button className="primary branch-button" onClick={createRectangle}>＋ 첫 건물 만들기</button>}
-      </aside>
-
-      <section className={`canvas-wrap canvas-mode-${canvasMode}`}>
-        <div id="vworld-map" className={`vworld-canvas ${vworldReady ? "ready" : ""}`}></div>
-        {!vworldReady && <div className="fallback-world">
-          <iframe
-            className="fallback-map-frame"
-            src={osmEmbedUrl(state.site.center)}
-            title="OpenStreetMap 배경 지도"
-            loading="eager"
-            referrerPolicy="strict-origin-when-cross-origin"
-          />
-          <div className="fallback-map-shade"></div>
-          {active && <svg className="analysis-overlay" viewBox="0 0 320 240" aria-label="그림자 분석 미리보기">
-            {compareShadow && compareShadow.points.length >= 3 && <polygon className="fallback-shadow compare" points={svgPoints(compareShadow.points)} />}
-            {activeShadow && activeShadow.points.length >= 3 && <polygon className="fallback-shadow active" points={svgPoints(activeShadow.points)} />}
-            {compare && <polygon className="fallback-mass compare" points={svgPoints(massLocalPoints(compare.mass))} />}
-            <polygon className="fallback-mass active" points={svgPoints(massLocalPoints(active.mass))} />
-          </svg>}
-          <div className="fallback-map-attribution">© OpenStreetMap contributors</div>
-          <div className="fallback-note">{mapError ? "3D 지도 연결 오류 · 2D 배경지도로 표시 중" : apiKey ? "VWorld 3D 지도를 불러오는 중…" : "2D 배경지도 · VWorld 연결 시 3D 전환"}</div>
-        </div>}
-
-        <div className="site-toolbar">
-          <form className="site-search" onSubmit={handleSearch}>
-            <input value={searchQuery} onChange={(event) => setSearchQuery(event.target.value)} placeholder={apiKey ? "주소나 지번을 검색하세요" : "VWorld 연결 후 주소 검색 가능"} aria-label="주소 검색" />
-            <button type="submit" disabled={searching || !apiKey}>{searching ? "…" : "검색"}</button>
-          </form>
-          {searchResults.length > 0 && <div className="search-results">
-            {searchResults.map((result) => <button key={result.id} onClick={() => void selectSearchResult(result)}><strong>{result.title}</strong><span>{result.address}</span></button>)}
-          </div>}
-        </div>
-
-        <div className="model-toolbar" aria-label="건물 배치 도구">
-          <button className={canvasMode === "pick-site" ? "selected" : ""} onClick={() => setCanvasMode("pick-site")}>⌖ 필지 선택</button>
-          <button onClick={createRectangle}>＋ 사각형</button>
-          <button className={canvasMode === "draw-polygon" ? "selected" : ""} onClick={startPolygon}>✎ 자유형</button>
-          <button className={canvasMode === "move-mass" ? "selected" : ""} onClick={() => active && setCanvasMode("move-mass")} disabled={!active}>↔ 이동</button>
-          <button className={canvasMode === "sun-point" ? "selected" : ""} onClick={() => active && setCanvasMode("sun-point")} disabled={!active}>☀ 일조</button>
-          <button className={canvasMode === "viewpoint" ? "selected" : ""} onClick={() => setCanvasMode("viewpoint")}>◉ 조망</button>
-          <button onClick={() => active && actions.deleteScenario(active.id, "human")} disabled={!active}>삭제</button>
-        </div>
-
-        {canvasMode !== "inspect" && <div className="canvas-tool-hint">
-          {canvasMode === "pick-site" && "지도에서 검토할 필지를 선택하세요."}
-          {canvasMode === "move-mass" && "건물을 옮길 위치를 지도에서 선택하세요."}
-          {canvasMode === "draw-polygon" && <>{draftPoints.length < 3 ? `건물 외곽점을 찍어주세요 · ${draftPoints.length}개` : `꼭짓점 ${draftPoints.length}개 · 완료할 수 있습니다`} <button onClick={finishPolygon} disabled={draftPoints.length < 3}>완료</button></>}
-          {canvasMode === "sun-point" && "일조 시간을 확인할 지점을 선택하세요."}
-          {canvasMode === "viewpoint" && "건물을 바라볼 위치를 선택하세요."}
-          <button onClick={cancelCanvasTool}>취소</button>
-        </div>}
-
-        {siteMessage && <div className={`site-message ${siteBusy ? "busy" : ""}`}>{siteMessage}</div>}
-        {mapError && <div className="error-banner">{mapError}</div>}
-        <div className="canvas-title"><span>{state.site.source === "vworld-cadastral" ? "실제 필지" : "부지 미리보기"}</span><strong>{active ? `${active.id} · ${scenarioName(active.id, active.name)}` : siteName(state.site.source, state.site.name)}</strong></div>
-        {active && <div className="canvas-legend"><span><i className="legend-dot active-dot"></i>{active.id} 현재안</span>{compare && <span><i className="legend-dot compare-dot"></i>{compare.id} 비교안</span>}</div>}
-
-        <section className="analysis-dock" aria-label="일조와 그림자 분석">
-          {active && activeShadow ? <>
-            <div className="analysis-topline">
-              <div className="analysis-title"><div className="eyebrow">일조 · 그림자</div><strong>{activeTime} KST</strong><span>태양고도 {solarValue(activeShadow.solar.elevationDeg)} · 방위각 {solarValue(activeShadow.solar.azimuthDeg)} · 그림자 {activeShadow.solar.isDaylight ? `${activeShadow.lengthM.toFixed(1)}m` : "—"} · 일조 {activeSunStudy ? formatMinutesKo(sceneSunContext?.supported ? activeContextSunMinutes : activeSunStudy.sunMinutes) : "—"}</span></div>
-              <div className="analysis-fields"><label>날짜<input aria-label="그림자 날짜" type="date" value={activeDate} onChange={(event) => actions.setShadowTime(active.id, withDateAndTime(active.analysisTime, event.target.value, activeTime))} /></label><label>시간<input aria-label="그림자 시간" type="time" value={activeTime} onChange={(event) => actions.setShadowTime(active.id, withDateAndTime(active.analysisTime, activeDate, event.target.value))} /></label></div>
-            </div>
-            <div className="timeline"><span>09:00</span><input aria-label="그림자 시간대" type="range" min={540} max={1080} step={15} value={Math.min(1080, Math.max(540, activeMinutes))} onChange={(event) => actions.setShadowTime(active.id, withDateAndTime(active.analysisTime, activeDate, timeFromMinutes(Number(event.target.value))))} /><span>18:00</span></div>
-            {workspaceMode === "compare" && <div className="compare-drawer">
-              <div className="compare-drawer-head"><div><div className="eyebrow">대안 비교</div><strong>주요 차이</strong></div><select aria-label="비교할 대안" value={state.compareScenarioId ?? ""} onChange={(event) => actions.compareScenarios(active.id, event.target.value || undefined)}><option value="">비교 안 함</option>{state.scenarios.filter((scenario) => scenario.id !== active.id).map((scenario) => <option key={scenario.id} value={scenario.id}>{scenario.id} · {scenario.name}</option>)}</select></div>
-              {compare && compareShadow ? <div className="compare-grid"><Meter label="높이 A / B" value={`${active.mass.heightM} / ${compare.mass.heightM}`} suffix="m" /><Meter label="연면적 차이" value={(estimateGfa(active.mass) - estimateGfa(compare.mass)).toLocaleString()} suffix="㎡" /><Meter label="그림자 차이" value={(activeShadow.lengthM - compareShadow.lengthM).toFixed(1)} suffix="m" /><Meter label="일조 A / B" value={activeSunStudy && compareSunStudy ? `${formatMinutesKo(sceneSunContext?.supported ? activeContextSunMinutes : activeSunStudy.sunMinutes)} / ${formatMinutesKo(sceneSunContext?.supported ? compareContextSunMinutes : compareSunStudy.sunMinutes)}` : "—"} /></div> : <p className="muted">비교할 다른 대안을 선택하세요.</p>}
-            </div>}
-          </> : <div className="analysis-empty"><strong>먼저 부지를 선택해보세요.</strong><span>주소 검색 → 필지 선택 → 건물 배치 → 일조·조망 비교</span></div>}
-        </section>
-      </section>
-
-      <aside className={`right-panel panel ${inspectorOpen ? "open" : ""}`}>
-        {active && activeShadow ? <>
-          <div className="inspector-heading"><span className="inspector-scenario" data-scenario={active.id}>{active.id}</span><div><div className="eyebrow">설계 설정</div><h2>{active.name}</h2></div></div>
-          <section className="inspector-section"><div className="section-heading"><span>건물 규모</span><b>{active.mass.footprint.kind === "polygon" ? "자유형" : "사각형"}</b></div>
-            <Slider label="높이" value={active.mass.heightM} min={3} max={80} suffix="m" onChange={(heightM) => actions.editBuildingMass(active.id, { heightM })} />
-            <Slider label="회전" value={active.mass.rotationDeg} min={-180} max={180} suffix="°" onChange={(rotationDeg) => actions.editBuildingMass(active.id, { rotationDeg })} />
-            <label className="control"><div className="control-line"><span>층수</span><span className="value-editor"><input aria-label="층수" type="number" min={1} max={40} value={active.mass.floors} onChange={(event) => actions.editBuildingMass(active.id, { floors: Number(event.target.value) })} /></span></div></label>
-          </section>
-          <section className="inspector-section"><div className="section-heading"><span>배치 위치</span><b>기준점 상대(m)</b></div>
-            <Slider label="동쪽" value={active.mass.position.eastM} min={-120} max={120} suffix="m" onChange={(eastM) => actions.editBuildingMass(active.id, { position: { eastM } })} />
-            <Slider label="북쪽" value={active.mass.position.northM} min={-120} max={120} suffix="m" onChange={(northM) => actions.editBuildingMass(active.id, { position: { northM } })} />
-          </section>
-          <FootprintEditor footprint={active.mass.footprint} onChange={(footprint) => actions.setMassFootprint(active.id, footprint)} />
-          <section className="inspector-section"><div className="section-heading"><span>그림자</span><b>{activeTime}</b></div><div className="readout-list"><div><span>태양고도</span><strong>{solarValue(activeShadow.solar.elevationDeg)}</strong></div><div><span>방위각</span><strong>{solarValue(activeShadow.solar.azimuthDeg)}</strong></div><div><span>그림자 길이</span><strong>{activeShadow.solar.isDaylight ? `${activeShadow.lengthM.toFixed(1)}m` : "—"}</strong></div><div><span>그림자 방향</span><strong>{shadowBearing(activeShadow)}{activeShadow.solar.isDaylight ? "°" : ""}</strong></div></div></section>
-          <section className="inspector-section"><div className="section-heading"><span>계획 수치</span><b>현재 대안</b></div><div className="readout-list"><div><span>대지면적</span><strong>{activePlanning ? Math.round(activePlanning.siteAreaM2).toLocaleString() : "—"}㎡</strong></div><div><span>건축면적</span><strong>{Math.round(footprintAreaM2(active.mass.footprint)).toLocaleString()}㎡</strong></div><div><span>추정 연면적</span><strong>{estimateGfa(active.mass).toLocaleString()}㎡</strong></div><div><span>계획 건폐율</span><strong>{activePlanning ? activePlanning.coverageRatioPct.toFixed(1) : "—"}%</strong></div><div><span>계획 용적률</span><strong>{activePlanning ? activePlanning.floorAreaRatioPct.toFixed(1) : "—"}%</strong></div></div></section>
-          <section className="inspector-section"><div className="section-heading"><span>일조시간</span><b>09:00–18:00</b></div><div className="readout-list"><div><span>분석 지점</span><strong>{state.sunStudyPoint ? "사용자 지정" : "부지 중심"}</strong></div><div><span>직접 일조</span><strong>{activeSunStudy ? formatMinutesKo(sceneSunContext?.supported ? activeContextSunMinutes : activeSunStudy.sunMinutes) : "—"}</strong></div><div><span>계획 건물 음영</span><strong>{activeSunStudy ? formatMinutesKo(activeSunStudy.shadowMinutes) : "—"}</strong></div><div><span>주변 환경</span><strong>{sceneSunBusy ? "계산 중…" : sceneSunContext?.supported ? "VWorld 3D 반영" : "계획 건물만"}</strong></div></div><button className="quiet-button analysis-action" onClick={() => setCanvasMode("sun-point")}>일조 지점 선택</button>{state.sunStudyPoint && <button className="quiet-button analysis-action" onClick={() => actions.setSunStudyPoint(undefined, "human")}>부지 중심 사용</button>}</section>
-          <section className="inspector-section"><div className="section-heading"><span>조망 위치</span><b>{state.viewpoint ? `눈높이 ${state.viewpoint.eyeHeightM.toFixed(1)}m` : "미설정"}</b></div>{state.viewpoint ? <><label className="control"><div className="control-line"><span>눈높이</span><span className="value-editor"><input aria-label="조망 눈높이" type="number" min={1.2} max={50} step={0.1} value={state.viewpoint.eyeHeightM} onChange={(event) => actions.setViewpoint({ ...state.viewpoint!, eyeHeightM: Number(event.target.value) }, "human")} /><em>m</em></span></div></label><div className="viewpoint-actions"><button className="quiet-button" onClick={() => flyToViewpoint(state.viewpoint!, state.site, active.mass)}>이 위치에서 보기</button><button className="quiet-button" onClick={() => { actions.setViewpoint(undefined, "human"); flyToSite(state.site); }}>해제</button></div></> : <button className="quiet-button analysis-action" onClick={() => setCanvasMode("viewpoint")}>조망 위치 선택</button>}</section>
-          <small className="boundary">*일조·그림자 결과는 초기 공간 검토용입니다. 법적 일조권 판정이나 인허가 판단을 대신하지 않습니다.</small>
-        </> : <div className="inspector-empty"><div className="eyebrow">설계 설정</div><h2>선택된 건물이 없습니다</h2><p>사각형 또는 자유형 도구로 첫 건물을 만들어보세요.</p></div>}
-      </aside>
-    </section>
-  </main>;
+  return <div className="app-shell"><header className="topbar"><a className="brand" href="#top" onClick={() => setView("map")}><span className="brand-mark">LT</span><span><strong>LocalTwin</strong><small>DAEGU / V0</small></span></a><nav className="primary-nav" aria-label="주요 화면"><button className={view === "map" ? "active" : ""} onClick={() => setView("map")}><span>01</span>기회지도</button><button className={view === "compare" ? "active" : ""} onClick={() => setView("compare")}><span>02</span>후보비교</button><button className={view === "funding" ? "active" : ""} onClick={() => setView("funding")}><span>03</span>자금계획</button></nav><div className="topbar-status"><span className={`status-dot ${providerStatus === "live" ? "live" : ""}`} />{providerStatus === "live" ? "VWorld 연결" : "Snapshot mode"}<span className="divider" /><span>대구 중앙도심</span></div></header><main id="top">{dataError && <div className="data-error" role="status">{dataError}</div>}{view === "map" && <MapView state={state} actions={actions} selectedCellId={selectedCellId} setSelectedCellId={setSelectedCellId} providerStatus={providerStatus} provenance={provenance} />}{view === "compare" && <CompareView state={state} actions={actions} />}{view === "funding" && <FundingView state={state} actions={actions} programs={programs} provenance={provenance} />}</main><footer><span>공모전 데모 — 일부 데이터는 공개자료 Snapshot 또는 시연용 가정</span><span>독립 프로토타입 · 전문 회계·법률·세무·대출 자문 대체 아님</span></footer></div>;
 }

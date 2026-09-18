@@ -1,0 +1,10 @@
+{
+  "mode": "demo",
+  "formula": "TransitDemand(x)=sum station_passengers(s)*exp(-distance(x,s)/lambda_transit)",
+  "lambdaTransitMeters": 450,
+  "records": [
+    {"station":"중앙로역","dailyPassengersProxy":92000,"sourceMode":"official-statistical-proxy"},
+    {"station":"반월당역","dailyPassengersProxy":116000,"sourceMode":"official-statistical-proxy"},
+    {"station":"서문시장역","dailyPassengersProxy":51000,"sourceMode":"official-statistical-proxy"}
+  ]
+}

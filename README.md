@@ -1,76 +1,92 @@
-# SpaceLab AI
+# LocalTwin Daegu
 
-**현실 공간 위에서 초기 건축 massing 대안을 만들고 비교하는 Spatial Decision Canvas.**
+**대구 청년창업을 위한 상권·자금 시뮬레이터**
 
-SpaceLab is a small browser-native V0 for non-specialists. It places conceptual building masses on a VWorld 3D context, keeps scenario branches in one canonical state, and exposes the same application actions to the human UI and WebMCP.
+대구의 상권 수요와 도시재생 신호를 지도에서 비교하고, 실제 점포 조건을 넣어 필요한 창업비용·손익분기점·현금흐름·자금부족을 계산하는 2026 AI Blockchain Challenge in Daegu prototype입니다.
 
-## V0 scope
+> “어디가 뜰까?”가 아니라, **“이 위치·이 임대조건·이 자기자본으로 내가 실제로 버틸 수 있는가?”**
 
-- VWorld address search and real cadastral parcel selection (`LP_PA_CBND_BUBUN`)
-- Empty-site start with direct rectangle / free-polygon mass creation
-- Rectangular and free-polygon `BuildingMass` footprints
-- Height, floors, footprint, position, and rotation editing
-- Canvas parcel pick, polygon drawing, and click-to-move mass placement
-- Scenario clone/branch with parent relationships
-- A/B comparison with GFA, height, solar-geometry shadow deltas, and direct-sun duration
-- Geolocation/date/time solar position and ground shadow polygon preview
-- Selectable ground-point Direct Sun Hours pre-check with planned-mass shadow plus VWorld 3D scene/terrain occlusion when supported
-- Repeatable VWorld viewpoint for scenario viewing
-- Planned site coverage/FAR metrics from parcel area and current mass
-- VWorld WebGL adapter with a no-key fallback geometry canvas
-- WebMCP tools that call the same application action surface as the UI
+## What is in V0
 
-This is early-stage massing exploration. It is not a legal sunlight-right determination, building-permit advice, full CAD/BIM system, structural analysis, or a replacement for licensed professional review.
+- 동성로–교동–북성로 corridor의 하나의 육각형 셀 체계와 레이어 토글
+- 상권 수요, 교통 접근, Buzz, 거리감쇠 기반 파생수요, 도시재생 맥락, 지역 임대 benchmark, 종합 Opportunity 신호
+- 후보 A/B 선택과 업종별 실제 보증금·월세·창업비용 입력
+- 월 손익분기 매출, 하루 필요 고객, 관련 보행량 proxy 대비 필요 전환율, 12개월 현금흐름, 현금고갈, payback, Funding Gap
+- 기본 / 보행량 -20% / 전환율 -20% / 원가율 +10%p / 임대료 +10% / 금리 +1%p / 복합 악화 stress preset
+- 대구 청년창업·북성로 창업클러스터·대구신용보증재단의 상담/공고 검토 항목
+- 선택적 VWorld 브라우저 provider와 항상 사용 가능한 Demo geometry fallback
+- optional offline RF-DETR + tracker + line/zone aggregate pipeline
+
+V0는 은행 신용승인 모델, 대출한도 예측, 성공확률, 매출 예측 oracle, 부동산 매물/공실 DB, SNS 모니터링 시스템이 아닙니다. 지원·보증·대출 여부와 한도는 기관 심사에 따릅니다.
+
+## Evidence boundary
+
+모든 숫자는 `observed`, `official`, `modelled`, `demo` 중 하나로 구분합니다. 이 저장소의 중앙 corridor 숫자는 공개자료 adapter 계약을 보여주는 **demo snapshot**입니다. 공개 데이터 source URL과 제한사항은 [`public/data/provenance.json`](./public/data/provenance.json)에 하나로 모았습니다.
+
+- `public/data/opportunity_cells.json` — 지도에 표시하는 정규화 전 원자료와 provenance IDs
+- `public/data/businesses.json` — compact POI snapshot shape
+- `public/data/transit.json` — 역 승하차 proxy와 직선거리 감쇠 식
+- `public/data/regeneration.json` — 도시재생/쇠퇴 맥락
+- `public/data/rent_benchmark.json` — 상권/지역 benchmark; 해당 점포 실제 월세·공실 아님
+- `public/data/buzz.json` — 상대 관심도/게시량 proxy; 절대 검색량 아님
+- `public/data/footfall.json` — aggregate-only vision output shape; 현재 커밋은 demo
+- `public/data/support_programs.json` — 기관 원문을 다시 확인하는 검토 후보
 
 ## Architecture
 
 ```text
-Human UI ───────┐
-                ├─ application actions → canonical SpatialWorkspace
-WebMCP adapter ─┘             │
-                              ├─ Site (real parcel + boundary)
-                              ├─ BuildingMass
-                              ├─ Scenario branches
-                              └─ analysis selectors
-                                    ↓
-                         VWorld / fallback rendering adapter
+official/public data + permitted local video
+          ↓ offline adapters / vision
+provenance-stamped JSON snapshots
+          ↓ static Vite build
+React map + candidate scenarios + pure financial engine
+          ↓ optional browser-side VWorld adapter
 ```
 
-`src/types.ts` defines the canonical `BuildingMass`, `Scenario`, and workspace types. `src/model.ts` contains pure state transitions and analysis helpers. `src/actions.ts` is the shared application action surface. `src/vworld.ts` is a rendering adapter; it does not own scenario state. `src/webmcp.ts` registers tools against the same actions used by React event handlers.
+React UI and optional WebMCP tools call the same small application action surface. The financial engine in `src/model.ts` is deterministic and has no LLM dependency. Missing metrics remain null; available score weights are renormalized rather than silently treating missing data as zero.
 
-## Local setup
+## Local run
 
 ```bash
 npm install
 npm run dev
 ```
 
-The Vite config reads `VITE_VWORLD_API_KEY` from the process/hosted environment first, then supports the local `C:\Users\<you>\.codex\.env` variables `VITE_VWORLD_API_KEY` or `VWORLD_API_KEY`. `VITE_VWORLD_DOMAIN` controls the VWorld service-domain parameter and should match the deployed Site host. The key is only injected into the browser bundle for the VWorld adapter; it is never stored in this repository. Without a key, the fallback geometry remains fully interactive.
+Optional `.env`:
 
-For a local project `.env`, copy `.env.example` to `.env` and set `VITE_VWORLD_API_KEY`. `.env` files are ignored by Git.
+```text
+VITE_VWORLD_API_KEY=
+VITE_VWORLD_DOMAIN=localhost
+```
 
-## WebMCP tools
+Without a key the fallback map remains usable. Never put provider secrets into source control or public JSON.
 
-- `get_spatial_workspace`
-- `search_location`
-- `select_site`
-- `create_building_mass`
-- `delete_scenario`
-- `clone_scenario`
-- `edit_building_mass`
-- `set_mass_footprint`
-- `set_shadow_time`
-- `set_sun_study_point`
-- `set_viewpoint`
-- `run_direct_sun_study`
-- `compare_scenarios`
+## Refresh / vision commands
 
-WebMCP is optional. The site remains usable without a Site Tools-capable host.
+The guarded adapter entry point does not overwrite public snapshots without a reviewed source:
+
+```powershell
+python scripts/ingest/refresh_snapshots.py
+```
+
+For an authorized local video, see [`vision/README.md`](./vision/README.md). The output is aggregate counts only. The pipeline does not claim a live CCTV stream at a specific Daegu point.
+
+## Verification
+
+```bash
+npm run typecheck
+npm test
+npm run build
+```
+
+The GitHub workflow runs the same checks plus `git diff --check`.
 
 ## Sites deployment
 
-See [`SITES_DEPLOY.md`](./SITES_DEPLOY.md). Configure `VITE_VWORLD_API_KEY` as a hosted build environment variable, deploy the Vite app, then allowlist the final public Site origin in the VWorld console.
+This is a static Vite site. Follow [`SITES_DEPLOY.md`](./SITES_DEPLOY.md) for the exact source/build-secret boundary. Keep `.env` out of Git, set `VITE_VWORLD_API_KEY` and the exact deployed host as `VITE_VWORLD_DOMAIN`, and preserve Demo geometry when the provider is unavailable.
 
-## License
+## Attribution and independent prototype notice
 
-MIT for repository-authored source. VWorld, Cesium, and any provider data remain subject to their own terms.
+The implementation baseline was adapted from [`sionchu/spacelab-ai`](https://github.com/sionchu/spacelab-ai). Repository-authored source is MIT-licensed; provider data, VWorld, H3-equivalent geometry, RF-DETR, tracker packages, and Supervision remain subject to their own terms. See [`THIRD_PARTY.md`](./THIRD_PARTY.md).
+
+This is an independent competition prototype. It does not represent official iM Bank affiliation, approval, underwriting, or a financial product.

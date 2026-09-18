@@ -1,113 +1,176 @@
 export type GeoPoint = { lon: number; lat: number };
 
-export type LocalPoint = { xM: number; yM: number };
-
 export type Site = {
   id: string;
   name: string;
   center: GeoPoint;
+  source: "vworld" | "demo";
+};
+
+export type BusinessCategory = "cafe" | "restaurant" | "retail" | "beauty" | "service";
+
+export const businessCategoryLabels: Record<BusinessCategory, string> = {
+  cafe: "카페",
+  restaurant: "음식점",
+  retail: "소매",
+  beauty: "뷰티",
+  service: "생활서비스",
+};
+
+export type EvidenceQuality = "observed" | "official" | "modelled" | "demo";
+
+export type MapLayer =
+  | "opportunity"
+  | "demand"
+  | "transit"
+  | "buzz"
+  | "spillover"
+  | "regeneration"
+  | "rent";
+
+export type LocationEvidence = {
+  cellId: string;
+  center: GeoPoint;
   boundary: GeoPoint[];
-  pnu?: string;
-  address?: string;
-  source: "vworld-cadastral" | "manual-point" | "demo";
+  label: string;
+  district: string;
+  poiCount: number;
+  sameCategoryCount: number;
+  sameCategoryCounts: Partial<Record<BusinessCategory, number>>;
+  transitDemand: number | null;
+  observedFootfall: number | null;
+  footfallSource?: string;
+  buzzLevel: number | null;
+  buzzMomentum: number | null;
+  spilloverScore: number | null;
+  regenerationScore: number | null;
+  rentBenchmark: number | null;
+  vacancyBenchmark: number | null;
+  evidenceQuality: EvidenceQuality;
+  provenanceIds: string[];
+  anchorStrength?: number | null;
 };
 
-export type RectangleFootprint = {
-  kind: "rectangle";
-  widthM: number;
-  depthM: number;
+export type StressPreset =
+  | "base"
+  | "footfallDown"
+  | "conversionDown"
+  | "costUp"
+  | "rentUp"
+  | "rateUp"
+  | "combined";
+
+export const stressPresetLabels: Record<StressPreset, string> = {
+  base: "기본",
+  footfallDown: "보행량 -20%",
+  conversionDown: "전환율 -20%",
+  costUp: "원가율 +10%p",
+  rentUp: "임대료 +10%",
+  rateUp: "금리 +1%p",
+  combined: "복합 악화",
 };
 
-export type PolygonFootprint = {
-  kind: "polygon";
-  points: LocalPoint[];
+export type StartupAssumptions = {
+  category: BusinessCategory;
+  depositKrw: number;
+  monthlyRentKrw: number;
+  managementFeeKrw: number;
+  interiorKrw: number;
+  equipmentKrw: number;
+  initialInventoryKrw: number;
+  permitAndSetupKrw: number;
+  openingMarketingKrw: number;
+  monthlyPayrollKrw: number;
+  monthlyUtilitiesKrw: number;
+  monthlyOtherFixedKrw: number;
+  averageTicketKrw: number;
+  variableCostRatio: number;
+  operatingDaysPerMonth: number;
+  assumedConversionRate: number;
+  ownerCashKrw: number;
+  grantKrw: number;
+  assumedFinancingKrw: number;
+  otherFundingKrw: number;
+  financingAnnualRate: number;
+  financingMonths: number;
+  openingBufferMonths: number;
 };
 
-export type Footprint = RectangleFootprint | PolygonFootprint;
-
-export type MassPosition = {
-  eastM: number;
-  northM: number;
-};
-
-/** Canonical domain object. Rendering adapters consume this object but do not own it. */
-export type BuildingMass = {
-  id: string;
-  name: string;
-  footprint: Footprint;
-  heightM: number;
-  floors: number;
-  position: MassPosition;
-  rotationDeg: number;
-};
-
-/** A branchable design alternative and its analysis time are canonical scenario state. */
-export type Scenario = {
+export type BusinessScenario = {
   id: string;
   name: string;
   parentId?: string;
-  intent: string;
   createdBy: "human" | "agent";
-  mass: BuildingMass;
-  analysisTime: string;
+  locationCellId: string;
+  assumptions: StartupAssumptions;
+  stressPreset: StressPreset;
 };
 
-export type Viewpoint = {
-  point: GeoPoint;
-  eyeHeightM: number;
+export type MonthlyTimelinePoint = {
+  month: number;
+  revenueKrw: number;
+  operatingCashFlowKrw: number;
+  cashBalanceKrw: number;
 };
 
-export type SpatialWorkspace = {
+export type FinancialAnalysis = {
+  startupCapitalNeedKrw: number;
+  openingWorkingCapitalKrw: number;
+  monthlyFixedCostKrw: number;
+  monthlyBreakEvenRevenueKrw: number;
+  monthlyBreakEvenCustomers: number;
+  breakEvenCustomersPerDay: number;
+  requiredConversionRate: number | null;
+  steadyStateRevenueKrw: number;
+  fundingGapKrw: number;
+  breakEvenMonth: number | null;
+  cashRunwayMonths: number | null;
+  paybackMonth: number | null;
+  monthlyTimeline: MonthlyTimelinePoint[];
+};
+
+export type SupportProgram = {
+  id: string;
+  title: string;
+  provider: string;
+  sourceUrl: string;
+  verifiedDate: string;
+  status: "review" | "future";
+  targetAgeMin?: number;
+  targetAgeMax?: number;
+  maxBusinessAgeYears?: number;
+  geography?: string[];
+  categoryNotes?: string[];
+  supportType: "grant" | "rent-support" | "guarantee" | "loan" | "incubation";
+  amountText?: string;
+  notes: string[];
+};
+
+export type LocalTwinState = {
   site: Site;
-  /** Local scenario datetimes are interpreted with this fixed site offset. */
-  timeZoneOffsetMinutes: number;
-  scenarios: Scenario[];
+  cells: LocationEvidence[];
+  scenarios: BusinessScenario[];
   activeScenarioId?: string;
   compareScenarioId?: string;
-  /** Ground point used for deterministic direct-sun study. Defaults to site center in the UI. */
-  sunStudyPoint?: GeoPoint;
-  /** Saved camera observation point for repeatable scenario viewing. */
-  viewpoint?: Viewpoint;
+  activeLayer: MapLayer;
 };
 
-export type MassPatch = Partial<Pick<BuildingMass, "heightM" | "floors" | "rotationDeg" | "footprint">> & {
-  position?: Partial<MassPosition>;
-};
-
-export type CreateMassInput = {
-  name?: string;
-  intent?: string;
-  footprint?: Footprint;
-  heightM?: number;
-  floors?: number;
-  position?: MassPosition;
-  rotationDeg?: number;
-};
-
-export type ActionSource = "human" | "agent";
-
-export type WorkspaceAction =
-  | { type: "SET_SITE"; site: Site; source?: ActionSource }
-  | { type: "CREATE_SCENARIO"; input?: CreateMassInput; createdBy?: ActionSource }
-  | { type: "DELETE_SCENARIO"; scenarioId: string; source?: ActionSource }
-  | { type: "SELECT_SCENARIO"; scenarioId: string }
-  | { type: "COMPARE_SCENARIOS"; primaryId: string; compareId?: string }
-  | { type: "CLONE_SCENARIO"; sourceId: string; name?: string; createdBy?: ActionSource }
-  | { type: "EDIT_BUILDING_MASS"; scenarioId: string; patch: MassPatch; source?: ActionSource }
-  | { type: "SET_SHADOW_TIME"; scenarioId: string; value: string; source?: ActionSource }
-  | { type: "SET_SUN_STUDY_POINT"; point?: GeoPoint; source?: ActionSource }
-  | { type: "SET_VIEWPOINT"; viewpoint?: Viewpoint; source?: ActionSource };
+export type LocalTwinAction =
+  | { type: "SET_CELLS"; cells: LocationEvidence[] }
+  | { type: "SET_LAYER"; layer: MapLayer }
+  | { type: "SELECT_CELL"; cellId: string; slot?: "A" | "B" }
+  | { type: "SET_SCENARIO_ASSUMPTIONS"; scenarioId: string; patch: Partial<StartupAssumptions> }
+  | { type: "SET_SCENARIO_CATEGORY"; scenarioId: string; category: BusinessCategory }
+  | { type: "SET_STRESS_PRESET"; scenarioId: string; preset: StressPreset }
+  | { type: "CLONE_SCENARIO"; sourceId: string; name?: string; createdBy?: "human" | "agent" }
+  | { type: "COMPARE_SCENARIOS"; primaryId: string; compareId?: string };
 
 export type ApplicationActions = {
-  setSite: (site: Site, source?: ActionSource) => void;
-  createBuildingMass: (input?: CreateMassInput, createdBy?: ActionSource) => void;
-  deleteScenario: (scenarioId: string, source?: ActionSource) => void;
-  selectScenario: (scenarioId: string) => void;
+  selectCell: (cellId: string, slot?: "A" | "B") => void;
+  setLayer: (layer: MapLayer) => void;
+  setAssumptions: (scenarioId: string, patch: Partial<StartupAssumptions>) => void;
+  setCategory: (scenarioId: string, category: BusinessCategory) => void;
+  setStressPreset: (scenarioId: string, preset: StressPreset) => void;
+  cloneScenario: (sourceId: string, name?: string, createdBy?: "human" | "agent") => void;
   compareScenarios: (primaryId: string, compareId?: string) => void;
-  cloneScenario: (sourceId: string, name?: string, createdBy?: ActionSource) => void;
-  editBuildingMass: (scenarioId: string, patch: MassPatch, source?: ActionSource) => void;
-  setMassFootprint: (scenarioId: string, footprint: Footprint, source?: ActionSource) => void;
-  setShadowTime: (scenarioId: string, value: string, source?: ActionSource) => void;
-  setSunStudyPoint: (point?: GeoPoint, source?: ActionSource) => void;
-  setViewpoint: (viewpoint?: Viewpoint, source?: ActionSource) => void;
 };

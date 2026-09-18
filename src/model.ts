@@ -1,436 +1,336 @@
 import type {
-  BuildingMass,
-  CreateMassInput,
-  Footprint,
+  BusinessCategory,
+  BusinessScenario,
+  FinancialAnalysis,
   GeoPoint,
-  LocalPoint,
-  MassPatch,
-  Scenario,
-  Site,
-  SpatialWorkspace,
-  WorkspaceAction,
+  LocalTwinAction,
+  LocalTwinState,
+  LocationEvidence,
+  StartupAssumptions,
+  StressPreset,
 } from "./types";
 
-export const siteTimeZoneOffsetMinutes = 540;
+export const daeguCenter: GeoPoint = { lon: 128.5967, lat: 35.8714 };
 
-const demoCenter = { lon: 127.11052, lat: 37.39483 };
-const demoSite: Site = {
-  id: "demo-pangyo",
-  name: "Select a real site",
-  center: demoCenter,
-  boundary: [
-    { lon: demoCenter.lon - 0.00022, lat: demoCenter.lat - 0.00016 },
-    { lon: demoCenter.lon + 0.00022, lat: demoCenter.lat - 0.00016 },
-    { lon: demoCenter.lon + 0.00022, lat: demoCenter.lat + 0.00016 },
-    { lon: demoCenter.lon - 0.00022, lat: demoCenter.lat + 0.00016 },
-  ],
-  source: "demo",
+export const demoSite = {
+  id: "daegu-central-corridor",
+  name: "대구 중앙도심 corridor",
+  center: daeguCenter,
+  source: "demo" as const,
 };
 
-export type SolarPosition = {
-  azimuthDeg: number;
-  elevationDeg: number;
-  declinationDeg: number;
-  equationOfTimeMinutes: number;
-  isDaylight: boolean;
-};
-
-export type ShadowPolygon = {
-  points: LocalPoint[];
-  lengthM: number;
-  solar: SolarPosition;
-};
-
-const defaultRectangle: Footprint = { kind: "rectangle", widthM: 32, depthM: 24 };
-
-export const initialState: SpatialWorkspace = {
-  site: demoSite,
-  timeZoneOffsetMinutes: siteTimeZoneOffsetMinutes,
-  scenarios: [],
-  activeScenarioId: undefined,
-  compareScenarioId: undefined,
-};
-
-export function getScenario(state: SpatialWorkspace, id: string): Scenario {
-  const found = state.scenarios.find((scenario) => scenario.id === id);
-  if (!found) throw new Error(`Unknown scenario: ${id}`);
-  return found;
-}
-
-export function getActiveScenario(state: SpatialWorkspace) {
-  return state.activeScenarioId ? state.scenarios.find((scenario) => scenario.id === state.activeScenarioId) : undefined;
-}
-
-export function cloneFootprint(footprint: Footprint): Footprint {
-  return footprint.kind === "rectangle"
-    ? { ...footprint }
-    : { kind: "polygon", points: footprint.points.map((point) => ({ ...point })) };
-}
-
-export function cloneMass(mass: BuildingMass): BuildingMass {
-  return {
-    ...mass,
-    position: { ...mass.position },
-    footprint: cloneFootprint(mass.footprint),
+export const defaultAssumptions = (category: BusinessCategory = "cafe"): StartupAssumptions => {
+  const categoryDefaults: Record<BusinessCategory, Pick<StartupAssumptions, "averageTicketKrw" | "variableCostRatio" | "monthlyPayrollKrw" | "equipmentKrw">> = {
+    cafe: { averageTicketKrw: 6_500, variableCostRatio: 0.32, monthlyPayrollKrw: 2_900_000, equipmentKrw: 18_000_000 },
+    restaurant: { averageTicketKrw: 12_000, variableCostRatio: 0.40, monthlyPayrollKrw: 3_400_000, equipmentKrw: 25_000_000 },
+    retail: { averageTicketKrw: 28_000, variableCostRatio: 0.55, monthlyPayrollKrw: 2_400_000, equipmentKrw: 12_000_000 },
+    beauty: { averageTicketKrw: 45_000, variableCostRatio: 0.25, monthlyPayrollKrw: 3_200_000, equipmentKrw: 15_000_000 },
+    service: { averageTicketKrw: 22_000, variableCostRatio: 0.28, monthlyPayrollKrw: 2_700_000, equipmentKrw: 10_000_000 },
   };
-}
+  return {
+    category,
+    depositKrw: 30_000_000,
+    monthlyRentKrw: 2_600_000,
+    managementFeeKrw: 350_000,
+    interiorKrw: 38_000_000,
+    equipmentKrw: categoryDefaults[category].equipmentKrw,
+    initialInventoryKrw: 5_000_000,
+    permitAndSetupKrw: 3_000_000,
+    openingMarketingKrw: 4_000_000,
+    monthlyPayrollKrw: categoryDefaults[category].monthlyPayrollKrw,
+    monthlyUtilitiesKrw: 650_000,
+    monthlyOtherFixedKrw: 450_000,
+    averageTicketKrw: categoryDefaults[category].averageTicketKrw,
+    variableCostRatio: categoryDefaults[category].variableCostRatio,
+    operatingDaysPerMonth: 26,
+    assumedConversionRate: 0.024,
+    ownerCashKrw: 55_000_000,
+    grantKrw: 0,
+    assumedFinancingKrw: 35_000_000,
+    otherFundingKrw: 0,
+    financingAnnualRate: 0.055,
+    financingMonths: 60,
+    openingBufferMonths: 3,
+  };
+};
 
-export function footprintPoints(footprint: Footprint): LocalPoint[] {
-  if (footprint.kind === "polygon") return footprint.points;
-  const halfWidth = footprint.widthM / 2;
-  const halfDepth = footprint.depthM / 2;
-  return [
-    { xM: -halfWidth, yM: -halfDepth },
-    { xM: halfWidth, yM: -halfDepth },
-    { xM: halfWidth, yM: halfDepth },
-    { xM: -halfWidth, yM: halfDepth },
+export function createScenario(
+  locationCellId: string,
+  id: string,
+  name: string,
+  category: BusinessCategory = "cafe",
+  createdBy: "human" | "agent" = "human",
+): BusinessScenario {
+  return { id, name, createdBy, locationCellId, assumptions: defaultAssumptions(category), stressPreset: "base" };
+}
+export function initialState(cells: LocationEvidence[] = []): LocalTwinState {
+  const first = cells[0]?.cellId ?? "hex-dongseongro-01";
+  const second = cells[2]?.cellId ?? "hex-buksungro-01";
+  const scenarios = [
+    createScenario(first, "scenario-a", "후보 A · 동성로", "cafe"),
+    createScenario(second, "scenario-b", "후보 B · 북성로", "cafe"),
   ];
-}
-
-export function rotatedFootprintPoints(mass: BuildingMass): LocalPoint[] {
-  const angle = (mass.rotationDeg * Math.PI) / 180;
-  const cos = Math.cos(angle);
-  const sin = Math.sin(angle);
-  return footprintPoints(mass.footprint).map(({ xM, yM }) => ({
-    xM: xM * cos - yM * sin,
-    yM: xM * sin + yM * cos,
-  }));
-}
-
-export function footprintBounds(mass: BuildingMass) {
-  const points = rotatedFootprintPoints(mass);
-  const xs = points.map((point) => point.xM);
-  const ys = points.map((point) => point.yM);
   return {
-    minX: Math.min(...xs),
-    maxX: Math.max(...xs),
-    minY: Math.min(...ys),
-    maxY: Math.max(...ys),
-    widthM: Math.max(...xs) - Math.min(...xs),
-    depthM: Math.max(...ys) - Math.min(...ys),
+    site: demoSite,
+    cells,
+    scenarios,
+    activeScenarioId: scenarios[0].id,
+    compareScenarioId: scenarios[1].id,
+    activeLayer: "opportunity",
   };
 }
 
-export function footprintAreaM2(footprint: Footprint) {
-  const points = footprintPoints(footprint);
-  return Math.abs(points.reduce((area, point, index) => {
-    const next = points[(index + 1) % points.length];
-    return area + point.xM * next.yM - next.xM * point.yM;
-  }, 0) / 2);
+export function getScenario(state: LocalTwinState, scenarioId: string) {
+  const scenario = state.scenarios.find((item) => item.id === scenarioId);
+  if (!scenario) throw new Error(`Unknown scenario: ${scenarioId}`);
+  return scenario;
 }
 
-export function estimateGfa(mass: BuildingMass) {
-  return Math.round(footprintAreaM2(mass.footprint) * mass.floors);
+export function getCell(state: LocalTwinState, cellId: string) {
+  const cell = state.cells.find((item) => item.cellId === cellId);
+  if (!cell) throw new Error(`Unknown cell: ${cellId}`);
+  return cell;
 }
 
-export function geoPointToLocal(center: GeoPoint, point: GeoPoint): LocalPoint {
-  const northM = (point.lat - center.lat) * 111_320;
-  const eastM = (point.lon - center.lon) * 111_320 * Math.cos((center.lat * Math.PI) / 180);
-  return { xM: eastM, yM: northM };
+function nextScenarioId(scenarios: BusinessScenario[]) {
+  let index = scenarios.length + 1;
+  while (scenarios.some((scenario) => scenario.id === `scenario-${index}`)) index += 1;
+  return `scenario-${index}`;
 }
 
-export function localPointToGeo(center: GeoPoint, point: LocalPoint): GeoPoint {
-  return {
-    lon: center.lon + point.xM / (111_320 * Math.cos((center.lat * Math.PI) / 180)),
-    lat: center.lat + point.yM / 111_320,
-  };
-}
-
-function degreesToRadians(value: number) {
-  return (value * Math.PI) / 180;
-}
-
-function radiansToDegrees(value: number) {
-  return (value * 180) / Math.PI;
-}
-
-function normalizeDegrees(value: number) {
-  return ((value % 360) + 360) % 360;
-}
-
-function clampUnit(value: number) {
-  return Math.min(1, Math.max(-1, value));
-}
-
-function parseLocalDateTime(localDateTime: string, timeZoneOffsetMinutes: number) {
-  const match = /^(\d{4})-(\d{2})-(\d{2})T(\d{2}):(\d{2})(?::(\d{2}))?$/.exec(localDateTime);
-  if (!match) return { date: new Date(Number.NaN), year: 0, month: 0, day: 0, hour: 0, minute: 0, second: 0 };
-  const year = Number(match[1]);
-  const month = Number(match[2]);
-  const day = Number(match[3]);
-  const hour = Number(match[4]);
-  const minute = Number(match[5]);
-  const second = Number(match[6] ?? 0);
-  const date = new Date(Date.UTC(year, month - 1, day, hour, minute, second) - timeZoneOffsetMinutes * 60_000);
-  return { date, year, month, day, hour, minute, second };
-}
-
-/** NOAA solar position approximation using the selected site and local time. */
-export function solarPosition(
-  location: GeoPoint,
-  localDateTime: string,
-  timeZoneOffsetMinutes = siteTimeZoneOffsetMinutes,
-): SolarPosition {
-  const parsed = parseLocalDateTime(localDateTime, timeZoneOffsetMinutes);
-  if (Number.isNaN(parsed.date.getTime())) {
-    return { azimuthDeg: Number.NaN, elevationDeg: Number.NaN, declinationDeg: Number.NaN, equationOfTimeMinutes: Number.NaN, isDaylight: false };
-  }
-
-  const julianDay = parsed.date.getTime() / 86_400_000 + 2_440_587.5;
-  const julianCentury = (julianDay - 2_451_545) / 36_525;
-  const geomMeanLongSun = normalizeDegrees(280.46646 + julianCentury * (36_000.76983 + julianCentury * 0.0003032));
-  const geomMeanAnomSun = 357.52911 + julianCentury * (35_999.05029 - 0.0001537 * julianCentury);
-  const eccentricity = 0.016708634 - julianCentury * (0.000042037 + 0.0000001267 * julianCentury);
-  const anomalyRadians = degreesToRadians(geomMeanAnomSun);
-  const sunEquationOfCenter = Math.sin(anomalyRadians) * (1.914602 - julianCentury * (0.004817 + 0.000014 * julianCentury))
-    + Math.sin(2 * anomalyRadians) * (0.019993 - 0.000101 * julianCentury)
-    + Math.sin(3 * anomalyRadians) * 0.000289;
-  const sunTrueLongitude = geomMeanLongSun + sunEquationOfCenter;
-  const omega = degreesToRadians(125.04 - 1_934.136 * julianCentury);
-  const sunApparentLongitude = sunTrueLongitude - 0.00569 - 0.00478 * Math.sin(omega);
-  const meanObliquity = 23 + (26 + ((21.448 - julianCentury * (46.815 + julianCentury * (0.00059 - julianCentury * 0.001813))) / 60)) / 60;
-  const correctedObliquity = meanObliquity + 0.00256 * Math.cos(omega);
-  const obliquityRadians = degreesToRadians(correctedObliquity);
-  const apparentLongitudeRadians = degreesToRadians(sunApparentLongitude);
-  const declinationRadians = Math.asin(Math.sin(obliquityRadians) * Math.sin(apparentLongitudeRadians));
-  const declinationDeg = radiansToDegrees(declinationRadians);
-  const variance = Math.tan(obliquityRadians / 2) ** 2;
-  const equationOfTimeMinutes = 4 * radiansToDegrees(
-    variance * Math.sin(2 * degreesToRadians(geomMeanLongSun))
-      - 2 * eccentricity * Math.sin(anomalyRadians)
-      + 4 * eccentricity * variance * Math.sin(anomalyRadians) * Math.cos(2 * degreesToRadians(geomMeanLongSun))
-      - 0.5 * variance ** 2 * Math.sin(4 * degreesToRadians(geomMeanLongSun))
-      - 1.25 * eccentricity ** 2 * Math.sin(2 * anomalyRadians),
-  );
-
-  const localMinutes = parsed.hour * 60 + parsed.minute + parsed.second / 60;
-  const trueSolarTime = ((localMinutes + equationOfTimeMinutes + 4 * location.lon - timeZoneOffsetMinutes) % 1_440 + 1_440) % 1_440;
-  const hourAngleDeg = trueSolarTime / 4 - 180;
-  const latitudeRadians = degreesToRadians(location.lat);
-  const hourAngleRadians = degreesToRadians(hourAngleDeg);
-  const zenithRadians = Math.acos(clampUnit(
-    Math.sin(latitudeRadians) * Math.sin(declinationRadians)
-      + Math.cos(latitudeRadians) * Math.cos(declinationRadians) * Math.cos(hourAngleRadians),
-  ));
-  const elevationDeg = 90 - radiansToDegrees(zenithRadians);
-  const azimuthDeg = normalizeDegrees(radiansToDegrees(Math.atan2(
-    Math.sin(hourAngleRadians),
-    Math.cos(hourAngleRadians) * Math.sin(latitudeRadians) - Math.tan(declinationRadians) * Math.cos(latitudeRadians),
-  )) + 180);
-
-  return { azimuthDeg, elevationDeg, declinationDeg, equationOfTimeMinutes, isDaylight: elevationDeg > 0 };
-}
-
-function cross(origin: LocalPoint, a: LocalPoint, b: LocalPoint) {
-  return (a.xM - origin.xM) * (b.yM - origin.yM) - (a.yM - origin.yM) * (b.xM - origin.xM);
-}
-
-function convexHull(points: LocalPoint[]) {
-  const sorted = points
-    .map((point) => ({ xM: Number(point.xM.toFixed(6)), yM: Number(point.yM.toFixed(6)) }))
-    .filter((point, index, all) => all.findIndex((candidate) => candidate.xM === point.xM && candidate.yM === point.yM) === index)
-    .sort((a, b) => a.xM - b.xM || a.yM - b.yM);
-  if (sorted.length <= 2) return sorted;
-  const lower: LocalPoint[] = [];
-  for (const point of sorted) {
-    while (lower.length >= 2 && cross(lower[lower.length - 2], lower[lower.length - 1], point) <= 0) lower.pop();
-    lower.push(point);
-  }
-  const upper: LocalPoint[] = [];
-  for (const point of [...sorted].reverse()) {
-    while (upper.length >= 2 && cross(upper[upper.length - 2], upper[upper.length - 1], point) <= 0) upper.pop();
-    upper.push(point);
-  }
-  return [...lower.slice(0, -1), ...upper.slice(0, -1)];
-}
-
-export function computeShadowPolygon(
-  mass: BuildingMass,
-  location: GeoPoint,
-  localDateTime: string,
-  timeZoneOffsetMinutes = siteTimeZoneOffsetMinutes,
-): ShadowPolygon {
-  const solar = solarPosition(location, localDateTime, timeZoneOffsetMinutes);
-  if (!solar.isDaylight) return { points: [], lengthM: 0, solar };
-
-  const elevationRadians = degreesToRadians(solar.elevationDeg);
-  const lengthM = mass.heightM / Math.tan(elevationRadians);
-  if (!Number.isFinite(lengthM) || lengthM <= 0) return { points: [], lengthM: 0, solar };
-
-  const basePoints = rotatedFootprintPoints(mass).map((point) => ({
-    xM: point.xM + mass.position.eastM,
-    yM: point.yM + mass.position.northM,
-  }));
-  const azimuthRadians = degreesToRadians(solar.azimuthDeg);
-  const shadowEastM = -Math.sin(azimuthRadians) * lengthM;
-  const shadowNorthM = -Math.cos(azimuthRadians) * lengthM;
-  const shadowPoints = basePoints.map((point) => ({ xM: point.xM + shadowEastM, yM: point.yM + shadowNorthM }));
-  return { points: convexHull([...basePoints, ...shadowPoints]), lengthM, solar };
-}
-
-function clamp(value: number, min: number, max: number) {
-  return Math.min(max, Math.max(min, value));
-}
-
-function normalizePoint(point: LocalPoint): LocalPoint {
-  return {
-    xM: clamp(Number(point.xM) || 0, -300, 300),
-    yM: clamp(Number(point.yM) || 0, -300, 300),
-  };
-}
-
-function normalizeFootprint(footprint: Footprint): Footprint {
-  if (!footprint || footprint.kind === "rectangle") {
-    return {
-      kind: "rectangle",
-      widthM: clamp(Number(footprint?.widthM) || 12, 6, 200),
-      depthM: clamp(Number(footprint?.depthM) || 12, 6, 200),
-    };
-  }
-  const points = Array.isArray(footprint.points) ? footprint.points.map(normalizePoint) : [];
-  return {
-    kind: "polygon",
-    points: points.length >= 3 ? points : footprintPoints(defaultRectangle),
-  };
-}
-
-function normalizePatch(patch: MassPatch): MassPatch {
-  const normalized: MassPatch = {};
-  if (patch.heightM !== undefined) normalized.heightM = clamp(Number(patch.heightM) || 6, 3, 120);
-  if (patch.floors !== undefined) normalized.floors = Math.round(clamp(Number(patch.floors) || 1, 1, 40));
-  if (patch.rotationDeg !== undefined) normalized.rotationDeg = clamp(Number(patch.rotationDeg) || 0, -180, 180);
-  if (patch.position) {
-    const position: Partial<BuildingMass["position"]> = {};
-    if (patch.position.eastM !== undefined) position.eastM = clamp(Number(patch.position.eastM) || 0, -300, 300);
-    if (patch.position.northM !== undefined) position.northM = clamp(Number(patch.position.northM) || 0, -300, 300);
-    normalized.position = position;
-  }
-  if (patch.footprint) normalized.footprint = normalizeFootprint(patch.footprint);
-  return normalized;
-}
-
-function applyMassPatch(mass: BuildingMass, patch: MassPatch) {
-  const normalized = normalizePatch(patch);
-  return {
-    ...mass,
-    ...normalized,
-    position: { ...mass.position, ...normalized.position },
-    footprint: normalized.footprint ? cloneFootprint(normalized.footprint) : cloneFootprint(mass.footprint),
-  };
-}
-
-function nextScenarioId(scenarios: Scenario[]) {
-  const ids = new Set(scenarios.map((scenario) => scenario.id));
-  for (const letter of "ABCDEFGHIJKLMNOPQRSTUVWXYZ") {
-    if (!ids.has(letter)) return letter;
-  }
-  return `S${scenarios.length + 1}`;
-}
-
-function createScenario(scenarios: Scenario[], input: CreateMassInput = {}, createdBy: "human" | "agent" = "human"): Scenario {
-  const id = nextScenarioId(scenarios);
-  const footprint = normalizeFootprint(input.footprint ?? defaultRectangle);
-  return {
-    id,
-    name: input.name?.trim() || `Option ${id}`,
-    intent: input.intent?.trim() || "Early massing option",
-    createdBy,
-    mass: {
-      id: `mass-${id.toLowerCase()}`,
-      name: input.name?.trim() || `Building mass ${id}`,
-      footprint,
-      heightM: clamp(Number(input.heightM) || 18, 3, 120),
-      floors: Math.round(clamp(Number(input.floors) || 5, 1, 40)),
-      position: {
-        eastM: clamp(Number(input.position?.eastM) || 0, -300, 300),
-        northM: clamp(Number(input.position?.northM) || 0, -300, 300),
-      },
-      rotationDeg: clamp(Number(input.rotationDeg) || 0, -180, 180),
-    },
-    analysisTime: "2026-09-18T15:00",
-  };
-}
-
-export function reducer(state: SpatialWorkspace, action: WorkspaceAction): SpatialWorkspace {
+export function reducer(state: LocalTwinState, action: LocalTwinAction): LocalTwinState {
   switch (action.type) {
-    case "SET_SITE":
+    case "SET_CELLS":
+      return { ...state, cells: action.cells };
+    case "SET_LAYER":
+      return { ...state, activeLayer: action.layer };
+    case "SELECT_CELL": {
+      const slot = action.slot ?? "A";
+      const existingId = slot === "A" ? state.activeScenarioId : state.compareScenarioId;
+      if (existingId) {
+        return {
+          ...state,
+          scenarios: state.scenarios.map((scenario) => scenario.id === existingId
+            ? { ...scenario, locationCellId: action.cellId }
+            : scenario),
+        };
+      }
+      const label = slot === "A" ? "후보 A" : "후보 B";
+      const created = createScenario(action.cellId, nextScenarioId(state.scenarios), label);
       return {
         ...state,
-        site: {
-          ...action.site,
-          center: { ...action.site.center },
-          boundary: action.site.boundary.map((point) => ({ ...point })),
-        },
-        scenarios: [],
-        activeScenarioId: undefined,
-        compareScenarioId: undefined,
-        sunStudyPoint: undefined,
-        viewpoint: undefined,
-      };
-    case "CREATE_SCENARIO": {
-      const next = createScenario(state.scenarios, action.input, action.createdBy);
-      return {
-        ...state,
-        scenarios: [...state.scenarios, next],
-        activeScenarioId: next.id,
-        compareScenarioId: undefined,
+        scenarios: [...state.scenarios, created],
+        ...(slot === "A" ? { activeScenarioId: created.id } : { compareScenarioId: created.id }),
       };
     }
-    case "DELETE_SCENARIO": {
-      getScenario(state, action.scenarioId);
-      const scenarios = state.scenarios.filter((scenario) => scenario.id !== action.scenarioId);
-      const activeScenarioId = state.activeScenarioId === action.scenarioId ? scenarios[0]?.id : state.activeScenarioId;
-      const compareScenarioId = state.compareScenarioId === action.scenarioId ? undefined : state.compareScenarioId;
-      return { ...state, scenarios, activeScenarioId, compareScenarioId };
-    }
-    case "SELECT_SCENARIO":
-      getScenario(state, action.scenarioId);
-      return { ...state, activeScenarioId: action.scenarioId };
-    case "COMPARE_SCENARIOS":
-      getScenario(state, action.primaryId);
-      if (action.compareId) getScenario(state, action.compareId);
-      return { ...state, activeScenarioId: action.primaryId, compareScenarioId: action.compareId };
-    case "SET_SHADOW_TIME":
-      getScenario(state, action.scenarioId);
+    case "SET_SCENARIO_ASSUMPTIONS":
       return {
         ...state,
         scenarios: state.scenarios.map((scenario) => scenario.id === action.scenarioId
-          ? { ...scenario, analysisTime: action.value }
+          ? { ...scenario, assumptions: { ...scenario.assumptions, ...action.patch } }
           : scenario),
       };
-    case "EDIT_BUILDING_MASS":
-      getScenario(state, action.scenarioId);
+    case "SET_SCENARIO_CATEGORY":
       return {
         ...state,
         scenarios: state.scenarios.map((scenario) => scenario.id === action.scenarioId
-          ? { ...scenario, mass: applyMassPatch(scenario.mass, action.patch) }
+          ? { ...scenario, assumptions: { ...scenario.assumptions, category: action.category } }
           : scenario),
       };
-    case "SET_SUN_STUDY_POINT":
-      return { ...state, sunStudyPoint: action.point ? { ...action.point } : undefined };
-    case "SET_VIEWPOINT":
+    case "SET_STRESS_PRESET":
       return {
         ...state,
-        viewpoint: action.viewpoint
-          ? { point: { ...action.viewpoint.point }, eyeHeightM: action.viewpoint.eyeHeightM }
-          : undefined,
+        scenarios: state.scenarios.map((scenario) => scenario.id === action.scenarioId
+          ? { ...scenario, stressPreset: action.preset }
+          : scenario),
       };
     case "CLONE_SCENARIO": {
       const source = getScenario(state, action.sourceId);
       const id = nextScenarioId(state.scenarios);
-      const next: Scenario = {
+      const clone: BusinessScenario = {
         ...source,
         id,
+        name: action.name ?? `${source.name} 복제`,
         parentId: source.id,
-        name: action.name?.trim() || `Option ${id}`,
         createdBy: action.createdBy ?? "human",
-        mass: { ...cloneMass(source.mass), id: `mass-${id.toLowerCase()}` },
+        assumptions: { ...source.assumptions },
       };
-      return {
-        ...state,
-        scenarios: [...state.scenarios, next],
-        activeScenarioId: id,
-      };
+      return { ...state, scenarios: [...state.scenarios, clone], activeScenarioId: clone.id };
     }
+    case "COMPARE_SCENARIOS":
+      getScenario(state, action.primaryId);
+      if (action.compareId) getScenario(state, action.compareId);
+      return { ...state, activeScenarioId: action.primaryId, compareScenarioId: action.compareId };
+    default:
+      return state;
   }
+}
+
+export function distanceMeters(a: GeoPoint, b: GeoPoint) {
+  const latScale = 111_320;
+  const lonScale = latScale * Math.cos((a.lat * Math.PI) / 180);
+  return Math.hypot((b.lon - a.lon) * lonScale, (b.lat - a.lat) * latScale);
+}
+
+export function distanceDecay(distanceM: number, lambdaM = 350) {
+  if (distanceM < 0 || lambdaM <= 0) throw new Error("Distance and lambda must be non-negative/positive.");
+  return Math.exp(-distanceM / lambdaM);
+}
+
+export function spilloverContribution(anchorStrength: number, distanceM: number, lambdaM = 350) {
+  return Math.max(0, anchorStrength) * distanceDecay(distanceM, lambdaM);
+}
+
+export function spilloverFromAnchors(target: GeoPoint, anchors: Array<{ center: GeoPoint; strength: number }>, lambdaM = 350) {
+  return anchors.reduce((sum, anchor) => sum + spilloverContribution(anchor.strength, distanceMeters(target, anchor.center), lambdaM), 0);
+}
+
+export function normalizeMetric(values: Array<number | null | undefined>, value: number | null | undefined) {
+  if (value === null || value === undefined || !Number.isFinite(value)) return null;
+  const available = values.filter((item): item is number => item !== null && item !== undefined && Number.isFinite(item));
+  if (!available.length) return null;
+  const min = Math.min(...available);
+  const max = Math.max(...available);
+  if (max === min) return 50;
+  return ((value - min) / (max - min)) * 100;
+}
+
+export type OpportunityScores = {
+  footfall: number | null;
+  transit: number | null;
+  buzz: number | null;
+  spillover: number | null;
+  poiContext: number | null;
+  demandScore: number | null;
+  rentRelief: number | null;
+};
+
+export function computeOpportunityScores(cell: LocationEvidence, allCells: LocationEvidence[]): OpportunityScores {
+  const footfall = normalizeMetric(allCells.map((item) => item.observedFootfall), cell.observedFootfall);
+  const transit = normalizeMetric(allCells.map((item) => item.transitDemand), cell.transitDemand);
+  const buzz = normalizeMetric(allCells.map((item) => item.buzzLevel), cell.buzzLevel);
+  const spillover = normalizeMetric(allCells.map((item) => item.spilloverScore), cell.spilloverScore);
+  const poiContext = normalizeMetric(allCells.map((item) => item.poiCount), cell.poiCount);
+  const weighted = [
+    [footfall, 0.35],
+    [transit, 0.20],
+    [buzz, 0.20],
+    [spillover, 0.15],
+    [poiContext, 0.10],
+  ] as Array<[number | null, number]>;
+  const availableWeight = weighted.filter(([value]) => value !== null).reduce((sum, [, weight]) => sum + weight, 0);
+  const demandScore = availableWeight
+    ? weighted.reduce((sum, [value, weight]) => sum + (value === null ? 0 : value * (weight / availableWeight)), 0)
+    : null;
+  const rentRelief = normalizeMetric(allCells.map((item) => item.rentBenchmark === null ? null : -item.rentBenchmark), cell.rentBenchmark === null ? null : -cell.rentBenchmark);
+  return { footfall, transit, buzz, spillover, poiContext, demandScore, rentRelief };
+}
+
+function assertAssumptions(assumptions: StartupAssumptions) {
+  if (assumptions.averageTicketKrw <= 0) throw new Error("Average ticket must be positive.");
+  if (assumptions.variableCostRatio < 0 || assumptions.variableCostRatio >= 1) throw new Error("Variable cost ratio must be between 0 and 1.");
+  if (assumptions.operatingDaysPerMonth <= 0) throw new Error("Operating days must be positive.");
+  if (assumptions.financingMonths < 0) throw new Error("Financing months cannot be negative.");
+  if (assumptions.openingBufferMonths < 0) throw new Error("Opening buffer months cannot be negative.");
+}
+
+export function monthlyDebtPayment(principal: number, annualRate: number, months: number) {
+  if (principal <= 0 || months <= 0) return 0;
+  if (annualRate <= 0) return principal / months;
+  const rate = annualRate / 12;
+  return principal * rate / (1 - (1 + rate) ** -months);
+}
+
+export function monthlyOperatingFixedCost(assumptions: StartupAssumptions) {
+  return assumptions.monthlyRentKrw
+    + assumptions.managementFeeKrw
+    + assumptions.monthlyPayrollKrw
+    + assumptions.monthlyUtilitiesKrw
+    + assumptions.monthlyOtherFixedKrw;
+}
+
+export function monthlyFixedCost(assumptions: StartupAssumptions) {
+  return monthlyOperatingFixedCost(assumptions)
+    + monthlyDebtPayment(assumptions.assumedFinancingKrw, assumptions.financingAnnualRate, assumptions.financingMonths);
+}
+
+export function startupCapitalNeed(assumptions: StartupAssumptions) {
+  assertAssumptions(assumptions);
+  const openingWorkingCapitalKrw = monthlyOperatingFixedCost(assumptions) * assumptions.openingBufferMonths;
+  return assumptions.depositKrw
+    + assumptions.interiorKrw
+    + assumptions.equipmentKrw
+    + assumptions.initialInventoryKrw
+    + assumptions.permitAndSetupKrw
+    + assumptions.openingMarketingKrw
+    + openingWorkingCapitalKrw;
+}
+
+export function contributionPerCustomer(assumptions: StartupAssumptions) {
+  assertAssumptions(assumptions);
+  return assumptions.averageTicketKrw * (1 - assumptions.variableCostRatio);
+}
+
+export function applyStressPreset(assumptions: StartupAssumptions, preset: StressPreset): StartupAssumptions {
+  const next = { ...assumptions };
+  if (["footfallDown", "conversionDown", "combined"].includes(preset)) next.assumedConversionRate *= 0.8;
+  if (["costUp", "combined"].includes(preset)) next.variableCostRatio = Math.min(0.99, next.variableCostRatio + 0.10);
+  if (["rentUp", "combined"].includes(preset)) next.monthlyRentKrw *= 1.10;
+  if (["rateUp", "combined"].includes(preset)) next.financingAnnualRate += 0.01;
+  return next;
+}
+
+export function analyzeFinancials(
+  rawAssumptions: StartupAssumptions,
+  relevantDailyFootfall: number | null,
+  preset: StressPreset = "base",
+): FinancialAnalysis {
+  const assumptions = applyStressPreset(rawAssumptions, preset);
+  assertAssumptions(assumptions);
+  const monthlyFixedCostKrw = monthlyFixedCost(assumptions);
+  const openingWorkingCapitalKrw = monthlyOperatingFixedCost(assumptions) * assumptions.openingBufferMonths;
+  const startupCapitalNeedKrw = startupCapitalNeed(assumptions);
+  const contribution = contributionPerCustomer(assumptions);
+  const monthlyBreakEvenCustomers = monthlyFixedCostKrw / contribution;
+  const breakEvenCustomersPerDay = monthlyBreakEvenCustomers / assumptions.operatingDaysPerMonth;
+  const monthlyBreakEvenRevenueKrw = monthlyFixedCostKrw / (1 - assumptions.variableCostRatio);
+  const requiredConversionRate = relevantDailyFootfall && relevantDailyFootfall > 0
+    ? breakEvenCustomersPerDay / relevantDailyFootfall
+    : null;
+  const steadyStateRevenueKrw = relevantDailyFootfall && relevantDailyFootfall > 0
+    ? relevantDailyFootfall * assumptions.assumedConversionRate * assumptions.averageTicketKrw * assumptions.operatingDaysPerMonth
+    : 0;
+  const sourceCashKrw = assumptions.ownerCashKrw + assumptions.grantKrw + assumptions.assumedFinancingKrw + assumptions.otherFundingKrw;
+  const fundingGapKrw = Math.max(0, startupCapitalNeedKrw - sourceCashKrw);
+  const initialCash = sourceCashKrw - startupCapitalNeedKrw;
+  const ramp = [0.60, 0.70, 0.80, 0.90, 1, 1, 1, 1, 1, 1, 1, 1];
+  let cash = initialCash;
+  let cumulativeOperatingCash = 0;
+  const monthlyTimeline = ramp.map((factor, index) => {
+    const revenueKrw = steadyStateRevenueKrw * factor;
+    const operatingCashFlowKrw = revenueKrw * (1 - assumptions.variableCostRatio) - monthlyFixedCostKrw;
+    cumulativeOperatingCash += operatingCashFlowKrw;
+    cash += operatingCashFlowKrw;
+    return { month: index + 1, revenueKrw, operatingCashFlowKrw, cashBalanceKrw: cash };
+  });
+  const firstNegative = initialCash < 0 ? 0 : monthlyTimeline.find((point) => point.cashBalanceKrw < 0)?.month ?? null;
+  const breakEvenMonth = monthlyTimeline.find((point) => point.operatingCashFlowKrw >= 0)?.month ?? null;
+  const paybackMonth = assumptions.ownerCashKrw <= 0
+    ? 0
+    : monthlyTimeline.find((_, index) => monthlyTimeline.slice(0, index + 1).reduce((sum, point) => sum + point.operatingCashFlowKrw, 0) >= assumptions.ownerCashKrw)?.month ?? null;
+  return {
+    startupCapitalNeedKrw,
+    openingWorkingCapitalKrw,
+    monthlyFixedCostKrw,
+    monthlyBreakEvenRevenueKrw,
+    monthlyBreakEvenCustomers,
+    breakEvenCustomersPerDay,
+    requiredConversionRate,
+    steadyStateRevenueKrw,
+    fundingGapKrw,
+    breakEvenMonth,
+    cashRunwayMonths: firstNegative,
+    paybackMonth,
+    monthlyTimeline,
+  };
 }

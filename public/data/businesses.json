@@ -1,0 +1,12 @@
+[
+  {"id":"demo-biz-001","cellId":"hex-dongseongro-01","category":"cafe","status":"operating","mode":"demo"},
+  {"id":"demo-biz-002","cellId":"hex-dongseongro-01","category":"restaurant","status":"operating","mode":"demo"},
+  {"id":"demo-biz-003","cellId":"hex-dongseongro-02","category":"cafe","status":"operating","mode":"demo"},
+  {"id":"demo-biz-004","cellId":"hex-gyodong-01","category":"cafe","status":"operating","mode":"demo"},
+  {"id":"demo-biz-005","cellId":"hex-gyodong-02","category":"retail","status":"operating","mode":"demo"},
+  {"id":"demo-biz-006","cellId":"hex-buksungro-01","category":"cafe","status":"operating","mode":"demo"},
+  {"id":"demo-biz-007","cellId":"hex-buksungro-01","category":"service","status":"operating","mode":"demo"},
+  {"id":"demo-biz-008","cellId":"hex-buksungro-02","category":"restaurant","status":"operating","mode":"demo"},
+  {"id":"demo-biz-009","cellId":"hex-jungang-01","category":"cafe","status":"operating","mode":"demo"},
+  {"id":"demo-biz-010","cellId":"hex-seomun-01","category":"retail","status":"operating","mode":"demo"}
+]

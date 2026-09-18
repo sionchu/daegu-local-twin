@@ -1,70 +1,42 @@
 import type { Dispatch } from "react";
-import type {
-  ApplicationActions,
-  CreateMassInput,
-  Footprint,
-  MassPatch,
-  Site,
-  SpatialWorkspace,
-  WorkspaceAction,
-} from "./types";
+import type { ApplicationActions, LocalTwinAction, LocalTwinState, StartupAssumptions } from "./types";
 
-/**
- * The application action surface is shared by human UI handlers and WebMCP.
- * Adapters can observe or render the resulting canonical workspace, but they
- * do not mutate scenarios directly.
- */
 export function createApplicationActions(
-  dispatch: Dispatch<WorkspaceAction>,
-  getState: () => SpatialWorkspace,
+  dispatch: Dispatch<LocalTwinAction>,
+  getState: () => LocalTwinState,
 ): ApplicationActions {
   const requireScenario = (scenarioId: string) => {
-    if (!getState().scenarios.some((scenario) => scenario.id === scenarioId)) {
-      throw new Error(`Unknown scenario: ${scenarioId}`);
-    }
+    if (!getState().scenarios.some((scenario) => scenario.id === scenarioId)) throw new Error(`Unknown scenario: ${scenarioId}`);
   };
-
+  const requireCell = (cellId: string) => {
+    if (!getState().cells.some((cell) => cell.cellId === cellId)) throw new Error(`Unknown cell: ${cellId}`);
+  };
   return {
-    setSite: (site: Site, source = "human") => {
-      dispatch({ type: "SET_SITE", site, source });
+    selectCell: (cellId, slot = "A") => {
+      requireCell(cellId);
+      dispatch({ type: "SELECT_CELL", cellId, slot });
     },
-    createBuildingMass: (input: CreateMassInput = {}, createdBy = "human") => {
-      dispatch({ type: "CREATE_SCENARIO", input, createdBy });
-    },
-    deleteScenario: (scenarioId, source = "human") => {
+    setLayer: (layer) => dispatch({ type: "SET_LAYER", layer }),
+    setAssumptions: (scenarioId, patch: Partial<StartupAssumptions>) => {
       requireScenario(scenarioId);
-      dispatch({ type: "DELETE_SCENARIO", scenarioId, source });
+      dispatch({ type: "SET_SCENARIO_ASSUMPTIONS", scenarioId, patch });
     },
-    selectScenario: (scenarioId) => {
+    setCategory: (scenarioId, category) => {
       requireScenario(scenarioId);
-      dispatch({ type: "SELECT_SCENARIO", scenarioId });
+      dispatch({ type: "SET_SCENARIO_CATEGORY", scenarioId, category });
     },
-    compareScenarios: (primaryId, compareId) => {
-      requireScenario(primaryId);
-      if (compareId) requireScenario(compareId);
-      dispatch({ type: "COMPARE_SCENARIOS", primaryId, compareId });
+    setStressPreset: (scenarioId, preset) => {
+      requireScenario(scenarioId);
+      dispatch({ type: "SET_STRESS_PRESET", scenarioId, preset });
     },
     cloneScenario: (sourceId, name, createdBy = "human") => {
       requireScenario(sourceId);
       dispatch({ type: "CLONE_SCENARIO", sourceId, name, createdBy });
     },
-    editBuildingMass: (scenarioId, patch: MassPatch, source = "human") => {
-      requireScenario(scenarioId);
-      dispatch({ type: "EDIT_BUILDING_MASS", scenarioId, patch, source });
-    },
-    setMassFootprint: (scenarioId, footprint: Footprint, source = "human") => {
-      requireScenario(scenarioId);
-      dispatch({ type: "EDIT_BUILDING_MASS", scenarioId, patch: { footprint }, source });
-    },
-    setShadowTime: (scenarioId, value, source = "human") => {
-      requireScenario(scenarioId);
-      dispatch({ type: "SET_SHADOW_TIME", scenarioId, value, source });
-    },
-    setSunStudyPoint: (point, source = "human") => {
-      dispatch({ type: "SET_SUN_STUDY_POINT", point, source });
-    },
-    setViewpoint: (viewpoint, source = "human") => {
-      dispatch({ type: "SET_VIEWPOINT", viewpoint, source });
+    compareScenarios: (primaryId, compareId) => {
+      requireScenario(primaryId);
+      if (compareId) requireScenario(compareId);
+      dispatch({ type: "COMPARE_SCENARIOS", primaryId, compareId });
     },
   };
 }

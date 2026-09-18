@@ -1,0 +1,9 @@
+{
+  "mode": "demo",
+  "records": [
+    {"area":"교동","regenerationContextScore":63,"interpretation":"도시재생/쇠퇴 맥락 신호"},
+    {"area":"북성로","regenerationContextScore":86,"interpretation":"도시재생/쇠퇴 맥락 신호"},
+    {"area":"대신동","regenerationContextScore":74,"interpretation":"도시재생/쇠퇴 맥락 신호"}
+  ],
+  "limitation":"도시재생 맥락은 미래 상업 성공을 뜻하지 않음"
+}

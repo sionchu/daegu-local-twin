@@ -1,11 +1,10 @@
 # Sites deployment boundary
 
-1. Keep `.env` local and out of Git.
-2. Add `VITE_VWORLD_API_KEY` as a secret and `VITE_VWORLD_DOMAIN` as the exact Sites host to the hosted build environment. Do not paste the key into source, documentation, screenshots, or issue comments.
-3. Deploy the Vite application as a static site.
-4. Copy the final public Site origin.
-5. Add that origin to the VWorld API key service-domain allowlist.
-6. Open the deployed site and confirm the status pill reaches `VWorld 3D live`. Without the key or with a restricted origin, the app remains usable in `Demo geometry` mode.
-7. In a Site-Tools-capable ChatGPT surface, confirm the six SpaceLab WebMCP tools are discoverable.
+1. Keep `.env` local and ignored.
+2. Configure `VITE_VWORLD_API_KEY` as a hosted build secret.
+3. Configure `VITE_VWORLD_DOMAIN` as the exact final public Sites host, then add that origin to the VWorld service-domain allowlist.
+4. Build the static Vite app and publish the exact commit.
+5. Open the public origin and check: app loads, snapshots load, map fallback works, A/B selection works, financial inputs react, and mobile has no page-level horizontal overflow.
+6. If the key is configured, confirm the app's provider pill changes only after the browser-side VWorld probe succeeds. Otherwise keep `Demo geometry` visible.
 
-The browser receives the VWorld key because the VWorld WebGL SDK is a browser-side adapter. Domain restriction is therefore mandatory. The shadow overlay uses site geolocation, local date/time, solar position, and mass height/footprint; it remains an early-stage geometric preview rather than a statutory sunlight-right determination.
+The browser-side provider key is allowed only because VWorld's WebGL adapter requires it. Domain restriction is mandatory. No Naver, data.go.kr, bank, or vision secret belongs in the browser bundle.

@@ -1,0 +1,10 @@
+{
+  "mode": "demo",
+  "relativeIndex": true,
+  "records": [
+    {"area":"동성로","recentIndex":86,"previousIndex":72,"momentum":0.19,"sourceMode":"cached-demo"},
+    {"area":"교동","recentIndex":78,"previousIndex":60,"momentum":0.31,"sourceMode":"cached-demo"},
+    {"area":"북성로","recentIndex":73,"previousIndex":57,"momentum":0.28,"sourceMode":"cached-demo"}
+  ],
+  "limitation":"상대 검색 관심도/게시량 proxy이며 절대 검색량이 아님"
+}

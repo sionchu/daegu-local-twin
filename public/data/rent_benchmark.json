@@ -1,0 +1,10 @@
+{
+  "mode": "demo",
+  "geographicLevel": "상권/지역 benchmark",
+  "records": [
+    {"area":"동성로","monthlyRentBenchmarkKrw":5200000,"vacancyBenchmarkPct":7.2},
+    {"area":"교동","monthlyRentBenchmarkKrw":3300000,"vacancyBenchmarkPct":10.8},
+    {"area":"북성로","monthlyRentBenchmarkKrw":2100000,"vacancyBenchmarkPct":14.1}
+  ],
+  "limitation":"해당 점포 실제 월세·실제 공실이 아님"
+}

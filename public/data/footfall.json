@@ -1,0 +1,10 @@
+{
+  "mode": "demo",
+  "sourceMode": "demo",
+  "method": "RF-DETR person detection + tracker + line/zone aggregation (pipeline contract)",
+  "privacy": "aggregate counts only; no face, crop, embedding, name, or cross-camera identity",
+  "records": [
+    {"camera_id":"demo-corridor-01","zone_id":"main-line","timestamp_bucket":"2026-09-18T12:00:00+09:00","in_count":126,"out_count":118,"occupancy_mean":12},
+    {"camera_id":"demo-corridor-01","zone_id":"main-line","timestamp_bucket":"2026-09-18T13:00:00+09:00","in_count":142,"out_count":135,"occupancy_mean":15}
+  ]
+}
