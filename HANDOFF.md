@@ -2,29 +2,37 @@
 
 ## Objective
 
-Build a public `spacelab-ai` V0: a VWorld-backed Spatial Decision Canvas for early building-massing scenarios.
+Build a public `spacelab-ai` V0: a VWorld-backed Spatial Decision Canvas for early building-massing decisions.
 
 ## Completed in this checkpoint
 
-- Extracted the supplied `spacelab-ai-v0.zip` into this independent project directory.
-- Defined canonical `BuildingMass`, `Scenario`, and `SpatialWorkspace` types with rectangle/free-polygon footprints.
-- Added a shared application action surface used by React UI handlers and WebMCP.
-- Added scenario cloning, position/rotation/height/floors/footprint editing, A/B comparison, and date/time shadow preview.
-- Kept VWorld and fallback rendering in adapters; added local `.codex/.env` key loading plus hosted `VITE_VWORLD_API_KEY` boundary.
-- Added architecture and Sites deployment notes.
+- Defined canonical `BuildingMass`, `Scenario`, and `SpatialWorkspace` state with shared human/WebMCP application actions.
+- Added rectangular/free-polygon mass editing, branching, A/B comparison, geolocation/date/time solar geometry, and shadow polygon rendering through the VWorld and fallback adapters.
+- Added local `.codex/.env` key loading and hosted `VITE_VWORLD_API_KEY` / `VITE_VWORLD_DOMAIN` boundaries without committing secrets.
+- Established the project visual source of truth in `DESIGN.md` from the supplied SpaceLab workstation specification.
+- Reworked the UI without duplicating application state: canvas-first workstation layout, ancestry-aware Scenario Navigator, compact Design/Compare mode, engineering-style inspector, and bottom SUN / SHADOW timeline.
+
+## Current checkpoint
+
+- The design-pass changes are in the working tree and have not yet been committed or published.
+- `src/webmcp.ts` was not changed; the design pass only changes presentation and local UI mode state.
+- The last published Sites version remains the prior source revision until this checkpoint is committed and deployed.
 
 ## Verification evidence
 
 - `npm install` → 25 packages audited, 0 vulnerabilities.
-- `npm run typecheck` → exit 0.
+- `npm run typecheck` → exit 0 after the design pass.
 - `npm run build` → exit 0; Vite production bundle emitted under ignored `dist/`.
-- Aside local browser inspection → initial workspace opened at `http://localhost:4173/`; A switched to free polygon, a fifth vertex was added and GFA changed from `10,560㎡` to `11,520㎡`; A branched to C; changing time from 15:00 to 09:00 changed the qualitative shadow bearing from `225°` to `135°`.
-- Aside observed VWorld SDK initialization failure on this local run; fallback geometry remained interactive. WebMCP remained optional because the browser did not expose `document.modelContext`.
-- Public repository created through the signed-in GitHub session: `https://github.com/sionchu/spacelab-ai`.
-- `git push -u origin main` → remote `refs/heads/main` resolved to `ea8eec6ec9ad7d78d88e021a9ab42f1295db0d47`.
+- `git diff --check` → no whitespace errors.
+- CUA local preview at `http://127.0.0.1:4175/` → direct screenshot showed `VWorld Live`, real VWorld imagery/terrain, A/B mass and shadow overlays, a canvas-docked SUN / SHADOW timeline, and Compare mode metrics (`33.6 / 21.6 m`, delta `12.0 m`).
+- CUA Design mode screenshot → canvas remained dominant while Scenario Navigator, inspector, and timeline stayed visible without a permanent AI banner or duplicate scenario tree.
 
 ## Boundaries
 
 - Do not commit any `.env`, API key, token, or generated secret.
 - Do not claim live VWorld or real WebMCP acceptance until the corresponding runtime is opened and observed.
-- Do not expand V0 into legal sunlight-right determination, full CAD/BIM, structural analysis, or production deployment without a new scope decision.
+- Do not expand V0 into legal sunlight-right determination, full CAD/BIM, structural analysis, or unrelated product features.
+
+## Next concrete action
+
+Review the final diff, commit the design pass, push the exact commit to the existing public repository, package that commit, and deploy the matching private Sites version. Then inspect the deployed Site in an authenticated browser before any WebMCP changes.
