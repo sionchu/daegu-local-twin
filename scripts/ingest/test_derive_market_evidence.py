@@ -38,7 +38,7 @@ class DeriveMarketEvidenceTest(unittest.TestCase):
         for record in evidence["records"]:
             self.assertEqual(len(record["transit"]["stationContributions"]), 4)
 
-    def test_maps_buzz_and_rent_only_where_supported(self) -> None:
+    def test_maps_buzz_and_fills_rent_with_explicit_proxy(self) -> None:
         updated, evidence = derive_market_evidence(
             self.cells,
             self.transit,
@@ -59,10 +59,21 @@ class DeriveMarketEvidenceTest(unittest.TestCase):
             by_id["hex-seomun-01"]["rentBenchmarkKrwPerSqm"],
             17_300,
         )
-        self.assertIsNone(by_id["hex-gyodong-01"]["rentBenchmarkKrwPerSqm"])
-        self.assertIsNone(by_id["hex-buksungro-01"]["rentBenchmarkKrwPerSqm"])
-        self.assertIsNone(by_id["hex-jungang-01"]["rentBenchmarkKrwPerSqm"])
+        self.assertTrue(all(cell["rentBenchmarkKrwPerSqm"] is not None for cell in updated))
+        self.assertTrue(all(cell["vacancyBenchmark"] is not None for cell in updated))
+        self.assertEqual(by_id["hex-dongseongro-01"]["rentBenchmarkMode"], "official-area-mapped")
+        self.assertEqual(by_id["hex-seomun-01"]["rentBenchmarkMode"], "official-area-mapped")
+        self.assertEqual(by_id["hex-gyodong-01"]["rentBenchmarkMode"], "adjacent-official-proxy")
+        self.assertEqual(by_id["hex-buksungro-01"]["rentBenchmarkMode"], "adjacent-official-proxy")
+        self.assertEqual(by_id["hex-jungang-01"]["rentBenchmarkMode"], "adjacent-official-proxy")
         self.assertTrue(all("rentBenchmark" not in cell for cell in updated))
+
+        proxy_values = [
+            by_id["hex-gyodong-01"]["rentBenchmarkKrwPerSqm"],
+            by_id["hex-buksungro-01"]["rentBenchmarkKrwPerSqm"],
+            by_id["hex-jungang-01"]["rentBenchmarkKrwPerSqm"],
+        ]
+        self.assertTrue(all(17_300 <= value <= 26_800 for value in proxy_values))
 
         rent_records = {record["cellId"]: record["rent"] for record in evidence["records"]}
         self.assertEqual(
@@ -73,6 +84,11 @@ class DeriveMarketEvidenceTest(unittest.TestCase):
             rent_records["hex-seomun-01"]["officialArea"],
             "서문시장/청라언덕",
         )
+        self.assertEqual(
+            rent_records["hex-gyodong-01"]["mode"],
+            "modelled interpolation of official-area benchmarks",
+        )
+        self.assertEqual(evidence["rentProxyModel"]["lambdaMeters"], 900.0)
 
     def test_spillover_is_reproducible_and_bounded(self) -> None:
         updated, evidence = derive_market_evidence(
