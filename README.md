@@ -72,11 +72,14 @@ reviewed artifact and normalizes it deterministically.
 ## Run locally
 
 ```bash
-npm install
+npx --yes npm@11.6.0 install --no-package-lock
 npm run dev
 ```
 
 Open http://localhost:3000.
+
+The predev/prebuild hook copies MapLibre's ESM worker pair into `public/` so
+Next/Turbopack resolves the Web Worker through a real HTTP URL.
 
 Optional public map configuration:
 
