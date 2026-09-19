@@ -1,10 +1,44 @@
 # Third-party and source notices
 
-- **SpaceLab baseline** — coherent UI/state/VWorld ideas adapted from [sionchu/spacelab-ai](https://github.com/sionchu/spacelab-ai). Preserve the upstream repository's MIT license and attribution boundary.
-- **VWorld** — browser-side WebGL provider and address/map services remain subject to [VWorld terms](https://www.vworld.kr/).
-- **Hex-equivalent grid** — the V0 stores a single corridor hexagonal cell geometry in its snapshot. It does not claim that the demo records are an official dataset or that a provider has relicensed the data.
-- **RF-DETR** — optional detector path follows the [RF-DETR repository](https://github.com/roboflow/rf-detr) and its Apache-2.0 licensing terms.
-- **ByteTrack / compatible tracker** — the optional pipeline follows the tracker concept from [FoundationVision/ByteTrack](https://github.com/FoundationVision/ByteTrack). Any installed package must be reviewed under its own license before redistribution.
-- **Supervision** — optional detection/tracking/zone utilities follow [Roboflow Supervision](https://github.com/roboflow/supervision) and its license.
-- **T-Huff research reference** — future calibration reference: [GeoDS/T-Huff](https://github.com/GeoDS/T-Huff). It is not required by the V0 and is not used to produce the current scores.
-- **Official public-data providers** — source URLs, retrieval notes, fields, geographic level, and limitations are recorded in [`public/data/provenance.json`](./public/data/provenance.json). Public data is not automatically relicensed by this repository.
+LocalTwin Daegu contains project-authored source code plus dependencies and provider
+data governed by their own licenses and terms.
+
+## Web / visualization dependencies
+
+- **Next.js** — MIT.
+- **React** — MIT.
+- **MapLibre GL JS** — BSD-3-Clause.
+- **deck.gl** — MIT.
+- **Turf.js** — MIT.
+- **SunCalc** — BSD-2-Clause.
+- **Recharts** — MIT.
+- **shadcn/ui patterns** — MIT. Local UI primitives are repository-owned copies/patterns,
+  not a bundled hosted component service.
+- **Tailwind CSS** — MIT.
+
+## Map providers
+
+- **OpenFreeMap** provides the default hosted style/vector source used by the demo.
+  Map data is OpenStreetMap-derived; preserve the provider/OpenStreetMap attribution
+  shown by the map and review provider terms before production-scale use.
+- **MapLibre demo terrain tiles** provide the default raster-DEM demo endpoint.
+  This is a prototype dependency and should be replaced with a deployment-approved DEM
+  provider or self-hosted source before production use.
+
+## Optional computer vision
+
+- **RF-DETR** — Apache-2.0 upstream project.
+- **trackers / ByteTrackTracker** — use the installed package's license and notices.
+- **Supervision** — follow the installed upstream license and notices.
+- **OpenCV / NumPy** — follow their upstream licenses.
+
+## Public-data providers
+
+Public-data source URLs and retrieval limitations are recorded in
+`public/data/provenance.json`. This repository does **not** relicense provider datasets.
+
+## Reuse policy
+
+Recent GitHub projects may be inspected for implementation patterns, but LocalTwin does
+not copy third-party project code wholesale. Any direct reuse must preserve the
+applicable license and attribution.

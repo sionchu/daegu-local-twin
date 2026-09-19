@@ -7,6 +7,7 @@ on:
       - codex/**
   pull_request:
 
+
 jobs:
   verify:
     runs-on: ubuntu-latest
@@ -15,11 +16,11 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: 22
-          cache: npm
       - uses: actions/setup-python@v5
         with:
           python-version: "3.12"
-      - run: npm ci
+      - run: npm install -g npm@11.6.0 --no-audit --no-fund
+      - run: npm install --no-package-lock --no-audit --no-fund
       - run: npm run typecheck
       - run: npm test
       - run: npm run build

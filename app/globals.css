@@ -1,0 +1,131 @@
+@import "tailwindcss";
+
+:root {
+  --background: #071018;
+  --foreground: #edf6f7;
+  --card: #0b151f;
+  --muted-foreground: #8093a2;
+  --primary: #5eead4;
+  --chart-1: #5eead4;
+  --chart-2: #67b7dc;
+  --chart-3: #f4b860;
+  --chart-4: #a78bfa;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html {
+  background: var(--background);
+}
+
+body {
+  margin: 0;
+  min-width: 320px;
+  background:
+    radial-gradient(circle at 12% -10%, rgba(94, 234, 212, 0.08), transparent 30rem),
+    radial-gradient(circle at 88% 5%, rgba(244, 184, 96, 0.055), transparent 28rem),
+    var(--background);
+  color: var(--foreground);
+  font-family:
+    Inter,
+    Pretendard,
+    "Noto Sans KR",
+    ui-sans-serif,
+    system-ui,
+    -apple-system,
+    BlinkMacSystemFont,
+    "Segoe UI",
+    sans-serif;
+}
+
+button,
+input,
+select {
+  font: inherit;
+}
+
+button {
+  cursor: pointer;
+}
+
+::selection {
+  background: rgba(94, 234, 212, 0.24);
+  color: #fff;
+}
+
+.localtwin-range {
+  appearance: none;
+  height: 4px;
+  border-radius: 999px;
+  outline: none;
+  background: linear-gradient(
+    90deg,
+    rgba(94, 234, 212, 0.4),
+    rgba(244, 184, 96, 0.5)
+  );
+}
+
+.localtwin-range::-webkit-slider-thumb {
+  appearance: none;
+  width: 17px;
+  height: 17px;
+  border: 3px solid #071018;
+  border-radius: 999px;
+  background: #f4b860;
+  box-shadow: 0 0 0 1px rgba(244, 184, 96, 0.5);
+}
+
+.localtwin-range::-moz-range-thumb {
+  width: 13px;
+  height: 13px;
+  border: 3px solid #071018;
+  border-radius: 999px;
+  background: #f4b860;
+}
+
+.maplibregl-map {
+  font-family: inherit;
+}
+
+.maplibregl-ctrl-group {
+  overflow: hidden;
+  border: 1px solid rgba(255, 255, 255, 0.12) !important;
+  border-radius: 12px !important;
+  background: rgba(7, 16, 24, 0.86) !important;
+  box-shadow: none !important;
+  backdrop-filter: blur(12px);
+}
+
+.maplibregl-ctrl-group button {
+  background-color: transparent !important;
+}
+
+.maplibregl-ctrl-group button + button {
+  border-top-color: rgba(255, 255, 255, 0.09) !important;
+}
+
+.maplibregl-ctrl-icon {
+  filter: invert(1) opacity(0.78);
+}
+
+.maplibregl-ctrl-attrib {
+  background: rgba(7, 16, 24, 0.65) !important;
+  color: #93a4b2 !important;
+}
+
+.maplibregl-ctrl-attrib a {
+  color: #b6c6ce !important;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    scroll-behavior: auto !important;
+    transition-duration: 0.001ms !important;
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+  }
+}

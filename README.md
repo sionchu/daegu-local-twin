@@ -1,83 +1,92 @@
 # LocalTwin Daegu
 
-**대구 청년창업을 위한 상권·자금 시뮬레이터**
+**대구 청년창업을 위한 3D 상권·자금 디지털트윈**
 
-대구의 상권 수요와 도시재생 신호를 지도에서 비교하고, 실제 점포 조건을 넣어 필요한 창업비용·손익분기점·현금흐름·자금부족을 계산하는 2026 AI Blockchain Challenge in Daegu prototype입니다.
+LocalTwin Daegu는 단순히 “사람이 많은 곳”을 추천하는 상권분석기가 아니라,
+대구의 이동수요·Buzz·임대부담·도시재생 신호와 실제 창업비용을 함께 계산해
+**내 조건으로 버틸 수 있는 입지**를 비교하는 2026 AI Blockchain Challenge in
+Daegu 프로토타입입니다.
 
-> “어디가 뜰까?”가 아니라, **“이 위치·이 임대조건·이 자기자본으로 내가 실제로 버틸 수 있는가?”**
+## Current product
 
-## What is in V0
+The public UI is being migrated to a spatial-finance dashboard built with:
 
-- 동성로–교동–북성로 corridor의 하나의 육각형 셀 체계와 레이어 토글
-- 상권 수요, 교통 접근, Buzz, 거리감쇠 기반 파생수요, 도시재생 맥락, 지역 임대 benchmark, 종합 Opportunity 신호
-- 후보 A/B 선택과 업종별 실제 보증금·월세·창업비용 입력
-- 월 손익분기 매출, 하루 필요 고객, 관련 이동수요 proxy 대비 필요 전환율, 12개월 현금흐름, 현금고갈, payback, Funding Gap
-- 기본 / 이동수요 -20% / 전환율 -20% / 원가율 +10%p / 임대료 +10% / 금리 +1%p / 복합 악화 stress preset
-- 대구 청년창업·북성로 창업클러스터·대구신용보증재단의 상담/공고 검토 항목
-- 선택적 VWorld 브라우저 provider와 항상 사용 가능한 Demo geometry fallback
-- optional offline RF-DETR + tracker + line/zone aggregate pipeline
+- Next.js 16 / React 19 / TypeScript
+- Tailwind CSS 4 + local shadcn/ui-style primitives
+- MapLibre GL JS 6
+- deck.gl overlay for extruded opportunity cells
+- Turf.js for a selected-site catchment
+- SunCalc for time-slider solar azimuth/altitude
+- Recharts for demand, rent-vs-demand, cash-runway, and funding visualizations
+- Vercel as the target hosting platform
 
-V0는 은행 신용승인 모델, 대출한도 예측, 성공확률, 매출 예측 oracle, 부동산 매물/공실 DB, SNS 모니터링 시스템이 아닙니다. 지원·보증·대출 여부와 한도는 기관 심사에 따릅니다.
+The deterministic domain engine under `src/model.ts` remains the authority for all
+financial numbers.
+
+## Main interaction
+
+```text
+3D opportunity map
+    ↓
+time slider / sun lighting / DEM / buildings
+    ↓
+candidate A/B selection
+    ↓
+actual deposit + rent + business assumptions
+    ↓
+BEP · customers/day · required conversion
+    ↓
+12-month cash runway · payback · Funding Gap
+    ↓
+official support / guarantee / finance review candidates
+```
 
 ## Evidence boundary
 
-모든 숫자는 `observed`, `official`, `modelled`, `demo` 중 하나로 구분합니다. 이 저장소의 중앙 corridor 숫자는 공개자료 adapter 계약을 보여주는 **demo snapshot**입니다. 공개 데이터 source URL과 제한사항은 [`public/data/provenance.json`](./public/data/provenance.json)에 하나로 모았습니다.
+Every source-backed value must remain distinguishable as `observed`, `official`,
+`modelled`, or `demo`.
 
-- `public/data/opportunity_cells.json` — 지도에 표시하는 정규화 전 원자료와 provenance IDs
-- `public/data/businesses.json` — compact POI snapshot shape
-- `public/data/transit.json` — 대구교통공사 역별·일별·시간대별 승하차 공식 파일 snapshot 또는, refresh 전에는 명시적 demo proxy
-- `public/data/regeneration.json` — 도시재생/쇠퇴 맥락
-- `public/data/rent_benchmark.json` — 상권/지역 benchmark; 해당 점포 실제 월세·공실 아님
-- `public/data/buzz.json` — 상대 관심도/게시량 proxy; 절대 검색량 아님
-- `public/data/footfall.json` — aggregate-only vision output shape; 현재 커밋은 demo
-- `public/data/support_programs.json` — 기관 원문을 다시 확인하는 검토 후보
+The current central-Daegu corridor still contains an explicitly labelled demo snapshot
+for several mobility, rent, and Buzz fields. The UI must not present those as measured
+store-level facts or business-success probabilities.
 
-## Architecture
+Canonical source metadata lives in:
 
-```text
-official/public data (metro first) + permitted local video
-          ↓ offline adapters / optional vision
-provenance-stamped JSON snapshots
-          ↓ static Vite build
-React map + candidate scenarios + pure financial engine
-          ↓ optional browser-side VWorld adapter
-```
+- `public/data/provenance.json`
 
-React UI and optional WebMCP tools call the same small application action surface. The financial engine in `src/model.ts` is deterministic and has no LLM dependency. Missing metrics remain null; available score weights are renormalized rather than silently treating missing data as zero. The primary mobility source is official public-transport data; CCTV vision is an optional micro-footfall refinement, not a prerequisite.
+Current product snapshots:
 
-## Local run
+- `public/data/opportunity_cells.json`
+- `public/data/transit.json`
+- `public/data/businesses.json`
+- `public/data/rent_benchmark.json`
+- `public/data/regeneration.json`
+- `public/data/buzz.json`
+- `public/data/footfall.json`
+- `public/data/support_programs.json`
+
+Browser-based source collection is owned by the Codex Aside workflow. See
+[`docs/CRAWL_HANDOFF.md`](./docs/CRAWL_HANDOFF.md). Git-side code consumes only the
+reviewed artifact and normalizes it deterministically.
+
+## Run locally
 
 ```bash
-npm install
+npx --yes npm@11.6.0 install --no-package-lock
 npm run dev
 ```
 
-Optional `.env`:
+Open http://localhost:3000.
+
+The predev/prebuild hook copies MapLibre's ESM worker pair into `public/` so
+Next/Turbopack resolves the Web Worker through a real HTTP URL.
+
+Optional public map configuration:
 
 ```text
-VITE_VWORLD_API_KEY=
-VITE_VWORLD_DOMAIN=localhost
+NEXT_PUBLIC_MAP_STYLE_URL=https://tiles.openfreemap.org/styles/bright
+NEXT_PUBLIC_DEM_TILEJSON_URL=https://demotiles.maplibre.org/terrain-tiles/tiles.json
 ```
-
-Without a key the fallback map remains usable. Never put provider secrets into source control or public JSON.
-
-## Refresh / vision commands
-
-Browser crawling/downloading is handled outside this repository by the Codex Aside browser. Git-side code only consumes the resulting official artifact and normalizes it deterministically.
-
-For a crawled official Daegu Metro CSV/ZIP:
-
-```powershell
-python scripts/ingest/refresh_daegu_transit.py --input .\path\to\official-daegu-metro.csv --dataset-version 20260731
-```
-
-The crawler should commit only the normalized snapshot and its provenance metadata; raw HTML dumps and browser-session artifacts do not belong in the repository. See [`docs/CRAWL_HANDOFF.md`](./docs/CRAWL_HANDOFF.md).
-
-The latest verified catalog entry at implementation time is `20260731` (modified 2026-09-03). The portal's auto-converted XML/JSON API and national public-transit O/D APIs require a data.go.kr service key, so they are not embedded in the static browser build.
-
-`scripts/ingest/refresh_snapshots.py` remains the guarded entry point for the other unimplemented source adapters.
-
-For an authorized local video, see [`vision/README.md`](./vision/README.md). Vision is optional micro-footfall evidence; the output is aggregate counts only and the pipeline does not claim a live CCTV stream at a specific Daegu point.
 
 ## Verification
 
@@ -86,16 +95,42 @@ npm run typecheck
 npm test
 npm run build
 python -m unittest scripts.ingest.test_refresh_daegu_transit
+python -m py_compile vision/analyze_footfall.py scripts/ingest/refresh_daegu_transit.py
 ```
 
-The GitHub workflow runs the same checks, Python syntax checks, and `git diff --check`.
+GitHub Actions runs the same core checks.
 
-## Sites deployment
+## Optional vision pipeline
 
-This is a static Vite site. Follow [`SITES_DEPLOY.md`](./SITES_DEPLOY.md) for the exact source/build-secret boundary. Keep `.env` out of Git, set `VITE_VWORLD_API_KEY` and the exact deployed host as `VITE_VWORLD_DOMAIN`, and preserve Demo geometry when the provider is unavailable.
+The CV path is not required to render the web product. A permitted local video can be
+processed offline with RF-DETR + ByteTrackTracker + Supervision to produce aggregate
+footfall buckets. No face recognition, identity, or cross-camera re-identification is
+part of the product.
 
-## Attribution and independent prototype notice
+See [`vision/README.md`](./vision/README.md).
 
-The implementation baseline was adapted from [`sionchu/spacelab-ai`](https://github.com/sionchu/spacelab-ai). Repository-authored source is MIT-licensed; provider data, VWorld, H3-equivalent geometry, RF-DETR, tracker packages, and Supervision remain subject to their own terms. See [`THIRD_PARTY.md`](./THIRD_PARTY.md).
+## Deployment
 
-This is an independent competition prototype. It does not represent official iM Bank affiliation, approval, underwriting, or a financial product.
+Target deployment is Vercel. See [`VERCEL_DEPLOY.md`](./VERCEL_DEPLOY.md).
+
+## Recent implementation references
+
+The UI/geometry direction was informed by current upstream projects rather than copied
+wholesale:
+
+- MapLibre GL JS
+- vis.gl deck.gl
+- shadcn/ui
+- Recharts
+- Turf.js
+- SunCalc
+- recent Next.js + MapLibre starter/toolkit patterns
+
+See [`THIRD_PARTY.md`](./THIRD_PARTY.md) for license and attribution notes.
+
+## Prototype notice
+
+This is an independent competition prototype. It does not represent official iM Bank
+affiliation, underwriting, approval, or a financial product. Regional rent/vacancy data
+is a benchmark, not a point-store quote. Support, guarantee, and lending eligibility is
+subject to each institution's review.

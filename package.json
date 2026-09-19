@@ -1,25 +1,45 @@
 {
   "name": "daegu-local-twin",
+  "version": "0.2.0",
   "private": true,
-  "version": "0.1.0",
-  "type": "module",
+  "engines": {
+    "node": ">=22",
+    "npm": ">=11.6.0"
+  },
   "scripts": {
-    "dev": "vite --host 0.0.0.0",
-    "build": "tsc -b && vite build",
-    "preview": "vite preview --host 0.0.0.0",
-    "typecheck": "tsc -b --pretty false",
-    "test": "vitest run"
+    "copy:map-worker": "node -e \"const fs=require('fs'); for (const f of ['maplibre-gl-worker.mjs','maplibre-gl-shared.mjs']) fs.copyFileSync('node_modules/maplibre-gl/dist/'+f,'public/'+f)\"",
+    "predev": "npm run copy:map-worker",
+    "dev": "next dev",
+    "prebuild": "npm run copy:map-worker",
+    "build": "next build",
+    "start": "next start",
+    "typecheck": "tsc --noEmit --pretty false",
+    "test": "vitest run",
+    "check": "npm run typecheck && npm test && npm run build"
   },
   "dependencies": {
-    "@vitejs/plugin-react": "latest",
-    "vite": "latest",
-    "typescript": "latest",
-    "react": "latest",
-    "react-dom": "latest"
+    "@deck.gl/core": "9.4.0",
+    "@deck.gl/layers": "9.4.0",
+    "@deck.gl/mapbox": "9.4.0",
+    "@turf/turf": "7.4.0",
+    "clsx": "2.1.1",
+    "lucide-react": "0.575.0",
+    "maplibre-gl": "6.10.0",
+    "next": "16.3.3",
+    "react": "19.2.8",
+    "react-dom": "19.2.8",
+    "recharts": "3.10.1",
+    "suncalc": "2.0.2",
+    "tailwind-merge": "3.5.0"
   },
   "devDependencies": {
-    "@types/react": "latest",
-    "@types/react-dom": "latest",
+    "@tailwindcss/postcss": "4.3.3",
+    "@types/node": "24.0.0",
+    "@types/react": "19.2.14",
+    "@types/react-dom": "19.2.3",
+    "tailwindcss": "4.3.3",
+    "typescript": "5.9.3",
     "vitest": "4.1.11"
-  }
+  },
+  "packageManager": "npm@11.6.0"
 }

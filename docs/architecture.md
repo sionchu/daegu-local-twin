@@ -1,29 +1,44 @@
 # LocalTwin Daegu architecture
 
 ```text
-official/public mobility + commercial references
-            ↓ offline adapters
-provenance-stamped snapshots in public/data/*.json
-            ↑
-permitted local video → optional CV micro-footfall
-            ↓
-Vite static build → React opportunity map / A-B compare / funding plan
-            ↓
-pure deterministic financial engine + optional VWorld provider probe
+Codex Aside browser
+    ↓ official/public source artifacts
+Git-reviewed normalized snapshots in public/data
+    ↓
+Next.js App Router
+    ├─ deterministic finance/scenario engine
+    ├─ MapLibre GL JS basemap + DEM + OSM buildings
+    ├─ deck.gl opportunity/catchment overlays
+    ├─ SunCalc time-of-day lighting
+    ├─ Turf spatial helpers
+    └─ Recharts decision charts
+    ↓
+Vercel deployment
 ```
 
-The browser does not own API secrets or expensive joins. The committed corridor
-dataset is a small demo snapshot and every record exposes its evidence quality and
-provenance IDs. Point-level deposit, rent, management fee, startup costs and funding
-inputs are user inputs; regional rent/vacancy values are benchmarks only.
+The browser UI owns no source credentials. Current V0 uses committed snapshots so the
+decision engine remains deterministic and demoable without a live backend.
 
-The spatial layer uses one canonical hex-equivalent cell system for the corridor.
-DemandScore is a transparent renormalized weighted index, not a success probability.
-Spillover is an exponential straight-line distance-decay signal around anchors; it is
-not measured cross-shopping or causal uplift.
+## Spatial semantics
 
-The primary V0 mobility path is the official Daegu Metro station/day/hour
-boarding-alighting file snapshot. National public-transit O/D is a later key-gated
-enrichment path. The optional vision path is offline-only: RF-DETR person detections,
-ByteTrackTracker, and line/zone aggregation produce only time-bucketed counts. No faces,
-embeddings, names, or persistent cross-camera identity are part of the data model.
+- The corridor uses one canonical hex-equivalent cell system.
+- The extruded cell height is a **data index**, not physical building height.
+- OpenStreetMap-derived buildings are rendered as a separate 3D layer.
+- Terrain is a MapLibre raster-DEM visualization layer.
+- The selected candidate gets a Turf-generated 300 m geodesic catchment.
+- SunCalc provides solar azimuth/altitude for the time slider; MapLibre lighting and
+  hillshade direction use it as a visualization input.
+- The current time-demand chart uses an explicitly labelled demo intraday profile until
+  official hourly station snapshots are ingested.
+
+## Decision semantics
+
+DemandScore is a transparent weighted signal, not success probability.
+Opportunity adds rent relief and regeneration context. Financial outputs come only from
+the deterministic engine in `src/model.ts`.
+
+## Optional AI/CV
+
+RF-DETR + ByteTrackTracker + Supervision runs offline/edge-side on permitted video and
+emits aggregate counts only. It is a micro-footfall refinement, not the primary V0
+mobility dependency.
