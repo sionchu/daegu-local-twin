@@ -337,7 +337,7 @@ function ScenarioEditor({
             value={scenario.assumptions.assumedCaptureRate * 100}
             onChange={(value) => onPatch({ assumedCaptureRate: value / 100 })}
             suffix="%"
-            step={0.1}
+            step={0.01}
           />
           <NumberField
             label="원가율"
@@ -839,8 +839,8 @@ export default function LocalTwinDashboard() {
                     <CardTitle>임대료 vs 수요</CardTitle>
                   </div>
                   <CardDescription>
-                    좌상단에 가까울수록 상대적으로 낮은 비용에서 높은 수요를 확보한
-                    후보입니다.
+                    공식 상권 임대 benchmark가 연결된 셀만 표시합니다. ㎡당 환산임대료와
+                    모델 수요의 상대적 위치를 비교합니다.
                   </CardDescription>
                 </CardHeader>
                 <CardContent>
