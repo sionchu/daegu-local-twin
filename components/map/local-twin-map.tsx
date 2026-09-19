@@ -134,7 +134,6 @@ export default function LocalTwinMap({
       bearing: -18,
       maxPitch: 78,
       canvasContextAttributes: { antialias: true },
-      attributionControl: true,
     });
 
     map.addControl(new maplibregl.NavigationControl({ visualizePitch: true }), "top-right");
