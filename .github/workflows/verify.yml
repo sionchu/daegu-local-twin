@@ -19,7 +19,8 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: "3.12"
-      - run: npm install -g npm@11.6.0 --no-audit --no-fund\n      - run: npm install --no-package-lock --no-audit --no-fund
+      - run: npm install -g npm@11.6.0 --no-audit --no-fund
+      - run: npm install --no-package-lock --no-audit --no-fund
       - run: npm run typecheck
       - run: npm test
       - run: npm run build
