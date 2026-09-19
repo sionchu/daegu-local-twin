@@ -1,7 +1,7 @@
 import { expect, test } from "@playwright/test";
 
 test.describe("LocalTwin critical evidence path", () => {
-  test("loads the spatial dashboard and updates time controls", async ({ page }) => {
+  test("loads the spatial dashboard with the simplified map surface", async ({ page }) => {
     const pageErrors: string[] = [];
     page.on("pageerror", (error) => pageErrors.push(error.message));
 
@@ -24,11 +24,8 @@ test.describe("LocalTwin critical evidence path", () => {
     await expect(page.getByText("임대료 vs 수요", { exact: true })).toBeVisible();
     await expect(page.getByText("12개월 Cash Runway", { exact: true })).toBeVisible();
 
-    const timeSlider = page.getByLabel("시간 선택");
-    await expect(timeSlider).toHaveValue(String(18 * 60));
-    await timeSlider.focus();
-    await timeSlider.press("Home");
-    await expect(page.getByText("2026.09.19 · 06:00", { exact: true })).toBeVisible();
+    await expect(page.getByText(/태양 고도/)).toHaveCount(0);
+    await expect(page.getByLabel("시간 선택")).toHaveCount(0);
 
     expect(pageErrors).toEqual([]);
   });
