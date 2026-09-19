@@ -14,7 +14,7 @@
     "build": "next build",
     "start": "next start",
     "typecheck": "tsc --noEmit --pretty false",
-    "test": "vitest run",
+    "test": "vitest run src",
     "check": "npm run typecheck && npm test && npm run build",
     "e2e": "playwright test",
     "e2e:headed": "playwright test --headed"
