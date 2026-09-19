@@ -106,7 +106,7 @@ export function DemandTimelineChart({
         />
         <Tooltip
           contentStyle={tooltipStyle}
-          formatter={(value) => [formatCompact(Number(value)) + "명 proxy", "시간대 수요"]}
+          formatter={(value) => [formatCompact(Number(value)) + " 수요 proxy", "시간대 수요"]}
         />
         <ReferenceLine
           x={marker}
@@ -141,7 +141,7 @@ export function RentDemandScatterChart({
       return {
         id: cell.cellId,
         name: cell.label,
-        rent: (cell.rentBenchmarkKrwPerSqm ?? 0) / 10_000,
+        rent: (cell.rentBenchmarkKrwPerSqm ?? 0) / 1_000,
         demand: Math.round(scores.demandScore ?? 0),
         selected: cell.cellId === selectedCellId,
       };
@@ -154,8 +154,8 @@ export function RentDemandScatterChart({
         <XAxis
           type="number"
           dataKey="rent"
-          name="월 임대 benchmark"
-          unit="만원"
+          name="임대료 benchmark"
+          unit="천원/㎡"
           tick={{ fill: "#7f93a4", fontSize: 10 }}
           axisLine={false}
           tickLine={false}
@@ -173,7 +173,7 @@ export function RentDemandScatterChart({
           cursor={{ strokeDasharray: "3 3" }}
           contentStyle={tooltipStyle}
           formatter={(value, name) => [
-            name === "월 임대 benchmark" ? Number(value).toLocaleString("ko-KR") + "만원" : value,
+            name === "임대료 benchmark" ? Number(value).toLocaleString("ko-KR") + "천원/㎡" : value,
             name,
           ]}
           labelFormatter={(_, payload) => payload?.[0]?.payload?.name ?? ""}
