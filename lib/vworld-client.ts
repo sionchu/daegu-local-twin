@@ -113,6 +113,14 @@ export async function startVWorld(
   const vw = window.vw;
   if (!vw) throw new Error("VWorld SDK unavailable");
 
+  // VWorld WebGL 3.0 currently publishes its internal Cesium base as http://.
+  // Normalize the same official asset path to HTTPS so production pages do not
+  // trip mixed-content blocking for workers, CSS, or textures.
+  const secureBase = "https://map.vworld.kr/js/ws3dmap/WS3DRelease3/";
+  (window as any).WS3D_BASE_URL = secureBase;
+  (window as any).CESIUM_BASE_URL = secureBase;
+  window.Cesium?.buildModuleUrl?.setBaseUrl?.(secureBase);
+
   return new Promise<{ viewer: any; map: any }>((resolve, reject) => {
     let settled = false;
     let map: any;
