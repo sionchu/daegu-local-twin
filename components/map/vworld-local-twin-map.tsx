@@ -7,7 +7,6 @@ import { computeOpportunityScores } from "@/src/model";
 import type { LocationEvidence, MapLayer } from "@/src/types";
 
 const DAEGU_CENTER: [number, number] = [128.5967, 35.8714];
-
 type AdminGeometry = {
   type: "Polygon" | "MultiPolygon";
   coordinates: number[][][] | number[][][][];
@@ -36,7 +35,6 @@ type Props = {
   cells: LocationEvidence[];
   selectedCellId?: string;
   activeLayer: MapLayer;
-  selectedTime: Date;
   onSelect: (cellId: string) => void;
   onUnavailable: (reason: string) => void;
 };
@@ -93,6 +91,18 @@ function displayRings(geometry: AdminGeometry) {
   });
 }
 
+async function showVWorldBuildings(map: any) {
+  for (let attempt = 0; attempt < 30; attempt += 1) {
+    const layer = map?.getLayerElement?.("facility_build");
+    if (layer) {
+      layer.show?.();
+      return true;
+    }
+    await new Promise((resolve) => window.setTimeout(resolve, 150));
+  }
+  return false;
+}
+
 function ringCenter(ring: number[][]) {
   if (!ring.length) return DAEGU_CENTER;
   const sum = ring.reduce(
@@ -106,7 +116,6 @@ export default function VWorldLocalTwinMap({
   cells,
   selectedCellId,
   activeLayer,
-  selectedTime,
   onSelect,
   onUnavailable,
 }: Props) {
@@ -118,7 +127,7 @@ export default function VWorldLocalTwinMap({
   const clickCleanupRef = useRef<(() => void) | null>(null);
   const initialSelectionRef = useRef(true);
   const [ready, setReady] = useState(false);
-  const [status, setStatus] = useState("VWorld 3D 연결 중");
+  const [buildingsReady, setBuildingsReady] = useState(false);
   const containerId = "localtwin-vworld-map";
 
   const selectedCell = useMemo(
@@ -160,10 +169,11 @@ export default function VWorldLocalTwinMap({
 
         viewerRef.current = viewer;
         mapRef.current = map;
+
         if (viewer.scene) {
           viewer.scene.requestRenderMode = true;
           viewer.scene.maximumRenderTimeChange = Number.POSITIVE_INFINITY;
-          if (viewer.scene.globe) viewer.scene.globe.enableLighting = true;
+          if (viewer.scene.globe) viewer.scene.globe.enableLighting = false;
           viewer.scene.fxaa = true;
         }
         if (viewer.clock) viewer.clock.shouldAnimate = false;
@@ -261,11 +271,15 @@ export default function VWorldLocalTwinMap({
         };
 
         setReady(true);
-        setStatus("VWorld 3D · Cesium");
         viewer.scene?.requestRender?.();
+
+        void showVWorldBuildings(map).then((shown) => {
+          if (cancelled) return;
+          setBuildingsReady(shown);
+          viewer.scene?.requestRender?.();
+        });
       } catch (error) {
         const reason = error instanceof Error ? error.message : String(error);
-        setStatus("VWorld 연결 불가 · 경량 지도 전환");
         onUnavailable(reason);
       }
     })();
@@ -275,6 +289,7 @@ export default function VWorldLocalTwinMap({
       clickCleanupRef.current?.();
       clearEntities(cellEntitiesRef.current);
       clearEntities(contextEntitiesRef.current);
+      setBuildingsReady(false);
       disposeVWorld(viewerRef.current);
       viewerRef.current = null;
       mapRef.current = null;
@@ -291,8 +306,8 @@ export default function VWorldLocalTwinMap({
     for (const cell of cells) {
       const selected = cell.cellId === selectedCellId;
       const score = scoreForLayer(cell, cells, activeLayer);
-      const color = scoreColor(Cesium, score, selected ? 0.26 : 0.10);
-      const accent = scoreColor(Cesium, score, selected ? 0.92 : 0.52);
+      const color = scoreColor(Cesium, score, selected ? 0.18 : 0.045);
+      const accent = scoreColor(Cesium, score, selected ? 0.92 : 0.42);
       const haloRadius = 95 + clamp(Number(score ?? 0), 0, 100) * 1.25;
 
       const entity = viewer.entities.add({
@@ -314,7 +329,7 @@ export default function VWorldLocalTwinMap({
         ellipse: {
           semiMajorAxis: selected ? haloRadius * 1.18 : haloRadius,
           semiMinorAxis: selected ? haloRadius * 1.18 : haloRadius,
-          material: scoreColor(Cesium, score, selected ? 0.16 : 0.055),
+          material: scoreColor(Cesium, score, selected ? 0.10 : 0.025),
           heightReference: Cesium.HeightReference?.CLAMP_TO_GROUND,
         },
         point: {
@@ -326,21 +341,21 @@ export default function VWorldLocalTwinMap({
           disableDepthTestDistance: Number.POSITIVE_INFINITY,
         },
         label: {
-          text: `${cell.label}\n${score === null ? "데이터 부족" : Math.round(score)}`,
-          font: selected ? "bold 15px sans-serif" : "12px sans-serif",
+          text: selected
+            ? `${cell.label}\n${score === null ? "데이터 부족" : Math.round(score) + " / 100"}`
+            : cell.label,
+          font: selected ? "bold 15px sans-serif" : "11px sans-serif",
           fillColor: Cesium.Color.WHITE,
           outlineColor: Cesium.Color.fromCssColorString("#071018"),
-          outlineWidth: 3,
+          outlineWidth: selected ? 3 : 2,
           style: Cesium.LabelStyle.FILL_AND_OUTLINE,
-          showBackground: true,
-          backgroundColor: Cesium.Color.fromCssColorString("#071018").withAlpha(
-            selected ? 0.88 : 0.72,
-          ),
+          showBackground: selected,
+          backgroundColor: Cesium.Color.fromCssColorString("#071018").withAlpha(0.84),
           backgroundPadding: new Cesium.Cartesian2(7, 5),
-          pixelOffset: new Cesium.Cartesian2(0, -24),
+          pixelOffset: new Cesium.Cartesian2(0, selected ? -26 : -20),
           heightReference: Cesium.HeightReference?.CLAMP_TO_GROUND,
           disableDepthTestDistance: Number.POSITIVE_INFINITY,
-          distanceDisplayCondition: new Cesium.DistanceDisplayCondition(0, 6500),
+          distanceDisplayCondition: new Cesium.DistanceDisplayCondition(0, 5200),
         },
       });
       cellEntitiesRef.current.push(entity);
@@ -348,15 +363,6 @@ export default function VWorldLocalTwinMap({
 
     viewer.scene?.requestRender?.();
   }, [activeLayer, cells, clearEntities, ready, selectedCellId]);
-
-  useEffect(() => {
-    const viewer = viewerRef.current;
-    const Cesium = window.Cesium;
-    if (!ready || !viewer || !Cesium) return;
-
-    if (viewer.clock) viewer.clock.currentTime = Cesium.JulianDate.fromDate(selectedTime);
-    viewer.scene?.requestRender?.();
-  }, [ready, selectedTime]);
 
   useEffect(() => {
     if (!ready) return;
@@ -368,7 +374,7 @@ export default function VWorldLocalTwinMap({
         destination: Cesium.Cartesian3.fromDegrees(
           DAEGU_CENTER[0],
           DAEGU_CENTER[1],
-          2600,
+          1500,
         ),
         orientation: {
           heading: 0,
@@ -423,19 +429,17 @@ export default function VWorldLocalTwinMap({
       className="relative h-full min-h-[520px] overflow-hidden rounded-2xl bg-[#071018]"
       data-testid="spatial-map"
       data-map-engine="vworld"
+      data-buildings={buildingsReady ? "facility_build" : "unavailable"}
     >
       <div ref={containerRef} id={containerId} className="absolute inset-0 h-full w-full" />
-      <div className="pointer-events-none absolute left-4 top-4 z-10 flex items-center gap-2 rounded-full border border-white/10 bg-slate-950/82 px-3 py-1.5 text-[11px] text-slate-100 backdrop-blur">
-        <span
-          className={
-            "h-1.5 w-1.5 rounded-full " +
-            (ready ? "bg-emerald-300" : "animate-pulse bg-amber-300")
-          }
-        />
-        {status}
-      </div>
+      {!ready ? (
+        <div className="pointer-events-none absolute left-4 top-4 z-10 flex items-center gap-2 rounded-full border border-white/10 bg-slate-950/82 px-3 py-1.5 text-[11px] text-slate-100 backdrop-blur">
+          <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-amber-300" />
+          VWorld 3D 연결 중
+        </div>
+      ) : null}
       <div className="pointer-events-none absolute bottom-3 left-3 z-10 max-w-[85%] rounded-lg border border-white/10 bg-slate-950/78 px-2.5 py-1.5 text-[10px] leading-4 text-slate-300 backdrop-blur">
-        실선 = 공식 행정동 경계 · 반투명 영역/halo = 모델 분석 셀(실제 상권 경계 아님) · 역 = 공간참조 anchor
+        행정동 경계 · 분석 셀(모델) · 지하철
       </div>
     </div>
   );

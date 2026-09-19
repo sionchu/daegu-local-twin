@@ -5,7 +5,6 @@ import { GeoJsonLayer, ScatterplotLayer } from "@deck.gl/layers";
 import { MapLibreOverlay } from "@deck.gl/maplibre";
 import { buffer, point } from "@turf/turf";
 import * as maplibregl from "maplibre-gl";
-import * as SunCalc from "suncalc";
 
 import { computeOpportunityScores } from "@/src/model";
 import type { LocationEvidence, MapLayer } from "@/src/types";
@@ -94,7 +93,6 @@ export default function LocalTwinMap({
   cells,
   selectedCellId,
   activeLayer,
-  selectedTime,
   showTerrain,
   showBuildings,
   showExtrusion,
@@ -103,7 +101,6 @@ export default function LocalTwinMap({
   cells: LocationEvidence[];
   selectedCellId?: string;
   activeLayer: MapLayer;
-  selectedTime: Date;
   showTerrain: boolean;
   showBuildings: boolean;
   showExtrusion: boolean;
@@ -363,35 +360,6 @@ export default function LocalTwinMap({
       showBuildings ? "visible" : "none",
     );
   }, [showBuildings, ready]);
-
-  useEffect(() => {
-    const map = mapRef.current;
-    if (!map || !ready) return;
-
-    const sun = SunCalc.getPosition(selectedTime, DAEGU_CENTER[1], DAEGU_CENTER[0]);
-    const altitudeDeg = sun.altitude;
-    const azimuthFromNorth = ((sun.azimuth % 360) + 360) % 360;
-    const polar = clamp(90 - altitudeDeg, 8, 168);
-    const intensity = clamp((altitudeDeg + 8) / 52, 0.16, 0.92);
-
-    try {
-      map.setLight({
-        anchor: "map",
-        color: altitudeDeg > 4 ? "#fff3d6" : "#9ab0c5",
-        intensity,
-        position: [1.5, azimuthFromNorth, polar],
-      });
-      if (map.getLayer("localtwin-hillshade")) {
-        map.setPaintProperty(
-          "localtwin-hillshade",
-          "hillshade-illumination-direction",
-          Math.round(azimuthFromNorth),
-        );
-      }
-    } catch {
-      // Light is a progressive enhancement; map interaction remains authoritative.
-    }
-  }, [selectedTime, ready]);
 
   useEffect(() => {
     const map = mapRef.current;

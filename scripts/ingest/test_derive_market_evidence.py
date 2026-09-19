@@ -38,7 +38,7 @@ class DeriveMarketEvidenceTest(unittest.TestCase):
         for record in evidence["records"]:
             self.assertEqual(len(record["transit"]["stationContributions"]), 4)
 
-    def test_maps_buzz_and_rent_only_where_supported(self) -> None:
+    def test_maps_buzz_and_fills_rent_with_explicit_modelled_blend(self) -> None:
         updated, evidence = derive_market_evidence(
             self.cells,
             self.transit,
@@ -59,9 +59,26 @@ class DeriveMarketEvidenceTest(unittest.TestCase):
             by_id["hex-seomun-01"]["rentBenchmarkKrwPerSqm"],
             17_300,
         )
-        self.assertIsNone(by_id["hex-gyodong-01"]["rentBenchmarkKrwPerSqm"])
-        self.assertIsNone(by_id["hex-buksungro-01"]["rentBenchmarkKrwPerSqm"])
-        self.assertIsNone(by_id["hex-jungang-01"]["rentBenchmarkKrwPerSqm"])
+        self.assertEqual(by_id["hex-dongseongro-01"]["rentBenchmarkMode"], "exact")
+        self.assertEqual(
+            by_id["hex-dongseongro-01"]["rentBenchmarkSourceAreas"],
+            ["동성로중심"],
+        )
+        self.assertEqual(by_id["hex-gyodong-01"]["rentBenchmarkMode"], "proxy")
+        self.assertEqual(
+            set(by_id["hex-gyodong-01"]["rentBenchmarkSourceAreas"]),
+            {"동성로중심", "서문시장/청라언덕"},
+        )
+        self.assertTrue(
+            all(cell["rentBenchmarkKrwPerSqm"] is not None for cell in updated)
+        )
+        self.assertTrue(
+            all(cell["vacancyBenchmark"] is not None for cell in updated)
+        )
+        self.assertGreater(
+            by_id["hex-gyodong-01"]["rentBenchmarkKrwPerSqm"],
+            by_id["hex-buksungro-02"]["rentBenchmarkKrwPerSqm"],
+        )
         self.assertTrue(all("rentBenchmark" not in cell for cell in updated))
 
         rent_records = {record["cellId"]: record["rent"] for record in evidence["records"]}
@@ -73,6 +90,15 @@ class DeriveMarketEvidenceTest(unittest.TestCase):
             rent_records["hex-seomun-01"]["officialArea"],
             "서문시장/청라언덕",
         )
+        self.assertEqual(
+            rent_records["hex-gyodong-01"]["mode"],
+            "modelled spatial blend of official-area benchmarks",
+        )
+        self.assertEqual(
+            len(rent_records["hex-gyodong-01"]["sourceOfficialAreas"]),
+            2,
+        )
+        self.assertEqual(evidence["rentInterpolation"]["lambdaMeters"], 900.0)
 
     def test_spillover_is_reproducible_and_bounded(self) -> None:
         updated, evidence = derive_market_evidence(

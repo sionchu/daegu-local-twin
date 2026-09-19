@@ -46,6 +46,8 @@ export type LocationEvidence = {
   regenerationScore: number | null;
   rentBenchmarkKrwPerSqm: number | null;
   vacancyBenchmark: number | null;
+  rentBenchmarkMode?: "exact" | "proxy" | null;
+  rentBenchmarkSourceAreas?: string[];
   evidenceQuality: EvidenceQuality;
   provenanceIds: string[];
   anchorStrength?: number | null;

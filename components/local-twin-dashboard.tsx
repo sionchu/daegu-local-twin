@@ -7,8 +7,6 @@ import {
   Database,
   DollarSign,
   MapPin,
-  Moon,
-  Sun,
   TrendingUp,
   WalletCards,
 } from "lucide-react";
@@ -21,8 +19,6 @@ import {
   useRef,
   useState,
 } from "react";
-import * as SunCalc from "suncalc";
-
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
@@ -131,12 +127,12 @@ type Provenance = {
 };
 
 const layerLabels: Record<MapLayer, string> = {
-  opportunity: "종합 Opportunity",
-  demand: "상권 수요",
-  transit: "교통 접근",
-  buzz: "Buzz",
+  opportunity: "종합",
+  demand: "수요",
+  transit: "교통",
+  buzz: "관심도",
   spillover: "파생수요",
-  regeneration: "쇠퇴·재생 맥락",
+  regeneration: "재생맥락",
   rent: "임대여력",
 };
 
@@ -145,21 +141,6 @@ const viewMeta: Record<View, { index: string; label: string }> = {
   compare: { index: "02", label: "후보비교" },
   funding: { index: "03", label: "자금계획" },
 };
-
-const DAEGU_LAT = 35.8714;
-const DAEGU_LON = 128.5967;
-
-function pad(value: number) {
-  return String(value).padStart(2, "0");
-}
-
-function timeLabel(minutes: number) {
-  return pad(Math.floor(minutes / 60)) + ":" + pad(minutes % 60);
-}
-
-function dateForKstMinutes(minutes: number) {
-  return new Date("2026-09-19T" + timeLabel(minutes) + ":00+09:00");
-}
 
 function formatMan(value: number) {
   return Math.round(value / 10_000).toLocaleString("ko-KR") + "만원";
@@ -181,6 +162,17 @@ function formatRentPerSqm(value: number | null) {
   return value === null || !Number.isFinite(value)
     ? "데이터 부족"
     : (value / 1_000).toFixed(1) + "천원/㎡";
+}
+
+function rentBenchmarkNote(cell: LocationEvidence) {
+  const areas = cell.rentBenchmarkSourceAreas ?? [];
+  if (cell.rentBenchmarkMode === "exact") {
+    return `R-ONE 2026 Q2 · ${areas[0] ?? "공식 상권"} 직접 매칭 · 점포 호가 아님`;
+  }
+  if (cell.rentBenchmarkMode === "proxy") {
+    return `R-ONE 2026 Q2 · 인접 공식상권 공간 proxy · 점포 호가 아님`;
+  }
+  return "R-ONE 2026 Q2 benchmark · 점포 호가 아님";
 }
 
 function qualityLabel(quality: EvidenceQuality) {
@@ -466,7 +458,6 @@ export default function LocalTwinDashboard() {
 
   const [view, setView] = useState<View>("map");
   const [selectedCellId, setSelectedCellId] = useState<string>();
-  const [selectedMinutes, setSelectedMinutes] = useState(18 * 60);
   const [programs, setPrograms] = useState<SupportProgram[]>([]);
   const [provenance, setProvenance] = useState<Provenance>();
   const [dataError, setDataError] = useState<string>();
@@ -564,13 +555,6 @@ export default function LocalTwinDashboard() {
         )
       : null;
 
-  const selectedTime = dateForKstMinutes(selectedMinutes);
-  const currentHour = Math.floor(selectedMinutes / 60);
-  const sun = SunCalc.getPosition(selectedTime, DAEGU_LAT, DAEGU_LON);
-  const sunAltitude = sun.altitude;
-  const sunAzimuth = ((sun.azimuth % 360) + 360) % 360;
-  const isDay = sunAltitude > 0;
-
   if (!state.cells.length && !dataError) {
     return (
       <div className="grid min-h-screen place-items-center bg-[color:var(--background)] text-sm text-slate-400">
@@ -601,30 +585,23 @@ export default function LocalTwinDashboard() {
             </div>
           </button>
 
-          <nav className="ml-auto flex min-w-0 items-center gap-1 rounded-xl border border-white/8 bg-white/[0.025] p-1">
+          <nav className="ml-auto flex min-w-0 items-center gap-4 sm:gap-6">
             {(Object.keys(viewMeta) as View[]).map((item) => (
               <button
                 key={item}
                 onClick={() => setView(item)}
                 className={
-                  "rounded-lg px-3 py-2 text-xs font-medium transition " +
+                  "border-b px-0.5 py-2 text-xs font-medium transition " +
                   (view === item
-                    ? "bg-white/10 text-white"
-                    : "text-slate-500 hover:text-slate-200")
+                    ? "border-emerald-300 text-white"
+                    : "border-transparent text-slate-500 hover:text-slate-200")
                 }
               >
-                <span className="mr-1.5 text-[9px] text-slate-600">
-                  {viewMeta[item].index}
-                </span>
-                <span className="hidden sm:inline">{viewMeta[item].label}</span>
+                {viewMeta[item].label}
               </button>
             ))}
           </nav>
 
-          <div className="hidden items-center gap-2 text-[10px] text-slate-500 xl:flex">
-            <Database className="h-3.5 w-3.5" />
-            <span>Snapshot + deterministic model</span>
-          </div>
         </div>
       </header>
 
@@ -639,32 +616,27 @@ export default function LocalTwinDashboard() {
           <div className={view === "map" ? "contents" : "hidden"}>
             <section className="grid min-w-0 gap-5 xl:grid-cols-[minmax(0,1fr)_370px]">
               <Card className="min-w-0 overflow-hidden">
-                <CardHeader className="gap-4 border-b border-white/8 pb-4">
-                  <div className="flex flex-wrap items-start justify-between gap-4">
-                    <div>
-                      <div className="mb-2 flex items-center gap-2 text-[10px] font-semibold uppercase tracking-[0.2em] text-emerald-300">
-                        <MapPin className="h-3.5 w-3.5" />
-                        Opportunity map / Central Daegu
-                      </div>
-                      <h1 className="text-2xl font-semibold tracking-[-0.03em] text-white md:text-3xl">
-                        사람이 많은 곳보다,
-                        <span className="text-emerald-200"> 내가 버틸 수 있는 곳.</span>
-                      </h1>
-                      <p className="mt-2 max-w-3xl text-xs leading-5 text-slate-500">
-                        수요·임대부담·도시재생 신호를 3D 공간지표로 겹치고 실제 점포
-                        조건을 금융 시뮬레이션으로 연결합니다.
-                      </p>
+                <CardHeader className="gap-3 border-b border-white/8 pb-3">
+                  <div>
+                    <div className="mb-1.5 flex items-center gap-2 text-[10px] font-semibold tracking-[0.08em] text-emerald-300">
+                      <MapPin className="h-3.5 w-3.5" />
+                      대구 중구 · 3D 상권지도
                     </div>
-                    <Badge variant="blue">공식 Snapshot + 결정론적 파생</Badge>
+                    <h1 className="text-2xl font-semibold tracking-[-0.035em] text-white">
+                      창업 기회지도
+                    </h1>
+                    <p className="mt-1 text-xs leading-5 text-slate-500">
+                      수요·임대부담·재생맥락을 실제 도시 공간에서 비교합니다.
+                    </p>
                   </div>
 
-                  <div className="flex gap-2 overflow-x-auto pb-1">
+                  <div className="flex gap-1.5 overflow-x-auto pb-1">
                     {(Object.keys(layerLabels) as MapLayer[]).map((layer) => (
                       <Button
                         key={layer}
                         size="sm"
                         variant={state.activeLayer === layer ? "default" : "outline"}
-                        className="shrink-0"
+                        className="shrink-0 rounded-full px-3 text-[11px]"
                         onClick={() => actions.setLayer(layer)}
                       >
                         {layerLabels[layer]}
@@ -673,71 +645,16 @@ export default function LocalTwinDashboard() {
                   </div>
                 </CardHeader>
 
-                <CardContent className="p-3 md:p-4">
-                  <div className="h-[58vh] min-h-[520px] max-h-[760px]">
+                <CardContent className="p-2.5 md:p-3">
+                  <div className="h-[62vh] min-h-[560px] max-h-[780px]">
                     <LocalTwinMap
                       cells={state.cells}
                       selectedCellId={selectedCellId}
                       activeLayer={state.activeLayer}
-                      selectedTime={selectedTime}
                       onSelect={handleMapSelect}
                     />
                   </div>
 
-                  <div className="mt-4 rounded-2xl border border-white/8 bg-slate-950/40 p-4">
-                    <div className="flex flex-wrap items-center justify-between gap-3">
-                      <div className="flex items-center gap-3">
-                        <div
-                          className={
-                            "grid h-9 w-9 place-items-center rounded-xl " +
-                            (isDay
-                              ? "bg-amber-300/10 text-amber-200"
-                              : "bg-sky-300/10 text-sky-200")
-                          }
-                        >
-                          {isDay ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
-                        </div>
-                        <div>
-                          <div className="text-sm font-semibold text-white">
-                            2026.09.19 · {timeLabel(selectedMinutes)}
-                          </div>
-                          <div className="text-[10px] text-slate-500">
-                            태양 고도 {sunAltitude.toFixed(1)}° · 방위 {sunAzimuth.toFixed(0)}°
-                          </div>
-                        </div>
-                      </div>
-
-                      <div className="flex flex-wrap gap-2 text-[10px] text-slate-400">
-                        <span className="rounded-full border border-emerald-300/15 bg-emerald-300/5 px-2.5 py-1">
-                          VWorld 3D city context
-                        </span>
-                        <span className="rounded-full border border-white/8 bg-white/[0.025] px-2.5 py-1">
-                          공식 행정동 경계
-                        </span>
-                        <span className="rounded-full border border-white/8 bg-white/[0.025] px-2.5 py-1">
-                          분석 셀 halo
-                        </span>
-                        <span className="rounded-full border border-white/8 bg-white/[0.025] px-2.5 py-1">
-                          지하철 anchor
-                        </span>
-                      </div>
-                    </div>
-
-                    <div className="mt-4 grid grid-cols-[42px_minmax(0,1fr)_42px] items-center gap-3">
-                      <span className="text-[10px] text-slate-600">06:00</span>
-                      <input
-                        aria-label="시간 선택"
-                        className="localtwin-range w-full"
-                        type="range"
-                        min={6 * 60}
-                        max={23 * 60}
-                        step={15}
-                        value={selectedMinutes}
-                        onChange={(event) => setSelectedMinutes(Number(event.target.value))}
-                      />
-                      <span className="text-right text-[10px] text-slate-600">23:00</span>
-                    </div>
-                  </div>
                 </CardContent>
               </Card>
 
@@ -747,7 +664,7 @@ export default function LocalTwinDashboard() {
                     <div className="flex items-start justify-between gap-3">
                       <div>
                         <div className="text-[10px] uppercase tracking-[0.18em] text-slate-500">
-                          Selected analysis cell
+                          분석 후보
                         </div>
                         <CardTitle className="mt-1 text-xl">{selectedCell.label}</CardTitle>
                         <CardDescription>{selectedCell.district}</CardDescription>
@@ -760,33 +677,31 @@ export default function LocalTwinDashboard() {
                   <CardContent className="space-y-4 pt-5">
                     <div className="flex items-end justify-between gap-4">
                       <div>
-                        <div className="text-[11px] text-slate-500">종합 Opportunity</div>
+                        <div className="text-[11px] text-slate-500">기회지수</div>
                         <div className="mt-1 text-5xl font-semibold tracking-[-0.06em] text-white">
                           {Math.round(selectedScores.opportunityScore ?? 0)}
                         </div>
                       </div>
                       <div className="text-right text-[10px] leading-4 text-slate-500">
-                        Demand 55%
+                        상대지표 / 100
                         <br />
-                        Rent relief 25%
-                        <br />
-                        재생맥락 20%
+                        수요 55 · 임대 25 · 재생 20
                       </div>
                     </div>
 
                     <div className="grid grid-cols-2 gap-2">
                       <MetricTile
-                        label="이동수요 proxy"
+                        label="이동수요"
                         value={formatNumber(selectedCell.transitDemand)}
                         note="공식 역 승하차 × 거리감쇠 · 점포 앞 보행량 아님"
                       />
                       <MetricTile
-                        label="임대료 Benchmark"
+                        label="임대 benchmark"
                         value={formatRentPerSqm(selectedCell.rentBenchmarkKrwPerSqm)}
-                        note="소규모 상가 1층 환산임대료 · 점포 전체 월세 아님"
+                        note={rentBenchmarkNote(selectedCell)}
                       />
                       <MetricTile
-                        label="Buzz momentum"
+                        label="관심도 변화"
                         value={
                           selectedCell.buzzMomentum === null
                             ? "데이터 부족"
@@ -816,10 +731,6 @@ export default function LocalTwinDashboard() {
                       </Button>
                     </div>
 
-                    <div className="rounded-xl border border-white/8 bg-white/[0.025] p-3 text-[10px] leading-4 text-slate-500">
-                      반투명 영역은 실제 상권 경계가 아니라 공간 모델링을 위한 분석 셀입니다.
-                      공식 행정동 경계·지하철 anchor와 분리해 표시합니다.
-                    </div>
                   </CardContent>
                 </Card>
 
@@ -828,7 +739,7 @@ export default function LocalTwinDashboard() {
                     <CardHeader>
                       <div className="flex items-center gap-2 text-emerald-200">
                         <WalletCards className="h-4 w-4" />
-                        <CardTitle>후보 A Financial Twin</CardTitle>
+                        <CardTitle>후보 A 손익</CardTitle>
                       </div>
                       <CardDescription>{activeCell.label}</CardDescription>
                     </CardHeader>
@@ -847,31 +758,13 @@ export default function LocalTwinDashboard() {
                         accent
                       />
                       <MetricTile
-                        label="Funding Gap"
+                        label="자금부족"
                         value={formatMan(activeAnalysis.fundingGapKrw)}
                       />
                     </CardContent>
                   </Card>
                 ) : null}
 
-                <Card>
-                  <CardHeader>
-                    <div className="flex items-center gap-2">
-                      <Database className="h-4 w-4 text-slate-400" />
-                      <CardTitle>Evidence boundary</CardTitle>
-                    </div>
-                  </CardHeader>
-                  <CardContent className="space-y-2 text-[10px] leading-4 text-slate-500">
-                    <p>
-                      이동수요는 공식 역 승하차를 거리감쇠한 모델값, 임대는 공식 R-ONE
-                      상권 benchmark, Buzz는 NAVER 공개 상대 관심도 snapshot을 사용합니다.
-                    </p>
-                    <p>
-                      출처 레지스터 {provenance?.sources.length ?? 0}개 · 관측된 점포 앞
-                      보행량은 없으며 공간 결합·거리감쇠·spillover는 modelled로 분리합니다.
-                    </p>
-                  </CardContent>
-                </Card>
               </aside>
             </section>
 
@@ -892,7 +785,6 @@ export default function LocalTwinDashboard() {
                     <CardContent>
                       <DemandTimelineChart
                         dailyDemand={selectedCell.transitDemand}
-                        currentHour={currentHour}
                       />
                     </CardContent>
                   </Card>

@@ -1,16 +1,16 @@
 import { expect, test } from "@playwright/test";
 
 test.describe("LocalTwin critical evidence path", () => {
-  test("loads the spatial dashboard and updates time controls", async ({ page }) => {
+  test("loads the spatial dashboard with the simplified map surface", async ({ page }) => {
     const pageErrors: string[] = [];
     page.on("pageerror", (error) => pageErrors.push(error.message));
 
     await page.goto("/");
     await expect(
-      page.getByRole("heading", { name: /사람이 많은 곳보다/ }),
+      page.getByRole("heading", { name: "창업 기회지도" }),
     ).toBeVisible();
 
-    await expect(page.getByText("종합 Opportunity", { exact: true }).first()).toBeVisible();
+    await expect(page.getByRole("button", { name: "종합", exact: true })).toBeVisible();
 
     // The primary VWorld renderer and the MapLibre fallback share one spatial-map contract.
     const map = page.getByTestId("spatial-map").first();
@@ -24,11 +24,8 @@ test.describe("LocalTwin critical evidence path", () => {
     await expect(page.getByText("임대료 vs 수요", { exact: true })).toBeVisible();
     await expect(page.getByText("12개월 Cash Runway", { exact: true })).toBeVisible();
 
-    const timeSlider = page.getByLabel("시간 선택");
-    await expect(timeSlider).toHaveValue(String(18 * 60));
-    await timeSlider.focus();
-    await timeSlider.press("Home");
-    await expect(page.getByText("2026.09.19 · 06:00", { exact: true })).toBeVisible();
+    await expect(page.getByText(/태양 고도/)).toHaveCount(0);
+    await expect(page.getByLabel("시간 선택")).toHaveCount(0);
 
     expect(pageErrors).toEqual([]);
   });

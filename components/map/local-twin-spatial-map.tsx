@@ -11,7 +11,6 @@ type Props = {
   cells: LocationEvidence[];
   selectedCellId?: string;
   activeLayer: MapLayer;
-  selectedTime: Date;
   onSelect: (cellId: string) => void;
 };
 
@@ -36,7 +35,6 @@ export default function LocalTwinSpatialMap(props: Props) {
             cells={props.cells}
             selectedCellId={props.selectedCellId}
             activeLayer={props.activeLayer}
-            selectedTime={props.selectedTime}
             showTerrain
             showBuildings
             showExtrusion

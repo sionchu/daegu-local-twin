@@ -4,7 +4,8 @@ This integration is deterministic and network-free.  It replaces the remaining d
 market inputs in opportunity_cells.json with:
 - station-to-cell mobility demand from official Daegu Metro business-hour ridership;
 - NAVER DataLab relative-interest mappings for exact corridor concepts;
-- official REB per-square-meter rent/vacancy only where an explicit mapping is supported;
+- official REB per-square-meter rent/vacancy with exact mappings preserved;
+- distance-decay rent/vacancy benchmarks for cells without an exact official-area label;
 - a modelled neighboring-anchor spillover index.
 
 No value produced here is observed storefront footfall or a business-success probability.
@@ -22,6 +23,7 @@ from typing import Any, Mapping, Sequence
 
 TRANSIT_LAMBDA_METERS = 450.0
 SPILLOVER_LAMBDA_METERS = 350.0
+RENT_INTERPOLATION_LAMBDA_METERS = 900.0
 ANCHOR_WEIGHTS = {"transit": 0.55, "buzz": 0.25, "poi": 0.20}
 
 BUZZ_PREFIX_MAP = {
@@ -44,6 +46,97 @@ RENT_CELL_MAP = {
         "method": "exact shared place-name token: 서문시장",
     },
 }
+
+
+def build_rent_area_anchors(
+    cells: Sequence[Mapping[str, Any]],
+    rent_by_area: Mapping[str, Mapping[str, Any]],
+) -> list[dict[str, Any]]:
+    """Build one model anchor per exactly mapped official REB commercial area.
+
+    The anchor coordinate is the centroid of LocalTwin cells that have an explicit
+    place-name mapping to that official area. It is only a modelling coordinate for
+    interpolation; it is not an official R-ONE commercial-area centroid.
+    """
+
+    grouped: dict[str, list[Mapping[str, float]]] = {}
+    for cell in cells:
+        mapping = RENT_CELL_MAP.get(str(cell["cellId"]))
+        if mapping is None:
+            continue
+        area = str(mapping["officialArea"])
+        if area not in rent_by_area:
+            raise ValueError(f"official rent area missing: {area}")
+        grouped.setdefault(area, []).append(cell["center"])
+
+    anchors: list[dict[str, Any]] = []
+    for area in sorted(grouped):
+        centers = grouped[area]
+        anchors.append(
+            {
+                "officialArea": area,
+                "center": {
+                    "lat": sum(float(item["lat"]) for item in centers) / len(centers),
+                    "lon": sum(float(item["lon"]) for item in centers) / len(centers),
+                },
+                "sourceCellIds": [
+                    str(cell["cellId"])
+                    for cell in cells
+                    if RENT_CELL_MAP.get(str(cell["cellId"]), {}).get("officialArea") == area
+                ],
+                "record": rent_by_area[area],
+            }
+        )
+    if len(anchors) < 2:
+        raise ValueError("rent interpolation requires at least two exact official-area anchors")
+    return anchors
+
+
+def interpolate_rent_benchmark(
+    center: Mapping[str, float],
+    anchors: Sequence[Mapping[str, Any]],
+) -> dict[str, Any]:
+    contributions: list[dict[str, Any]] = []
+    total_weight = 0.0
+    weighted_rent = 0.0
+    weighted_vacancy = 0.0
+
+    for anchor in anchors:
+        distance = distance_meters(center, anchor["center"])
+        weight = decay(distance, RENT_INTERPOLATION_LAMBDA_METERS)
+        record = anchor["record"]
+        rent_value = float(record["localTwin"]["rentPerSquareMeter"]["value"])
+        vacancy_value = float(record["localTwin"]["vacancy"]["value"])
+        total_weight += weight
+        weighted_rent += rent_value * weight
+        weighted_vacancy += vacancy_value * weight
+        contributions.append(
+            {
+                "officialArea": anchor["officialArea"],
+                "sourceCellIds": anchor["sourceCellIds"],
+                "distanceMeters": round(distance, 1),
+                "rawWeight": round(weight, 6),
+                "rentKrwPerSqm": int(rent_value),
+                "vacancyPct": vacancy_value,
+            }
+        )
+
+    if total_weight <= 0:
+        raise ValueError("rent interpolation produced zero total weight")
+
+    for contribution in contributions:
+        contribution["normalizedWeight"] = round(
+            float(contribution["rawWeight"]) / total_weight,
+            6,
+        )
+
+    return {
+        # Keep the benchmark visually honest: the official inputs themselves are
+        # reported in 100 KRW/㎡ increments, so the modelled blend is rounded likewise.
+        "rentKrwPerSqm": int(round((weighted_rent / total_weight) / 100.0) * 100),
+        "vacancyPct": round(weighted_vacancy / total_weight, 1),
+        "contributions": contributions,
+    }
 
 
 def load_json(path: Path) -> Any:
@@ -130,6 +223,7 @@ def derive_market_evidence(
         record["geography"]["regionName"]: record
         for record in rent["records"]
     }
+    rent_area_anchors = build_rent_area_anchors(updated, rent_by_area)
 
     records: list[dict[str, Any]] = []
 
@@ -167,12 +261,15 @@ def derive_market_evidence(
 
         rent_mapping = RENT_CELL_MAP.get(cell["cellId"])
         rent_record = None
+        rent_interpolation = None
         if rent_mapping is not None:
             rent_record = rent_by_area.get(rent_mapping["officialArea"])
             if rent_record is None:
                 raise ValueError(
                     f"official rent area missing: {rent_mapping['officialArea']}"
                 )
+        else:
+            rent_interpolation = interpolate_rent_benchmark(center, rent_area_anchors)
 
         cell["transitDemand"] = round(transit_total, 1)
         cell["observedFootfall"] = None
@@ -188,14 +285,23 @@ def derive_market_evidence(
             else round(float(buzz_record["momentum"]), 6)
         )
 
-        if rent_record is None:
-            cell["rentBenchmarkKrwPerSqm"] = None
-            cell["vacancyBenchmark"] = None
-        else:
+        if rent_record is not None:
             cell["rentBenchmarkKrwPerSqm"] = int(
                 rent_record["localTwin"]["rentPerSquareMeter"]["value"]
             )
             cell["vacancyBenchmark"] = float(rent_record["localTwin"]["vacancy"]["value"])
+            cell["rentBenchmarkMode"] = "exact"
+            cell["rentBenchmarkSourceAreas"] = [str(rent_mapping["officialArea"])]
+        elif rent_interpolation is not None:
+            cell["rentBenchmarkKrwPerSqm"] = int(rent_interpolation["rentKrwPerSqm"])
+            cell["vacancyBenchmark"] = float(rent_interpolation["vacancyPct"])
+            cell["rentBenchmarkMode"] = "proxy"
+            cell["rentBenchmarkSourceAreas"] = [
+                str(item["officialArea"])
+                for item in rent_interpolation["contributions"]
+            ]
+        else:
+            raise ValueError(f"no rent evidence path for {cell['cellId']}")
         cell.pop("rentBenchmark", None)
 
         # Remove source IDs that previously pointed at demo cell values, then add only
@@ -208,7 +314,7 @@ def derive_market_evidence(
         provenance_ids.extend(["transit", "transit-station-locations", "spillover-model", "cell-market-evidence"])
         if buzz_record is not None:
             provenance_ids.append("buzz")
-        if rent_record is not None:
+        if rent_record is not None or rent_interpolation is not None:
             provenance_ids.append("rent-benchmark")
         cell["provenanceIds"] = list(dict.fromkeys(provenance_ids))
 
@@ -255,11 +361,15 @@ def derive_market_evidence(
                     }
                     if rent_record is not None
                     else {
-                        "mode": "unavailable",
+                        "mode": "modelled spatial blend of official-area benchmarks",
                         "officialArea": None,
-                        "rentKrwPerSqm": None,
-                        "vacancyPct": None,
-                        "reason": "no supported exact official-area mapping; no interpolation performed",
+                        "mappingMethod": (
+                            "distance-decay blend across exact-mapped official R-ONE "
+                            f"area anchors; lambda={int(RENT_INTERPOLATION_LAMBDA_METERS)}m"
+                        ),
+                        "rentKrwPerSqm": cell["rentBenchmarkKrwPerSqm"],
+                        "vacancyPct": cell["vacancyBenchmark"],
+                        "sourceOfficialAreas": rent_interpolation["contributions"],
                     }
                 ),
             }
@@ -357,7 +467,7 @@ def derive_market_evidence(
 
     sidecar = {
         "mode": "modelled",
-        "modelVersion": "cell-market-evidence-v1",
+        "modelVersion": "cell-market-evidence-v2",
         "inputs": {
             "transit": {
                 "datasetId": transit.get("datasetId"),
@@ -393,6 +503,24 @@ def derive_market_evidence(
         },
         "buzzMapping": BUZZ_PREFIX_MAP,
         "rentMapping": RENT_CELL_MAP,
+        "rentInterpolation": {
+            "lambdaMeters": RENT_INTERPOLATION_LAMBDA_METERS,
+            "anchorPolicy": (
+                "one modelling anchor per exactly mapped official R-ONE area; "
+                "anchor coordinate = centroid of exact-mapped LocalTwin cell centers"
+            ),
+            "anchors": [
+                {
+                    "officialArea": anchor["officialArea"],
+                    "center": {
+                        "lat": round(float(anchor["center"]["lat"]), 6),
+                        "lon": round(float(anchor["center"]["lon"]), 6),
+                    },
+                    "sourceCellIds": anchor["sourceCellIds"],
+                }
+                for anchor in rent_area_anchors
+            ],
+        },
         "anchorModel": {
             "weights": ANCHOR_WEIGHTS,
             "missingMetricPolicy": "renormalize weights over available components",
@@ -408,7 +536,8 @@ def derive_market_evidence(
             "관측된 점포 앞 보행량이 없으므로 observedFootfall은 모든 cell에서 null입니다.",
             "NAVER 값은 동일 비교기간에서 정규화된 상대 검색 관심도이며 절대 검색량·매출·감성이 아닙니다.",
             "REB 임대료는 공식 상권의 소규모 상가 1층 환산임대료(원/㎡) benchmark이며 점포 전체 월세가 아닙니다.",
-            "공식 REB 상권과 정확히 연결할 수 없는 cell의 임대료/공실률은 null로 유지합니다.",
+            "정확히 연결되는 cell은 공식 REB 상권 benchmark를 그대로 사용하고, 나머지 cell은 정확매칭 상권 anchor 간 거리감쇠 보간값을 modelled benchmark로 사용합니다.",
+            "보간 임대료/공실률은 점포 실제 호가·계약값이나 공식 cell-level 통계가 아닙니다.",
             "spilloverScore는 인접 anchor의 결정론적 공간지표이며 실제 교차방문이나 인과효과가 아닙니다.",
         ],
     }
