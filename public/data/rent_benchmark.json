@@ -1,10 +1,768 @@
 {
-  "mode": "demo",
-  "geographicLevel": "상권/지역 benchmark",
-  "records": [
-    {"area":"동성로","monthlyRentBenchmarkKrw":5200000,"vacancyBenchmarkPct":7.2},
-    {"area":"교동","monthlyRentBenchmarkKrw":3300000,"vacancyBenchmarkPct":10.8},
-    {"area":"북성로","monthlyRentBenchmarkKrw":2100000,"vacancyBenchmarkPct":14.1}
+  "mode": "official-snapshot",
+  "provider": "한국부동산원",
+  "datasetId": "15134761",
+  "sourceUrl": "https://www.data.go.kr/data/15134761/openapi.do",
+  "officialPortalUrl": "https://www.reb.or.kr/r-one/portal/stat/easyStatPage.do",
+  "retrievedAt": "2026-09-19T08:40:28Z",
+  "sourceVersion": "202602",
+  "sourceDate": "2026-06-30",
+  "sourcePeriod": {
+    "cycle": "QY",
+    "code": "202602",
+    "year": 2026,
+    "quarter": 2,
+    "label": "2026년 2분기",
+    "asOf": "2026-06-30"
+  },
+  "officialGeographyLevel": "상권",
+  "commercialPropertyType": "소규모 상가",
+  "sourceFiles": [
+    {
+      "metric": "임대료",
+      "tableId": "T248223134698125",
+      "tableName": "임대동향 지역별 임대료(2024년3분기~)_소규모 상가",
+      "sourceSha256": "B29A906E130D608F0D5119EFC5C6BAE474E3C9AF905E4E31412188A61018041F",
+      "hashScope": "downloaded official R-ONE JSON export"
+    },
+    {
+      "metric": "공실률",
+      "tableId": "T241833134686576",
+      "tableName": "임대동향 지역별 공실률(2024년3분기~)_소규모 상가",
+      "sourceSha256": "B8D68CC3795EF8F57088833B9BA81C1C9A61BD3A6BFC1D69E0C91383B52E17AD",
+      "hashScope": "downloaded official R-ONE JSON export"
+    }
   ],
-  "limitation":"해당 점포 실제 월세·실제 공실이 아님"
+  "coverage": {
+    "requestedCorridorLabels": [
+      "동성로",
+      "교동",
+      "북성로"
+    ],
+    "officialProvince": "대구",
+    "officialGeographyLevel": "상권",
+    "officialAreaNames": [
+      "경북대북문",
+      "동대구",
+      "동성로중심",
+      "두류감삼역",
+      "들안길",
+      "삼덕/대봉",
+      "상인/월배",
+      "서문시장/청라언덕",
+      "수성범어",
+      "시지지구",
+      "월촌/안지랑",
+      "죽전역",
+      "칠곡"
+    ],
+    "matchedOfficialAreaLabelsByStringContainment": {
+      "동성로": [
+        "동성로중심"
+      ]
+    },
+    "unavailableRequestedCorridorLabels": [
+      "교동",
+      "북성로"
+    ],
+    "note": "These are official R-ONE 상권 labels only; no cell-level or street-label allocation is performed."
+  },
+  "metricDefinitions": {
+    "rent": {
+      "officialName": "임대료",
+      "unit": "천원/㎡",
+      "definition": "상가의 환산임대료를 임대가능면적(전용면적+공용면적)으로 나눈 상권별 ㎡당 지표. 보증금과 월세를 전환율로 환산하며 관리비와 부가가치세는 제외.",
+      "surveyBasis": "상가 1층 기준 임대료"
+    },
+    "vacancy": {
+      "officialName": "공실률",
+      "unit": "%",
+      "definition": "해당 상권 표본의 공실면적 합을 표본의 총 임대가능면적 합으로 나눈 지표.",
+      "surveyBasis": "임대계약 미체결 또는 자가·무상임대 방식으로 이용되지 않는 빈 공간을 공실로 정의"
+    }
+  },
+  "quality": {
+    "rentRawRecordCount": 276,
+    "vacancyRawRecordCount": 276,
+    "rentDaeguAreaRecordCount": 14,
+    "vacancyDaeguAreaRecordCount": 14,
+    "provinceAggregateExcluded": 1,
+    "rentSelectedAreaCount": 13,
+    "vacancySelectedAreaCount": 13,
+    "normalizedRecordCount": 13,
+    "syntheticRecordCount": 0,
+    "missingMetricPairCount": 0
+  },
+  "records": [
+    {
+      "periodCode": "202602",
+      "period": {
+        "cycle": "QY",
+        "code": "202602",
+        "year": 2026,
+        "quarter": 2,
+        "label": "2026년 2분기",
+        "asOf": "2026-06-30"
+      },
+      "geography": {
+        "level": "상권",
+        "provinceName": "대구",
+        "regionName": "경북대북문",
+        "regionFullName": "대구>경북대북문",
+        "sourceRentRowNumber": 89,
+        "sourceVacancyRowNumber": 89
+      },
+      "commercialPropertyType": "소규모 상가",
+      "official": {
+        "rent": {
+          "metric": "임대료",
+          "value": 17.5,
+          "unit": "천원/㎡",
+          "sourceTableId": "T248223134698125",
+          "sourceTableName": "임대동향 지역별 임대료(2024년3분기~)_소규모 상가"
+        },
+        "vacancy": {
+          "metric": "공실률",
+          "value": 5.8,
+          "unit": "%",
+          "sourceTableId": "T241833134686576",
+          "sourceTableName": "임대동향 지역별 공실률(2024년3분기~)_소규모 상가"
+        }
+      },
+      "localTwin": {
+        "rentPerSquareMeter": {
+          "value": 17500,
+          "unit": "원/㎡",
+          "formula": "official rent (천원/㎡) × 1,000",
+          "scope": "official 상권 benchmark; individual store rent is not inferred"
+        },
+        "vacancy": {
+          "value": 5.8,
+          "unit": "%",
+          "formula": "official vacancy value; no unit conversion",
+          "scope": "official 상권 benchmark; individual store vacancy is not inferred"
+        }
+      },
+      "sourceMode": "official-snapshot"
+    },
+    {
+      "periodCode": "202602",
+      "period": {
+        "cycle": "QY",
+        "code": "202602",
+        "year": 2026,
+        "quarter": 2,
+        "label": "2026년 2분기",
+        "asOf": "2026-06-30"
+      },
+      "geography": {
+        "level": "상권",
+        "provinceName": "대구",
+        "regionName": "동대구",
+        "regionFullName": "대구>동대구",
+        "sourceRentRowNumber": 90,
+        "sourceVacancyRowNumber": 90
+      },
+      "commercialPropertyType": "소규모 상가",
+      "official": {
+        "rent": {
+          "metric": "임대료",
+          "value": 11.3,
+          "unit": "천원/㎡",
+          "sourceTableId": "T248223134698125",
+          "sourceTableName": "임대동향 지역별 임대료(2024년3분기~)_소규모 상가"
+        },
+        "vacancy": {
+          "metric": "공실률",
+          "value": 8,
+          "unit": "%",
+          "sourceTableId": "T241833134686576",
+          "sourceTableName": "임대동향 지역별 공실률(2024년3분기~)_소규모 상가"
+        }
+      },
+      "localTwin": {
+        "rentPerSquareMeter": {
+          "value": 11300,
+          "unit": "원/㎡",
+          "formula": "official rent (천원/㎡) × 1,000",
+          "scope": "official 상권 benchmark; individual store rent is not inferred"
+        },
+        "vacancy": {
+          "value": 8,
+          "unit": "%",
+          "formula": "official vacancy value; no unit conversion",
+          "scope": "official 상권 benchmark; individual store vacancy is not inferred"
+        }
+      },
+      "sourceMode": "official-snapshot"
+    },
+    {
+      "periodCode": "202602",
+      "period": {
+        "cycle": "QY",
+        "code": "202602",
+        "year": 2026,
+        "quarter": 2,
+        "label": "2026년 2분기",
+        "asOf": "2026-06-30"
+      },
+      "geography": {
+        "level": "상권",
+        "provinceName": "대구",
+        "regionName": "동성로중심",
+        "regionFullName": "대구>동성로중심",
+        "sourceRentRowNumber": 91,
+        "sourceVacancyRowNumber": 91
+      },
+      "commercialPropertyType": "소규모 상가",
+      "official": {
+        "rent": {
+          "metric": "임대료",
+          "value": 26.8,
+          "unit": "천원/㎡",
+          "sourceTableId": "T248223134698125",
+          "sourceTableName": "임대동향 지역별 임대료(2024년3분기~)_소규모 상가"
+        },
+        "vacancy": {
+          "metric": "공실률",
+          "value": 12.8,
+          "unit": "%",
+          "sourceTableId": "T241833134686576",
+          "sourceTableName": "임대동향 지역별 공실률(2024년3분기~)_소규모 상가"
+        }
+      },
+      "localTwin": {
+        "rentPerSquareMeter": {
+          "value": 26800,
+          "unit": "원/㎡",
+          "formula": "official rent (천원/㎡) × 1,000",
+          "scope": "official 상권 benchmark; individual store rent is not inferred"
+        },
+        "vacancy": {
+          "value": 12.8,
+          "unit": "%",
+          "formula": "official vacancy value; no unit conversion",
+          "scope": "official 상권 benchmark; individual store vacancy is not inferred"
+        }
+      },
+      "sourceMode": "official-snapshot"
+    },
+    {
+      "periodCode": "202602",
+      "period": {
+        "cycle": "QY",
+        "code": "202602",
+        "year": 2026,
+        "quarter": 2,
+        "label": "2026년 2분기",
+        "asOf": "2026-06-30"
+      },
+      "geography": {
+        "level": "상권",
+        "provinceName": "대구",
+        "regionName": "두류감삼역",
+        "regionFullName": "대구>두류감삼역",
+        "sourceRentRowNumber": 92,
+        "sourceVacancyRowNumber": 92
+      },
+      "commercialPropertyType": "소규모 상가",
+      "official": {
+        "rent": {
+          "metric": "임대료",
+          "value": 19.8,
+          "unit": "천원/㎡",
+          "sourceTableId": "T248223134698125",
+          "sourceTableName": "임대동향 지역별 임대료(2024년3분기~)_소규모 상가"
+        },
+        "vacancy": {
+          "metric": "공실률",
+          "value": 3.7,
+          "unit": "%",
+          "sourceTableId": "T241833134686576",
+          "sourceTableName": "임대동향 지역별 공실률(2024년3분기~)_소규모 상가"
+        }
+      },
+      "localTwin": {
+        "rentPerSquareMeter": {
+          "value": 19800,
+          "unit": "원/㎡",
+          "formula": "official rent (천원/㎡) × 1,000",
+          "scope": "official 상권 benchmark; individual store rent is not inferred"
+        },
+        "vacancy": {
+          "value": 3.7,
+          "unit": "%",
+          "formula": "official vacancy value; no unit conversion",
+          "scope": "official 상권 benchmark; individual store vacancy is not inferred"
+        }
+      },
+      "sourceMode": "official-snapshot"
+    },
+    {
+      "periodCode": "202602",
+      "period": {
+        "cycle": "QY",
+        "code": "202602",
+        "year": 2026,
+        "quarter": 2,
+        "label": "2026년 2분기",
+        "asOf": "2026-06-30"
+      },
+      "geography": {
+        "level": "상권",
+        "provinceName": "대구",
+        "regionName": "들안길",
+        "regionFullName": "대구>들안길",
+        "sourceRentRowNumber": 93,
+        "sourceVacancyRowNumber": 93
+      },
+      "commercialPropertyType": "소규모 상가",
+      "official": {
+        "rent": {
+          "metric": "임대료",
+          "value": 18.5,
+          "unit": "천원/㎡",
+          "sourceTableId": "T248223134698125",
+          "sourceTableName": "임대동향 지역별 임대료(2024년3분기~)_소규모 상가"
+        },
+        "vacancy": {
+          "metric": "공실률",
+          "value": 17,
+          "unit": "%",
+          "sourceTableId": "T241833134686576",
+          "sourceTableName": "임대동향 지역별 공실률(2024년3분기~)_소규모 상가"
+        }
+      },
+      "localTwin": {
+        "rentPerSquareMeter": {
+          "value": 18500,
+          "unit": "원/㎡",
+          "formula": "official rent (천원/㎡) × 1,000",
+          "scope": "official 상권 benchmark; individual store rent is not inferred"
+        },
+        "vacancy": {
+          "value": 17,
+          "unit": "%",
+          "formula": "official vacancy value; no unit conversion",
+          "scope": "official 상권 benchmark; individual store vacancy is not inferred"
+        }
+      },
+      "sourceMode": "official-snapshot"
+    },
+    {
+      "periodCode": "202602",
+      "period": {
+        "cycle": "QY",
+        "code": "202602",
+        "year": 2026,
+        "quarter": 2,
+        "label": "2026년 2분기",
+        "asOf": "2026-06-30"
+      },
+      "geography": {
+        "level": "상권",
+        "provinceName": "대구",
+        "regionName": "삼덕/대봉",
+        "regionFullName": "대구>삼덕/대봉",
+        "sourceRentRowNumber": 94,
+        "sourceVacancyRowNumber": 94
+      },
+      "commercialPropertyType": "소규모 상가",
+      "official": {
+        "rent": {
+          "metric": "임대료",
+          "value": 27.2,
+          "unit": "천원/㎡",
+          "sourceTableId": "T248223134698125",
+          "sourceTableName": "임대동향 지역별 임대료(2024년3분기~)_소규모 상가"
+        },
+        "vacancy": {
+          "metric": "공실률",
+          "value": 0,
+          "unit": "%",
+          "sourceTableId": "T241833134686576",
+          "sourceTableName": "임대동향 지역별 공실률(2024년3분기~)_소규모 상가"
+        }
+      },
+      "localTwin": {
+        "rentPerSquareMeter": {
+          "value": 27200,
+          "unit": "원/㎡",
+          "formula": "official rent (천원/㎡) × 1,000",
+          "scope": "official 상권 benchmark; individual store rent is not inferred"
+        },
+        "vacancy": {
+          "value": 0,
+          "unit": "%",
+          "formula": "official vacancy value; no unit conversion",
+          "scope": "official 상권 benchmark; individual store vacancy is not inferred"
+        }
+      },
+      "sourceMode": "official-snapshot"
+    },
+    {
+      "periodCode": "202602",
+      "period": {
+        "cycle": "QY",
+        "code": "202602",
+        "year": 2026,
+        "quarter": 2,
+        "label": "2026년 2분기",
+        "asOf": "2026-06-30"
+      },
+      "geography": {
+        "level": "상권",
+        "provinceName": "대구",
+        "regionName": "상인/월배",
+        "regionFullName": "대구>상인/월배",
+        "sourceRentRowNumber": 95,
+        "sourceVacancyRowNumber": 95
+      },
+      "commercialPropertyType": "소규모 상가",
+      "official": {
+        "rent": {
+          "metric": "임대료",
+          "value": 28.6,
+          "unit": "천원/㎡",
+          "sourceTableId": "T248223134698125",
+          "sourceTableName": "임대동향 지역별 임대료(2024년3분기~)_소규모 상가"
+        },
+        "vacancy": {
+          "metric": "공실률",
+          "value": 6.6,
+          "unit": "%",
+          "sourceTableId": "T241833134686576",
+          "sourceTableName": "임대동향 지역별 공실률(2024년3분기~)_소규모 상가"
+        }
+      },
+      "localTwin": {
+        "rentPerSquareMeter": {
+          "value": 28600,
+          "unit": "원/㎡",
+          "formula": "official rent (천원/㎡) × 1,000",
+          "scope": "official 상권 benchmark; individual store rent is not inferred"
+        },
+        "vacancy": {
+          "value": 6.6,
+          "unit": "%",
+          "formula": "official vacancy value; no unit conversion",
+          "scope": "official 상권 benchmark; individual store vacancy is not inferred"
+        }
+      },
+      "sourceMode": "official-snapshot"
+    },
+    {
+      "periodCode": "202602",
+      "period": {
+        "cycle": "QY",
+        "code": "202602",
+        "year": 2026,
+        "quarter": 2,
+        "label": "2026년 2분기",
+        "asOf": "2026-06-30"
+      },
+      "geography": {
+        "level": "상권",
+        "provinceName": "대구",
+        "regionName": "서문시장/청라언덕",
+        "regionFullName": "대구>서문시장/청라언덕",
+        "sourceRentRowNumber": 96,
+        "sourceVacancyRowNumber": 96
+      },
+      "commercialPropertyType": "소규모 상가",
+      "official": {
+        "rent": {
+          "metric": "임대료",
+          "value": 17.3,
+          "unit": "천원/㎡",
+          "sourceTableId": "T248223134698125",
+          "sourceTableName": "임대동향 지역별 임대료(2024년3분기~)_소규모 상가"
+        },
+        "vacancy": {
+          "metric": "공실률",
+          "value": 10.1,
+          "unit": "%",
+          "sourceTableId": "T241833134686576",
+          "sourceTableName": "임대동향 지역별 공실률(2024년3분기~)_소규모 상가"
+        }
+      },
+      "localTwin": {
+        "rentPerSquareMeter": {
+          "value": 17300,
+          "unit": "원/㎡",
+          "formula": "official rent (천원/㎡) × 1,000",
+          "scope": "official 상권 benchmark; individual store rent is not inferred"
+        },
+        "vacancy": {
+          "value": 10.1,
+          "unit": "%",
+          "formula": "official vacancy value; no unit conversion",
+          "scope": "official 상권 benchmark; individual store vacancy is not inferred"
+        }
+      },
+      "sourceMode": "official-snapshot"
+    },
+    {
+      "periodCode": "202602",
+      "period": {
+        "cycle": "QY",
+        "code": "202602",
+        "year": 2026,
+        "quarter": 2,
+        "label": "2026년 2분기",
+        "asOf": "2026-06-30"
+      },
+      "geography": {
+        "level": "상권",
+        "provinceName": "대구",
+        "regionName": "수성범어",
+        "regionFullName": "대구>수성범어",
+        "sourceRentRowNumber": 97,
+        "sourceVacancyRowNumber": 97
+      },
+      "commercialPropertyType": "소규모 상가",
+      "official": {
+        "rent": {
+          "metric": "임대료",
+          "value": 24.6,
+          "unit": "천원/㎡",
+          "sourceTableId": "T248223134698125",
+          "sourceTableName": "임대동향 지역별 임대료(2024년3분기~)_소규모 상가"
+        },
+        "vacancy": {
+          "metric": "공실률",
+          "value": 19.4,
+          "unit": "%",
+          "sourceTableId": "T241833134686576",
+          "sourceTableName": "임대동향 지역별 공실률(2024년3분기~)_소규모 상가"
+        }
+      },
+      "localTwin": {
+        "rentPerSquareMeter": {
+          "value": 24600,
+          "unit": "원/㎡",
+          "formula": "official rent (천원/㎡) × 1,000",
+          "scope": "official 상권 benchmark; individual store rent is not inferred"
+        },
+        "vacancy": {
+          "value": 19.4,
+          "unit": "%",
+          "formula": "official vacancy value; no unit conversion",
+          "scope": "official 상권 benchmark; individual store vacancy is not inferred"
+        }
+      },
+      "sourceMode": "official-snapshot"
+    },
+    {
+      "periodCode": "202602",
+      "period": {
+        "cycle": "QY",
+        "code": "202602",
+        "year": 2026,
+        "quarter": 2,
+        "label": "2026년 2분기",
+        "asOf": "2026-06-30"
+      },
+      "geography": {
+        "level": "상권",
+        "provinceName": "대구",
+        "regionName": "시지지구",
+        "regionFullName": "대구>시지지구",
+        "sourceRentRowNumber": 98,
+        "sourceVacancyRowNumber": 98
+      },
+      "commercialPropertyType": "소규모 상가",
+      "official": {
+        "rent": {
+          "metric": "임대료",
+          "value": 21.7,
+          "unit": "천원/㎡",
+          "sourceTableId": "T248223134698125",
+          "sourceTableName": "임대동향 지역별 임대료(2024년3분기~)_소규모 상가"
+        },
+        "vacancy": {
+          "metric": "공실률",
+          "value": 8.2,
+          "unit": "%",
+          "sourceTableId": "T241833134686576",
+          "sourceTableName": "임대동향 지역별 공실률(2024년3분기~)_소규모 상가"
+        }
+      },
+      "localTwin": {
+        "rentPerSquareMeter": {
+          "value": 21700,
+          "unit": "원/㎡",
+          "formula": "official rent (천원/㎡) × 1,000",
+          "scope": "official 상권 benchmark; individual store rent is not inferred"
+        },
+        "vacancy": {
+          "value": 8.2,
+          "unit": "%",
+          "formula": "official vacancy value; no unit conversion",
+          "scope": "official 상권 benchmark; individual store vacancy is not inferred"
+        }
+      },
+      "sourceMode": "official-snapshot"
+    },
+    {
+      "periodCode": "202602",
+      "period": {
+        "cycle": "QY",
+        "code": "202602",
+        "year": 2026,
+        "quarter": 2,
+        "label": "2026년 2분기",
+        "asOf": "2026-06-30"
+      },
+      "geography": {
+        "level": "상권",
+        "provinceName": "대구",
+        "regionName": "월촌/안지랑",
+        "regionFullName": "대구>월촌/안지랑",
+        "sourceRentRowNumber": 99,
+        "sourceVacancyRowNumber": 99
+      },
+      "commercialPropertyType": "소규모 상가",
+      "official": {
+        "rent": {
+          "metric": "임대료",
+          "value": 16.5,
+          "unit": "천원/㎡",
+          "sourceTableId": "T248223134698125",
+          "sourceTableName": "임대동향 지역별 임대료(2024년3분기~)_소규모 상가"
+        },
+        "vacancy": {
+          "metric": "공실률",
+          "value": 13.7,
+          "unit": "%",
+          "sourceTableId": "T241833134686576",
+          "sourceTableName": "임대동향 지역별 공실률(2024년3분기~)_소규모 상가"
+        }
+      },
+      "localTwin": {
+        "rentPerSquareMeter": {
+          "value": 16500,
+          "unit": "원/㎡",
+          "formula": "official rent (천원/㎡) × 1,000",
+          "scope": "official 상권 benchmark; individual store rent is not inferred"
+        },
+        "vacancy": {
+          "value": 13.7,
+          "unit": "%",
+          "formula": "official vacancy value; no unit conversion",
+          "scope": "official 상권 benchmark; individual store vacancy is not inferred"
+        }
+      },
+      "sourceMode": "official-snapshot"
+    },
+    {
+      "periodCode": "202602",
+      "period": {
+        "cycle": "QY",
+        "code": "202602",
+        "year": 2026,
+        "quarter": 2,
+        "label": "2026년 2분기",
+        "asOf": "2026-06-30"
+      },
+      "geography": {
+        "level": "상권",
+        "provinceName": "대구",
+        "regionName": "죽전역",
+        "regionFullName": "대구>죽전역",
+        "sourceRentRowNumber": 100,
+        "sourceVacancyRowNumber": 100
+      },
+      "commercialPropertyType": "소규모 상가",
+      "official": {
+        "rent": {
+          "metric": "임대료",
+          "value": 18.3,
+          "unit": "천원/㎡",
+          "sourceTableId": "T248223134698125",
+          "sourceTableName": "임대동향 지역별 임대료(2024년3분기~)_소규모 상가"
+        },
+        "vacancy": {
+          "metric": "공실률",
+          "value": 14.9,
+          "unit": "%",
+          "sourceTableId": "T241833134686576",
+          "sourceTableName": "임대동향 지역별 공실률(2024년3분기~)_소규모 상가"
+        }
+      },
+      "localTwin": {
+        "rentPerSquareMeter": {
+          "value": 18300,
+          "unit": "원/㎡",
+          "formula": "official rent (천원/㎡) × 1,000",
+          "scope": "official 상권 benchmark; individual store rent is not inferred"
+        },
+        "vacancy": {
+          "value": 14.9,
+          "unit": "%",
+          "formula": "official vacancy value; no unit conversion",
+          "scope": "official 상권 benchmark; individual store vacancy is not inferred"
+        }
+      },
+      "sourceMode": "official-snapshot"
+    },
+    {
+      "periodCode": "202602",
+      "period": {
+        "cycle": "QY",
+        "code": "202602",
+        "year": 2026,
+        "quarter": 2,
+        "label": "2026년 2분기",
+        "asOf": "2026-06-30"
+      },
+      "geography": {
+        "level": "상권",
+        "provinceName": "대구",
+        "regionName": "칠곡",
+        "regionFullName": "대구>칠곡",
+        "sourceRentRowNumber": 101,
+        "sourceVacancyRowNumber": 101
+      },
+      "commercialPropertyType": "소규모 상가",
+      "official": {
+        "rent": {
+          "metric": "임대료",
+          "value": 22.2,
+          "unit": "천원/㎡",
+          "sourceTableId": "T248223134698125",
+          "sourceTableName": "임대동향 지역별 임대료(2024년3분기~)_소규모 상가"
+        },
+        "vacancy": {
+          "metric": "공실률",
+          "value": 0,
+          "unit": "%",
+          "sourceTableId": "T241833134686576",
+          "sourceTableName": "임대동향 지역별 공실률(2024년3분기~)_소규모 상가"
+        }
+      },
+      "localTwin": {
+        "rentPerSquareMeter": {
+          "value": 22200,
+          "unit": "원/㎡",
+          "formula": "official rent (천원/㎡) × 1,000",
+          "scope": "official 상권 benchmark; individual store rent is not inferred"
+        },
+        "vacancy": {
+          "value": 0,
+          "unit": "%",
+          "formula": "official vacancy value; no unit conversion",
+          "scope": "official 상권 benchmark; individual store vacancy is not inferred"
+        }
+      },
+      "sourceMode": "official-snapshot"
+    }
+  ],
+  "limitations": [
+    "Official quarterly market benchmark at the R-ONE 상권 level; it is not a specific store's deposit, monthly rent, or vacancy.",
+    "The public JSON export exposes area names and source row numbers but no area code; no code was invented.",
+    "The official table contains 동성로중심 but no official 교동 or 북성로 row. Those labels remain unavailable and receive no allocated value.",
+    "The localTwin rent field is only a unit conversion to 원/㎡; no area multiplication or store-level monthly-rent estimate is made.",
+    "Cell-level rentRelief or map integration is intentionally outside this data-only snapshot."
+  ]
 }
