@@ -156,7 +156,14 @@ export async function startVWorld(
     map.setInitPosition(camera);
     map.setLogoVisible?.(false);
     map.setNavigationZoomVisible?.(false);
-    map.start();
+    try {
+      map.start();
+    } catch (error) {
+      // VWorld WebGL 3.0 can create ws3d.viewer before throwing while redefining
+      // its global viewer property. Treat an already-valid viewer as success.
+      if (!finish()) throw error;
+      return;
+    }
     waitForViewer();
   });
 }
