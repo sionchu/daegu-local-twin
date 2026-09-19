@@ -197,17 +197,19 @@
       "provider": "NAVER DataLab",
       "url": "https://datalab.naver.com/",
       "sourceUrl": "https://datalab.naver.com/",
-      "resultUrl": "https://datalab.naver.com/keyword/trendResult.naver?hashKey=N_71af73f12439d797b37c8c1",
+      "resultUrl": "https://datalab.naver.com/keyword/trendResult.naver?hashKey=N_d8acbe7b5dd398ef2abc615e8e30f5c1",
       "geographicLevel": "검색어 비교·기간",
       "sourceVersion": "2026-06 ~ 2026-09 week export",
       "sourceDate": "2026-09-07",
-      "retrievedAt": "2026-09-19T08:56:30Z",
-      "sourceSha256": "13295AB9BC4021E16C154D7CE1B07C1D880A69C253532CBF75F92A566FAC2E65",
+      "retrievedAt": "2026-09-19T16:45:34Z",
+      "sourceSha256": "2C07F609991FC1B9CF9F9390FF2D56E0CA016D7975140C71C14BEE4D3D9539F5",
       "accessMode": "public-web-ui",
       "queryTopics": [
         "동성로",
         "교동",
-        "북성로"
+        "북성로",
+        "중앙로",
+        "서문시장"
       ],
       "timeUnit": "week",
       "fieldsUsed": [
@@ -217,10 +219,10 @@
         "momentum"
       ],
       "limitations": [
-        "검색어 비교기간 내 최대값을 100으로 정규화한 상대 관심도 지수이며 건수나 시장 수요의 직접 측정값이 아님",
-        "검색 관심도 외 사업성과나 인과관계를 제공하지 않음",
-        "동일 공개 비교의 검색어·기간 단위이며 거리·점포 단위 수요를 제공하지 않음",
-        "공개 UI 다운로드 snapshot이며 API credential이나 private endpoint를 사용하지 않음"
+        "NAVER DataLab normalizes each topic against the maximum within the queried comparison period; values are relative indices, not counts.",
+        "This is a search-interest proxy only; it does not measure business outcomes or causal relationships.",
+        "The three topics were queried together in one public comparison, and the export does not provide street-level or store-level demand.",
+        "The public UI export contains the observations returned by NAVER at retrieval time; no API credentials or private endpoints were used."
       ],
       "mode": "public-snapshot"
     },
@@ -288,6 +290,27 @@
       ],
       "limitations": "선정·보증·대출 승인이나 한도를 예측하지 않음",
       "mode": "snapshot"
+    },
+    {
+      "id": "corridor-zones",
+      "title": "LocalTwin map-derived corridor zones",
+      "provider": "OpenStreetMap contributors / LocalTwin derivation",
+      "url": "https://www.openstreetmap.org/",
+      "sourceUrl": "https://nominatim.openstreetmap.org/",
+      "geographicLevel": "central Daegu corridor visualization",
+      "sourceVersion": "OSM geometry snapshot 2026-09-20",
+      "sourceDate": "2026-09-20",
+      "retrievedAt": "2026-09-19T16:56:35.782149Z",
+      "accessMode": "public-web",
+      "fieldsUsed": [
+        "road/market geometry",
+        "model corridor buffer"
+      ],
+      "limitations": [
+        "실제 OpenStreetMap 도로/시장 geometry를 기반으로 한 분석 corridor이며 공식 상권 경계가 아니다.",
+        "SEMAS storeZone 공식 polygon을 사용할 수 있는 승인키가 확보되면 이 시각화 경계를 대체한다."
+      ],
+      "mode": "modelled-map-derived"
     }
   ],
   "privacyBoundary": [

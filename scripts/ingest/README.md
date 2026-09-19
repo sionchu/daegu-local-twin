@@ -3,8 +3,9 @@
 The public V0 keeps expensive joins offline. Adapters should write normalized, provenance-stamped JSON under `public/data/` and must never put API keys in the browser bundle.
 
 Committed refresh adapters now cover SEMAS businesses, Daegu Metro ridership, urban
-decline, SGIS boundaries, REB rent/vacancy, and NAVER DataLab public exports. Every
-snapshot preserves source, retrieval date, geography, semantics, and limitations.
+decline, SGIS boundaries, REB rent/vacancy, NAVER DataLab public exports, and
+OpenStreetMap road/market geometry used for visualization corridors. Every snapshot
+preserves source, retrieval date, geography, semantics, and limitations.
 Credentials never enter the browser bundle or committed artifacts.
 
 ## Official SEMAS business snapshot
@@ -41,6 +42,20 @@ The derivation is network-free and updates only:
 
 It does not alter transit, rent, Buzz, spillover, or mobility/footfall values.
 
+
+## Map-derived corridor zones
+
+`refresh_corridor_zones.py` queries public OpenStreetMap/Nominatim geometry for the
+named Daegu roads and market anchors and buffers those real map features in metres to
+create `public/data/corridor_zones.geojson`. The output is
+`modelled-map-derived`: it is for legible map visualization and is **not** an official
+SEMAS commercial-area boundary. When an approved SEMAS `storeZone` service key is
+available, its WGS84 polygon should replace this visualization boundary.
+
+The committed NAVER DataLab snapshot compares five topics in one public result:
+`동성로`, `교동`, `북성로`, `중앙로`, and `서문시장`. All eight LocalTwin
+cells therefore have a mapped relative-interest level and momentum; these are relative
+search-interest indices, not visit counts or sales.
 
 ## Cell market evidence derivation
 

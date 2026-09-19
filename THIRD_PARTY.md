@@ -21,6 +21,9 @@ data governed by their own licenses and terms.
 
 - **VWorld** provides the primary Korean 3D city/terrain context. The client key must be
   service-domain restricted; LocalTwin overlays remain project-authored/modelled data.
+- **OpenStreetMap / Nominatim** provides real road/market geometry used to derive the
+  LocalTwin visualization corridors. The buffered corridors are modelled overlays, not
+  official commercial-area boundaries. Preserve OpenStreetMap attribution and ODbL terms.
 - **OpenFreeMap** provides the hosted style/vector source used by the fallback renderer.
   Map data is OpenStreetMap-derived; preserve the provider/OpenStreetMap attribution
   shown by the map and review provider terms before production-scale use.

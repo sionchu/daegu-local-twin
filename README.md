@@ -27,9 +27,9 @@ financial numbers.
 ```text
 VWorld 3D opportunity scene
     ↓
-official admin boundaries / analysis-cell halos / transit anchors
+official admin boundaries / map-derived corridor zones / transit anchors
     ↓
-VWorld 3D buildings + rent-aware spatial comparison
+VWorld 3D buildings + layer-driven corridor visualization
     ↓
 candidate A/B selection
     ↓
@@ -49,9 +49,10 @@ Every source-backed value must remain distinguishable as `observed`, `official`,
 
 The current central-Daegu corridor is built from reviewed official/public snapshots:
 SEMAS businesses, Daegu Metro station ridership, REB commercial rent/vacancy, NAVER
-DataLab relative search interest, official urban-decline indicators, and SGIS
-administrative-dong boundaries. LocalTwin then derives cell-level mobility, rent mapping,
-regeneration context, rent benchmarks, and spillover deterministically. Cells without
+DataLab five-topic relative search interest, official urban-decline indicators, SGIS
+administrative-dong boundaries, and OpenStreetMap road/market geometry used only for the
+map-derived visualization corridors. LocalTwin then derives cell-level mobility, rent
+mapping, regeneration context, rent benchmarks, and spillover deterministically. Cells without
 an exact R-ONE commercial-area name use an explicitly modelled distance-decay blend of
 the exact-mapped official R-ONE benchmarks; this remains a benchmark, not a store quote.
 
@@ -70,6 +71,7 @@ Current product snapshots:
 - `public/data/cell_spatial_evidence.json`
 - `public/data/cell_market_evidence.json`
 - `public/data/admin_dong_boundaries.geojson`
+- `public/data/corridor_zones.geojson`
 - `public/data/transit.json`
 - `public/data/transit_station_locations.json`
 - `public/data/businesses.json`

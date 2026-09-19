@@ -21,7 +21,7 @@ from xml.etree import ElementTree as ET
 
 
 SOURCE_URL = "https://datalab.naver.com/"
-DEFAULT_AREAS = ("동성로", "교동", "북성로")
+DEFAULT_AREAS = ("동성로", "교동", "북성로", "중앙로", "서문시장")
 TIME_UNIT_MAP = {"일간": "day", "주간": "week", "월간": "month"}
 XML_NS = "http://schemas.openxmlformats.org/spreadsheetml/2006/main"
 NS = {"m": XML_NS}
@@ -293,7 +293,7 @@ def normalize_export(
         "limitations": [
             "NAVER DataLab normalizes each topic against the maximum within the queried comparison period; values are relative indices, not counts.",
             "This is a search-interest proxy only; it does not measure business outcomes or causal relationships.",
-            "The three topics were queried together in one public comparison, and the export does not provide street-level or store-level demand.",
+            f"The {len(requested_areas)} topics were queried together in one public comparison, and the export does not provide street-level or store-level demand.",
             "The public UI export contains the observations returned by NAVER at retrieval time; no API credentials or private endpoints were used.",
         ],
     }

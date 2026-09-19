@@ -30,6 +30,8 @@ BUZZ_PREFIX_MAP = {
     "hex-dongseongro-": "동성로",
     "hex-gyodong-": "교동",
     "hex-buksungro-": "북성로",
+    "hex-jungang-": "중앙로",
+    "hex-seomun-": "서문시장",
 }
 
 RENT_CELL_MAP = {

@@ -62,11 +62,11 @@ def sample_rows(observation_count: int = 12) -> list[list[str]]:
         ["기간", "주간 : 2026-06 ~ 2026-09"],
         ["성별", "전체(여성,남성)"],
         ["연령대", "전체"],
-        ["날짜", "동성로", "날짜", "교동", "날짜", "북성로"],
+        ["날짜", "동성로", "날짜", "교동", "날짜", "북성로", "날짜", "중앙로", "날짜", "서문시장"],
     ]
     for index in range(observation_count):
         day = f"2026-06-{index + 1:02d}"
-        rows.append([day, str(10 + index), day, str(20 + index), day, str(30 + index)])
+        rows.append([day, str(10 + index), day, str(20 + index), day, str(30 + index), day, str(40 + index), day, str(50 + index)])
     return rows
 
 
@@ -92,7 +92,7 @@ class NaverBuzzNormalizationTest(unittest.TestCase):
 
     def test_rejects_missing_topic_or_observation(self) -> None:
         rows = sample_rows()
-        rows[6] = ["날짜", "동성로", "날짜", "교동", "날짜", "다른지역"]
+        rows[6] = ["날짜", "동성로", "날짜", "교동", "날짜", "북성로", "날짜", "중앙로", "날짜", "다른지역"]
         with self.assertRaisesRegex(ValueError, "topics differ"):
             normalize_export(make_xlsx(rows), source_sha256=SOURCE_SHA, retrieved_at="now")
 

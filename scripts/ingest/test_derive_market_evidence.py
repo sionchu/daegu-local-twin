@@ -47,9 +47,9 @@ class DeriveMarketEvidenceTest(unittest.TestCase):
             self.rent,
         )
         by_id = {cell["cellId"]: cell for cell in updated}
-        self.assertEqual(sum(cell["buzzLevel"] is not None for cell in updated), 6)
-        self.assertIsNone(by_id["hex-jungang-01"]["buzzLevel"])
-        self.assertIsNone(by_id["hex-seomun-01"]["buzzLevel"])
+        self.assertEqual(sum(cell["buzzLevel"] is not None for cell in updated), 8)
+        self.assertIsNotNone(by_id["hex-jungang-01"]["buzzLevel"])
+        self.assertIsNotNone(by_id["hex-seomun-01"]["buzzLevel"])
 
         self.assertEqual(
             by_id["hex-dongseongro-01"]["rentBenchmarkKrwPerSqm"],
