@@ -110,10 +110,10 @@ export default function VWorldLocalTwinMap({
   onSelect,
   onUnavailable,
 }: Props) {
-  const viewerRef = useRef<any>();
+  const viewerRef = useRef<any>(null);
   const contextEntitiesRef = useRef<any[]>([]);
   const cellEntitiesRef = useRef<any[]>([]);
-  const clickCleanupRef = useRef<() => void>();
+  const clickCleanupRef = useRef<(() => void) | null>(null);
   const initialSelectionRef = useRef(true);
   const [ready, setReady] = useState(false);
   const [status, setStatus] = useState("VWorld 3D 연결 중");
