@@ -7,6 +7,8 @@ import { computeOpportunityScores } from "@/src/model";
 import type { LocationEvidence, MapLayer } from "@/src/types";
 
 const DAEGU_CENTER: [number, number] = [128.5967, 35.8714];
+const VWORLD_BUILDING_TILESET =
+  "https://cdn.vworld.kr/TDServer/services/map4/TG9ENA.json";
 
 type AdminGeometry = {
   type: "Polygon" | "MultiPolygon";
@@ -101,16 +103,6 @@ function ringCenter(ring: number[][]) {
   return [sum[0] / ring.length, sum[1] / ring.length] as [number, number];
 }
 
-async function waitForVWorldLayer(map: any, name: string, timeoutMs = 10_000) {
-  const deadline = Date.now() + timeoutMs;
-  while (Date.now() < deadline) {
-    const layer = map?.getLayerElement?.(name);
-    if (layer) return layer;
-    await new Promise((resolve) => window.setTimeout(resolve, 250));
-  }
-  return null;
-}
-
 export default function VWorldLocalTwinMap({
   cells,
   selectedCellId,
@@ -120,6 +112,7 @@ export default function VWorldLocalTwinMap({
 }: Props) {
   const viewerRef = useRef<any>(null);
   const mapRef = useRef<any>(null);
+  const buildingTilesetRef = useRef<any>(null);
   const containerRef = useRef<HTMLDivElement>(null);
   const contextEntitiesRef = useRef<any[]>([]);
   const cellEntitiesRef = useRef<any[]>([]);
@@ -273,12 +266,28 @@ export default function VWorldLocalTwinMap({
         setStatus("VWorld 3D");
         viewer.scene?.requestRender?.();
 
-        void waitForVWorldLayer(map, "facility_build").then((buildingLayer) => {
-          if (cancelled || !buildingLayer) return;
-          buildingLayer.show?.();
-          setStatus("VWorld 3D · 건물 레이어");
-          viewer.scene?.requestRender?.();
-        });
+        void (async () => {
+          try {
+            const tileset =
+              typeof Cesium.Cesium3DTileset.fromUrl === "function"
+                ? await Cesium.Cesium3DTileset.fromUrl(VWORLD_BUILDING_TILESET, {
+                    maximumScreenSpaceError: 16,
+                  })
+                : new Cesium.Cesium3DTileset({
+                    url: VWORLD_BUILDING_TILESET,
+                    maximumScreenSpaceError: 16,
+                  });
+            if (cancelled) {
+              tileset.destroy?.();
+              return;
+            }
+            buildingTilesetRef.current = viewer.scene.primitives.add(tileset);
+            setStatus("VWorld 3D · 건물");
+            viewer.scene?.requestRender?.();
+          } catch {
+            // Building tiles are visual context only. Keep the core VWorld scene usable.
+          }
+        })();
       } catch (error) {
         const reason = error instanceof Error ? error.message : String(error);
         setStatus("VWorld 연결 불가 · 경량 지도 전환");
@@ -291,6 +300,10 @@ export default function VWorldLocalTwinMap({
       clickCleanupRef.current?.();
       clearEntities(cellEntitiesRef.current);
       clearEntities(contextEntitiesRef.current);
+      if (buildingTilesetRef.current && viewerRef.current?.scene?.primitives) {
+        viewerRef.current.scene.primitives.remove(buildingTilesetRef.current);
+      }
+      buildingTilesetRef.current = null;
       disposeVWorld(viewerRef.current);
       viewerRef.current = null;
       mapRef.current = null;
@@ -375,7 +388,7 @@ export default function VWorldLocalTwinMap({
         destination: Cesium.Cartesian3.fromDegrees(
           DAEGU_CENTER[0],
           DAEGU_CENTER[1],
-          1900,
+          1500,
         ),
         orientation: {
           heading: 0,
