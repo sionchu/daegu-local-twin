@@ -12,9 +12,12 @@ LocalTwin Daegu is a standard Next.js App Router application.
 
 ```text
 NEXT_PUBLIC_MAP_STYLE_URL=https://tiles.openfreemap.org/styles/bright
-NEXT_PUBLIC_DEM_TILEJSON_URL=https://demotiles.maplibre.org/terrain-tiles/tiles.json
 NEXT_PUBLIC_MAP_ATTRIBUTION=OpenStreetMap contributors
 ```
+
+The built-in DEM fallback uses the AWS Open Data Terrain Tiles Terrarium endpoint.
+Set `NEXT_PUBLIC_DEM_TILEJSON_URL` only when overriding it with another
+deployment-approved raster-dem TileJSON source.
 
 6. Deploy from `main` after CI passes.
 
