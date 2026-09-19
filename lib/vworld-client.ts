@@ -158,7 +158,7 @@ export async function startVWorld(
       mapId: containerId,
       initPosition: camera,
       logo: false,
-      navigation: true,
+      navigation: false,
     });
     map.setMapId(containerId);
     map.setInitPosition(camera);
