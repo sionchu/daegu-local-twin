@@ -20,13 +20,9 @@ test.describe("LocalTwin critical demo path", () => {
 
     const timeSlider = page.getByLabel("시간 선택");
     await expect(timeSlider).toHaveValue(String(18 * 60));
-    await timeSlider.evaluate((element) => {
-      const input = element as HTMLInputElement;
-      input.value = String(14 * 60);
-      input.dispatchEvent(new Event("input", { bubbles: true }));
-      input.dispatchEvent(new Event("change", { bubbles: true }));
-    });
-    await expect(page.getByText("2026.09.19 · 14:00", { exact: true })).toBeVisible();
+    await timeSlider.focus();
+    await timeSlider.press("Home");
+    await expect(page.getByText("2026.09.19 · 06:00", { exact: true })).toBeVisible();
 
     expect(pageErrors).toEqual([]);
   });
