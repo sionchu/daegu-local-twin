@@ -59,6 +59,8 @@ type CorridorFeature = {
     zoneId: string;
     label: string;
     memberCellIds: string[];
+    labelLon?: number;
+    labelLat?: number;
     boundaryMeaning?: string;
     sourceProvider?: string;
   };
@@ -123,6 +125,58 @@ function corridorRings(geometry: CorridorGeometry) {
     : (geometry.coordinates as number[][][][]).map((polygon) => polygon[0]);
 }
 
+function pointInRing(lon: number, lat: number, ring: number[][]) {
+  let inside = false;
+  for (let i = 0, j = ring.length - 1; i < ring.length; j = i, i += 1) {
+    const xi = ring[i]?.[0];
+    const yi = ring[i]?.[1];
+    const xj = ring[j]?.[0];
+    const yj = ring[j]?.[1];
+    if (
+      xi === undefined ||
+      yi === undefined ||
+      xj === undefined ||
+      yj === undefined
+    ) {
+      continue;
+    }
+    const intersects =
+      yi > lat !== yj > lat &&
+      lon < ((xj - xi) * (lat - yi)) / (yj - yi || Number.EPSILON) + xi;
+    if (intersects) inside = !inside;
+  }
+  return inside;
+}
+
+function corridorContains(zone: CorridorFeature, lon: number, lat: number) {
+  const polygons =
+    zone.geometry.type === "Polygon"
+      ? [zone.geometry.coordinates as number[][][]]
+      : (zone.geometry.coordinates as number[][][][]);
+
+  return polygons.some((polygon) => {
+    const [outer, ...holes] = polygon;
+    if (!outer || !pointInRing(lon, lat, outer)) return false;
+    return !holes.some((hole) => pointInRing(lon, lat, hole));
+  });
+}
+
+function ringArea(ring: number[][]) {
+  let area = 0;
+  for (let i = 0, j = ring.length - 1; i < ring.length; j = i, i += 1) {
+    const xi = ring[i]?.[0] ?? 0;
+    const yi = ring[i]?.[1] ?? 0;
+    const xj = ring[j]?.[0] ?? 0;
+    const yj = ring[j]?.[1] ?? 0;
+    area += xj * yi - xi * yj;
+  }
+  return Math.abs(area / 2);
+}
+
+function corridorArea(zone: CorridorFeature) {
+  return corridorRings(zone.geometry).reduce((sum, ring) => sum + ringArea(ring), 0);
+}
+
 function zoneScore(
   zone: CorridorFeature,
   cells: LocationEvidence[],
@@ -138,6 +192,13 @@ function zoneScore(
 }
 
 function zoneCenter(zone: CorridorFeature, cells: LocationEvidence[]) {
+  if (
+    typeof zone.properties.labelLon === "number" &&
+    typeof zone.properties.labelLat === "number"
+  ) {
+    return [zone.properties.labelLon, zone.properties.labelLat] as [number, number];
+  }
+
   const members = zone.properties.memberCellIds
     .map((cellId) => cells.find((cell) => cell.cellId === cellId))
     .filter((cell): cell is LocationEvidence => Boolean(cell));
@@ -327,7 +388,9 @@ export default function VWorldLocalTwinMap({
   const cellEntitiesRef = useRef<any[]>([]);
   const clickCleanupRef = useRef<(() => void) | null>(null);
   const spatialLimitCleanupRef = useRef<(() => void) | null>(null);
+  const hoveredZoneCellIdRef = useRef<string | null>(null);
   const initialSelectionRef = useRef(true);
+  const [hoveredZoneCellId, setHoveredZoneCellId] = useState<string | null>(null);
   const [ready, setReady] = useState(false);
   const [buildingsReady, setBuildingsReady] = useState(false);
   const [corridors, setCorridors] = useState<CorridorFeature[]>([]);
@@ -470,26 +533,80 @@ export default function VWorldLocalTwinMap({
 
         const handler = viewer.screenSpaceEventHandler;
         const clickType = Cesium.ScreenSpaceEventType.LEFT_CLICK;
+        const moveType = Cesium.ScreenSpaceEventType.MOUSE_MOVE;
         const originalClick = handler?.getInputAction?.(clickType);
-        const callback = (movement: any) => {
-          const picked = viewer.scene?.pick?.(movement.position);
-          const entityId = picked?.id?.id;
-          if (typeof entityId === "string" && entityId.startsWith("localtwin-cell-")) {
-            onSelect(entityId.slice("localtwin-cell-".length));
-          } else if (typeof entityId === "string" && entityId.startsWith("localtwin-zone-")) {
-            const primaryCellId = entityId
-              .slice("localtwin-zone-".length)
-              .split("::")[0];
-            if (primaryCellId) onSelect(primaryCellId);
-          } else if (typeof originalClick === "function") {
-            originalClick(movement);
+        const originalMove = handler?.getInputAction?.(moveType);
+
+        const pickIdsAt = (position: any): string[] => {
+          const drilled = viewer.scene?.drillPick?.(position, 16) ?? [];
+          return drilled
+            .map((picked: any) => picked?.id?.id)
+            .filter((entityId: unknown): entityId is string => typeof entityId === "string");
+        };
+
+        const zoneCellIdFromIds = (entityIds: string[]) => {
+          const entityId = entityIds.find((id) => id.startsWith("localtwin-zone-"));
+          if (!entityId) return null;
+          return entityId.slice("localtwin-zone-".length).split("::")[0] || null;
+        };
+
+        const zoneCellIdAtPosition = (position: any) => {
+          const ellipsoid = viewer.scene?.globe?.ellipsoid;
+          const cartesian = viewer.camera?.pickEllipsoid?.(position, ellipsoid);
+          if (!cartesian) return null;
+
+          const cartographic = Cesium.Cartographic.fromCartesian(cartesian);
+          const lon = Cesium.Math.toDegrees(cartographic.longitude);
+          const lat = Cesium.Math.toDegrees(cartographic.latitude);
+
+          const matching = (corridorData.features ?? [])
+            .filter((zone) => corridorContains(zone, lon, lat))
+            .sort((left, right) => corridorArea(left) - corridorArea(right));
+
+          const zone = matching[0];
+          return zone?.properties.memberCellIds?.[0] ?? null;
+        };
+
+        const updateHoveredZone = (cellId: string | null) => {
+          if (hoveredZoneCellIdRef.current === cellId) return;
+          hoveredZoneCellIdRef.current = cellId;
+          setHoveredZoneCellId(cellId);
+          if (containerRef.current) {
+            containerRef.current.style.cursor = cellId ? "pointer" : "";
           }
         };
+
+        const callback = (movement: any) => {
+          const entityIds = pickIdsAt(movement.position);
+          const cellEntityId = entityIds.find((id) => id.startsWith("localtwin-cell-"));
+          if (cellEntityId) {
+            onSelect(cellEntityId.slice("localtwin-cell-".length));
+            return;
+          }
+
+          const primaryCellId =
+            zoneCellIdFromIds(entityIds) ?? zoneCellIdAtPosition(movement.position);
+          if (primaryCellId) onSelect(primaryCellId);
+          else if (typeof originalClick === "function") originalClick(movement);
+        };
+
+        const handleMouseMove = (movement: any) => {
+          const entityIds = pickIdsAt(movement.endPosition);
+          updateHoveredZone(
+            zoneCellIdFromIds(entityIds) ?? zoneCellIdAtPosition(movement.endPosition),
+          );
+          if (typeof originalMove === "function") originalMove(movement);
+        };
+
         handler?.setInputAction?.(callback, clickType);
+        handler?.setInputAction?.(handleMouseMove, moveType);
         clickCleanupRef.current = () => {
           if (!handler) return;
+          updateHoveredZone(null);
           if (typeof originalClick === "function") handler.setInputAction(originalClick, clickType);
           else handler.removeInputAction(clickType);
+          if (typeof originalMove === "function") handler.setInputAction(originalMove, moveType);
+          else handler.removeInputAction(moveType);
         };
 
         setReady(true);
@@ -535,9 +652,13 @@ export default function VWorldLocalTwinMap({
 
       const selected = memberCells.some((cell) => cell.cellId === selectedCellId);
       const score = zoneScore(zone, cells, activeLayer);
-      const fill = scoreColor(Cesium, score, selected ? 0.30 : 0.17);
-      const border = scoreColor(Cesium, score, selected ? 1 : 0.82);
       const primaryCellId = memberCells[0].cellId;
+      const hovered = hoveredZoneCellId === primaryCellId;
+      const hoverActive = hoveredZoneCellId !== null;
+      const fillAlpha = hovered ? 0.34 : selected ? 0.24 : hoverActive ? 0.035 : 0.11;
+      const borderAlpha = hovered ? 1 : selected ? 0.92 : hoverActive ? 0.20 : 0.68;
+      const fill = scoreColor(Cesium, score, fillAlpha);
+      const border = scoreColor(Cesium, score, borderAlpha);
 
       corridorRings(zone.geometry).forEach((ring, ringIndex) => {
         if (!ring?.length) return;
@@ -560,8 +681,15 @@ export default function VWorldLocalTwinMap({
           },
           polyline: {
             positions,
-            width: selected ? 5 : 3,
-            material: border,
+            width: hovered ? 7 : selected ? 4.5 : hoverActive ? 1.25 : 2.5,
+            material:
+              hovered && Cesium.PolylineGlowMaterialProperty
+                ? new Cesium.PolylineGlowMaterialProperty({
+                    glowPower: 0.22,
+                    taperPower: 0.45,
+                    color: border,
+                  })
+                : border,
             clampToGround: true,
           },
         });
@@ -570,19 +698,26 @@ export default function VWorldLocalTwinMap({
 
       const [zoneLon, zoneLat] = zoneCenter(zone, cells);
       const zoneLabel = viewer.entities.add({
+        id: `localtwin-zone-${primaryCellId}::label`,
         position: Cesium.Cartesian3.fromDegrees(zoneLon, zoneLat),
         label: {
-          text: `${zone.properties.label}\n${score === null ? "데이터 부족" : Math.round(score) + " / 100"}`,
-          font: selected ? "bold 16px sans-serif" : "bold 13px sans-serif",
-          fillColor: Cesium.Color.WHITE,
+          text: hovered || selected
+            ? `${zone.properties.label}\n${score === null ? "데이터 부족" : Math.round(score) + " / 100"}`
+            : zone.properties.label,
+          font: hovered
+            ? "bold 16px sans-serif"
+            : selected
+              ? "bold 15px sans-serif"
+              : "bold 12px sans-serif",
+          fillColor: Cesium.Color.WHITE.withAlpha(hoverActive && !hovered && !selected ? 0.42 : 1),
           outlineColor: Cesium.Color.fromCssColorString("#071018"),
-          outlineWidth: 3,
+          outlineWidth: hovered || selected ? 3 : 2,
           style: Cesium.LabelStyle.FILL_AND_OUTLINE,
-          showBackground: true,
+          showBackground: hovered || selected,
           backgroundColor: Cesium.Color.fromCssColorString("#071018").withAlpha(
-            selected ? 0.88 : 0.70,
+            hovered ? 0.94 : 0.86,
           ),
-          backgroundPadding: new Cesium.Cartesian2(8, 6),
+          backgroundPadding: new Cesium.Cartesian2(9, 7),
           heightReference: Cesium.HeightReference?.CLAMP_TO_GROUND,
           disableDepthTestDistance: Number.POSITIVE_INFINITY,
           distanceDisplayCondition: new Cesium.DistanceDisplayCondition(0, 6500),
@@ -608,25 +743,21 @@ export default function VWorldLocalTwinMap({
           heightReference: Cesium.HeightReference?.CLAMP_TO_GROUND,
           disableDepthTestDistance: Number.POSITIVE_INFINITY,
         },
-        label: selected
-          ? {
-              text: cell.label,
-              font: "11px sans-serif",
-              fillColor: Cesium.Color.WHITE,
-              outlineColor: Cesium.Color.fromCssColorString("#071018"),
-              outlineWidth: 3,
-              style: Cesium.LabelStyle.FILL_AND_OUTLINE,
-              pixelOffset: new Cesium.Cartesian2(0, -18),
-              heightReference: Cesium.HeightReference?.CLAMP_TO_GROUND,
-              disableDepthTestDistance: Number.POSITIVE_INFINITY,
-            }
-          : undefined,
+        label: undefined,
       });
       cellEntitiesRef.current.push(point);
     }
 
     viewer.scene?.requestRender?.();
-  }, [activeLayer, cells, clearEntities, corridors, ready, selectedCellId]);
+  }, [
+    activeLayer,
+    cells,
+    clearEntities,
+    corridors,
+    hoveredZoneCellId,
+    ready,
+    selectedCellId,
+  ]);
 
   useEffect(() => {
     if (!ready) return;
@@ -695,6 +826,7 @@ export default function VWorldLocalTwinMap({
       data-map-engine="vworld"
       data-buildings={buildingsReady ? "facility_build" : "unavailable"}
       data-spatial-limited="daegu-central"
+      data-hovered-zone={hoveredZoneCellId ?? ""}
     >
       <div ref={containerRef} id={containerId} className="absolute inset-0 h-full w-full" />
       {!ready ? (
@@ -708,7 +840,7 @@ export default function VWorldLocalTwinMap({
           {LAYER_LABELS[activeLayer]} 시각화 · 진한 색일수록 신호 높음
         </div>
         <div>
-          상권권역 = 실제 도로·시장 기반 분석영역 · 공식 상권 경계 아님 · 대구 밖 지도 제한 ·{" "}
+          권역에 마우스를 올리면 강조되고 클릭하면 후보가 선택됩니다 · 실제 도로·시장 기반 분석영역 · 공식 상권 경계 아님 ·{" "}
           <a
             href="https://www.openstreetmap.org/copyright"
             target="_blank"

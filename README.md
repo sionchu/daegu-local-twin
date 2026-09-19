@@ -3,7 +3,7 @@
 **대구 청년창업을 위한 3D 상권·자금 디지털트윈**
 
 LocalTwin Daegu는 단순히 “사람이 많은 곳”을 추천하는 상권분석기가 아니라,
-대구의 이동수요·Buzz·임대부담·도시재생 신호와 실제 창업비용을 함께 계산해
+대구의 이동수요·검색관심·임대부담·도시재생 신호와 실제 창업비용을 함께 계산해
 **내 조건으로 버틸 수 있는 입지**를 비교하는 2026 AI Blockchain Challenge in
 Daegu 프로토타입입니다.
 
@@ -37,7 +37,7 @@ actual deposit + rent + business assumptions
     ↓
 BEP · customers/day · required capture rate
     ↓
-12-month cash runway · payback · Funding Gap
+12-month cash runway · payback · funding gap
     ↓
 official support / guarantee / finance review candidates
 ```
@@ -131,7 +131,7 @@ python -m unittest discover -s scripts/ingest -p 'test_*.py'
 python -m compileall -q scripts/ingest vision
 ```
 
-GitHub Actions also starts the production Next.js build in Chromium and verifies the critical evidence path: dashboard load, spatial-map contract, deferred chart loading, time slider, candidate finance recalculation, and funding inputs. CI has no VWorld key, so this path deliberately exercises the MapLibre fallback; production VWorld is checked separately in deployment QA. Failed browser runs retain screenshots, trace, video, and the HTML report as a short-lived Actions artifact.
+GitHub Actions also starts the production Next.js build in Chromium and verifies the critical evidence path: dashboard load, spatial-map contract, responsive map/review-panel layout, deferred chart loading, candidate finance recalculation, and funding inputs. CI has no VWorld key, so this path deliberately exercises the MapLibre fallback; production VWorld is checked separately in deployment QA. Failed browser runs retain screenshots, trace, video, and the HTML report as a short-lived Actions artifact.
 
 ## Optional vision pipeline
 
@@ -160,6 +160,8 @@ wholesale:
 - recent Next.js + MapLibre starter/toolkit patterns
 
 See [`THIRD_PARTY.md`](./THIRD_PARTY.md) for license and attribution notes.
+
+Commercial-area influence factors, anchor facilities, commuting profiles, ontology, and Graph-RAG boundaries are canonicalized in [`docs/COMMERCIAL_CONTEXT_MODEL.md`](./docs/COMMERCIAL_CONTEXT_MODEL.md).
 
 ## Prototype notice
 

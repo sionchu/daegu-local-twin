@@ -8,6 +8,8 @@ LocalTwin은 AI 대시보드가 아니라 **상권 검토 데스크**로 보인�
 화면은 지도와 검토표의 실무 도구처럼 차분해야 하며, 반복적인 카드·과한 그라데이션·
 AI 등급 연출은 사용하지 않는다.
 
+상권 영향요인·앵커시설·통근/생활권 프로필·온톨로지·Graph-RAG의 계산 및 증거 경계는 `docs/COMMERCIAL_CONTEXT_MODEL.md`를 따른다.
+
 ## Interface rules
 
 - Maximum three primary views: **상권지도, 후보비교, 자금계획**.
@@ -22,6 +24,9 @@ AI 등급 연출은 사용하지 않는다.
   road/market geometry. It is explicitly labelled as a model corridor, not an official
   commercial-district boundary.
 - Exact candidate cells remain secondary selectable points inside those corridors.
+- Corridor labels use representative points inside their actual polygon, not averages of candidate points.
+- Hovering a corridor strengthens its fill/outline/label, fades competing corridors, and changes the cursor to make clickability explicit.
+- If model corridors overlap, the smallest containing corridor wins the hover/click hit test.
 - Persistent corridor labels, transit anchors, official administrative boundaries, and
   VWorld buildings must make the geography legible at a glance.
 - The MapLibre/deck.gl path is a lazy reliability fallback, not the primary visual layer.

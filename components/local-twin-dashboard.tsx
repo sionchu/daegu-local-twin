@@ -656,7 +656,7 @@ export default function LocalTwinDashboard() {
   return (
     <div className="min-h-screen bg-[color:var(--background)] text-[color:var(--foreground)]">
       <header className="sticky top-0 z-50 border-b border-white/8 bg-[color:var(--background)]/88 backdrop-blur-xl">
-        <div className="mx-auto flex max-w-[1680px] items-center gap-4 px-4 py-3 lg:px-6">
+        <div className="mx-auto flex max-w-[1680px] flex-col items-stretch gap-3 px-5 py-3 md:flex-row md:items-center md:gap-6 lg:px-8">
           <button
             className="group shrink-0 text-left"
             onClick={() => setView("map")}
@@ -675,7 +675,7 @@ export default function LocalTwinDashboard() {
             </div>
           </button>
 
-          <nav className="ml-auto flex min-w-0 items-center gap-4 sm:gap-6">
+          <nav className="localtwin-no-scrollbar flex min-w-0 w-full items-center gap-5 overflow-x-auto border-t border-white/6 pt-2 md:ml-auto md:w-auto md:justify-end md:gap-7 md:border-t-0 md:pt-0">
             {(Object.keys(viewMeta) as View[]).map((item) => (
               <button
                 key={item}
@@ -695,7 +695,7 @@ export default function LocalTwinDashboard() {
         </div>
       </header>
 
-      <main className="mx-auto max-w-[1680px] space-y-5 px-4 py-5 lg:px-6">
+      <main className="mx-auto max-w-[1680px] space-y-6 px-4 py-6 sm:px-5 lg:px-8">
         {dataError ? (
           <div className="rounded-xl border border-rose-300/20 bg-rose-300/10 px-4 py-3 text-sm text-rose-100">
             {dataError}
@@ -706,21 +706,21 @@ export default function LocalTwinDashboard() {
           <div className={view === "map" ? "contents" : "hidden"}>
             <section className="grid min-w-0 gap-5 lg:grid-cols-[minmax(0,1fr)_350px] xl:grid-cols-[minmax(0,1fr)_370px]">
               <Card className="min-w-0 overflow-hidden">
-                <CardHeader className="gap-3 border-b border-white/8 pb-3">
+                <CardHeader className="gap-5 border-b border-white/8 px-5 pb-4 pt-5 sm:px-6">
                   <div>
-                    <div className="mb-1.5 flex items-center gap-2 text-[10px] font-semibold tracking-[0.08em] text-emerald-300">
+                    <div className="mb-2 flex items-center gap-2 text-[10px] font-semibold tracking-[0.08em] text-emerald-300">
                       <MapPin className="h-3.5 w-3.5" />
                       대구 중앙도심 · 상권분석 지도
                     </div>
-                    <h1 className="text-2xl font-semibold tracking-[-0.035em] text-white">
+                    <h1 className="text-[28px] font-semibold leading-[1.18] tracking-[-0.035em] text-white">
                       상권 입지 검토
                     </h1>
-                    <p className="mt-1 text-xs leading-5 text-slate-500">
+                    <p className="mt-2 max-w-3xl text-xs leading-5 text-slate-500">
                       교통·수요·임대·도시재생 여건을 실제 도시 공간에서 함께 비교합니다.
                     </p>
                   </div>
 
-                  <div className="localtwin-no-scrollbar flex gap-1.5 overflow-x-auto pb-1">
+                  <div className="localtwin-no-scrollbar flex gap-2 overflow-x-auto pt-1 pb-1">
                     {(Object.keys(layerLabels) as MapLayer[]).map((layer) => (
                       <Button
                         key={layer}
@@ -735,7 +735,7 @@ export default function LocalTwinDashboard() {
                   </div>
                 </CardHeader>
 
-                <CardContent className="p-2.5 md:p-3">
+                <CardContent className="p-3 sm:p-4">
                   <div className="h-[58vh] min-h-[520px] max-h-[760px] lg:h-[calc(100vh-210px)] lg:min-h-[560px]">
                     <LocalTwinMap
                       cells={state.cells}
