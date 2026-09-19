@@ -1,10 +1,197 @@
 {
-  "mode": "demo",
+  "mode": "public-snapshot",
+  "provider": "NAVER DataLab",
+  "accessMode": "public-web-ui",
+  "sourceMode": "public-web-ui",
+  "proxyType": "search-relative-interest",
   "relativeIndex": true,
-  "records": [
-    {"area":"동성로","recentIndex":86,"previousIndex":72,"momentum":0.19,"sourceMode":"cached-demo"},
-    {"area":"교동","recentIndex":78,"previousIndex":60,"momentum":0.31,"sourceMode":"cached-demo"},
-    {"area":"북성로","recentIndex":73,"previousIndex":57,"momentum":0.28,"sourceMode":"cached-demo"}
+  "sourceUrl": "https://datalab.naver.com/",
+  "resultUrl": "https://datalab.naver.com/keyword/trendResult.naver?hashKey=N_71af73f12439d797b37c8c1e0f72b8c1",
+  "sourceSha256": "13295AB9BC4021E16C154D7CE1B07C1D880A69C253532CBF75F92A566FAC2E65",
+  "retrievedAt": "2026-09-19T08:56:30Z",
+  "sourceVersion": "2026-06 ~ 2026-09 week export",
+  "sourceDate": "2026-09-07",
+  "query": {
+    "topics": [
+      "동성로",
+      "교동",
+      "북성로"
+    ],
+    "periodLabel": "2026-06 ~ 2026-09",
+    "periodStart": "2026-06-01",
+    "periodEnd": "2026-09-07",
+    "timeUnit": "week",
+    "timeUnitLabel": "주간",
+    "scope": {
+      "주제": "통검",
+      "범위": "합계",
+      "성별": "전체(여성,남성)",
+      "연령대": "전체"
+    }
+  },
+  "series": [
+    {
+      "date": "2026-06-01",
+      "values": {
+        "동성로": 58.39603,
+        "교동": 42.90695,
+        "북성로": 6.01945
+      }
+    },
+    {
+      "date": "2026-06-08",
+      "values": {
+        "동성로": 49.58708,
+        "교동": 37.67663,
+        "북성로": 5.23031
+      }
+    },
+    {
+      "date": "2026-06-15",
+      "values": {
+        "동성로": 48.76124,
+        "교동": 38.06202,
+        "북성로": 5.37713
+      }
+    },
+    {
+      "date": "2026-06-22",
+      "values": {
+        "동성로": 56.2305,
+        "교동": 39.2549,
+        "북성로": 5.83593
+      }
+    },
+    {
+      "date": "2026-06-29",
+      "values": {
+        "동성로": 60.61662,
+        "교동": 40.04404,
+        "북성로": 5.76252
+      }
+    },
+    {
+      "date": "2026-07-06",
+      "values": {
+        "동성로": 57.27656,
+        "교동": 42.20957,
+        "북성로": 4.53294
+      }
+    },
+    {
+      "date": "2026-07-13",
+      "values": {
+        "동성로": 59.68067,
+        "교동": 42.06276,
+        "북성로": 6.0378
+      }
+    },
+    {
+      "date": "2026-07-20",
+      "values": {
+        "동성로": 100.0,
+        "교동": 40.33767,
+        "북성로": 5.37713
+      }
+    },
+    {
+      "date": "2026-07-27",
+      "values": {
+        "동성로": 76.91319,
+        "교동": 41.87924,
+        "북성로": 5.46889
+      }
+    },
+    {
+      "date": "2026-08-03",
+      "values": {
+        "동성로": 67.07652,
+        "교동": 43.16388,
+        "북성로": 5.37713
+      }
+    },
+    {
+      "date": "2026-08-10",
+      "values": {
+        "동성로": 67.14993,
+        "교동": 48.81629,
+        "북성로": 6.62506
+      }
+    },
+    {
+      "date": "2026-08-17",
+      "values": {
+        "동성로": 58.24922,
+        "교동": 42.63167,
+        "북성로": 5.70746
+      }
+    },
+    {
+      "date": "2026-08-24",
+      "values": {
+        "동성로": 55.58818,
+        "교동": 39.14479,
+        "북성로": 6.23967
+      }
+    },
+    {
+      "date": "2026-08-31",
+      "values": {
+        "동성로": 54.9275,
+        "교동": 38.22719,
+        "북성로": 6.36814
+      }
+    },
+    {
+      "date": "2026-09-07",
+      "values": {
+        "동성로": 57.86382,
+        "교동": 41.14516,
+        "북성로": 7.3775
+      }
+    }
   ],
-  "limitation":"상대 검색 관심도/게시량 proxy이며 절대 검색량이 아님"
+  "records": [
+    {
+      "area": "동성로",
+      "recentIndex": 56.65718,
+      "previousIndex": 68.118,
+      "recentMean": 56.65718,
+      "previousMean": 68.118,
+      "momentum": -0.16825,
+      "sourceMode": "public-web-ui"
+    },
+    {
+      "area": "교동",
+      "recentIndex": 40.2872,
+      "previousIndex": 42.22104,
+      "recentMean": 40.2872,
+      "previousMean": 42.22104,
+      "momentum": -0.045803,
+      "sourceMode": "public-web-ui"
+    },
+    {
+      "area": "북성로",
+      "recentIndex": 6.42319,
+      "previousIndex": 5.62718,
+      "recentMean": 6.42319,
+      "previousMean": 5.62718,
+      "momentum": 0.141458,
+      "sourceMode": "public-web-ui"
+    }
+  ],
+  "calculation": {
+    "recentWindowWeeks": 4,
+    "previousWindowWeeks": 8,
+    "analysisPeriodStart": "2026-06-22",
+    "analysisPeriodEnd": "2026-09-07",
+    "formula": "momentum = previousMean > 0 ? (recentMean / previousMean) - 1 : null",
+    "means": "recentMean is the arithmetic mean of the latest 4 weekly relative-index observations; previousMean is the arithmetic mean of the preceding 8 observations"
+  },
+  "limitations": [
+    "NAVER DataLab normalizes each topic against the maximum within the queried comparison period; values are relative indices, not counts.",
+    "This is a search-interest proxy only; it does not measure business outcomes or causal relationships.",
+    "The three topics were queried together in one public comparison, and the export does not provide street-level or store-level demand.",
+    "The public UI export contains the observations returned by NAVER at retrieval time; no API credentials or private endpoints were used."
+  ]
 }

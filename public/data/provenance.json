@@ -177,17 +177,36 @@
     },
     {
       "id": "buzz",
-      "title": "Naver DataLab Search Trend / Blog Search",
-      "provider": "NAVER Developers",
-      "url": "https://developers.naver.com/docs/serviceapi/datalab/search/search.md",
-      "geographicLevel": "검색어·기간",
-      "freshness": "adapter target",
-      "fieldsUsed": [
-        "relative interest",
-        "mention velocity"
+      "title": "NAVER DataLab public Search Trend relative-interest snapshot",
+      "provider": "NAVER DataLab",
+      "url": "https://datalab.naver.com/",
+      "sourceUrl": "https://datalab.naver.com/",
+      "resultUrl": "https://datalab.naver.com/keyword/trendResult.naver?hashKey=N_71af73f12439d797b37c8c1",
+      "geographicLevel": "검색어 비교·기간",
+      "sourceVersion": "2026-06 ~ 2026-09 week export",
+      "sourceDate": "2026-09-07",
+      "retrievedAt": "2026-09-19T08:56:30Z",
+      "sourceSha256": "13295AB9BC4021E16C154D7CE1B07C1D880A69C253532CBF75F92A566FAC2E65",
+      "accessMode": "public-web-ui",
+      "queryTopics": [
+        "동성로",
+        "교동",
+        "북성로"
       ],
-      "limitations": "상대지수이며 절대 검색량·감성·매출이 아님; 공개 build에는 secret 미포함",
-      "mode": "demo"
+      "timeUnit": "week",
+      "fieldsUsed": [
+        "relative interest index series",
+        "recentMean",
+        "previousMean",
+        "momentum"
+      ],
+      "limitations": [
+        "검색어 비교기간 내 최대값을 100으로 정규화한 상대 관심도 지수이며 건수나 시장 수요의 직접 측정값이 아님",
+        "검색 관심도 외 사업성과나 인과관계를 제공하지 않음",
+        "동일 공개 비교의 검색어·기간 단위이며 거리·점포 단위 수요를 제공하지 않음",
+        "공개 UI 다운로드 snapshot이며 API credential이나 private endpoint를 사용하지 않음"
+      ],
+      "mode": "public-snapshot"
     },
     {
       "id": "spillover-model",
