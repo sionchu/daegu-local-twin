@@ -1,0 +1,4 @@
+{
+  "framework": "nextjs",
+  "installCommand": "npx --yes npm@11.6.0 install --no-package-lock --no-audit --no-fund"
+}
