@@ -16,7 +16,6 @@ The public UI is being migrated to a spatial-finance dashboard built with:
 - VWorld WebGL 3.0 as the primary Korean 3D city context
 - VWorld's Cesium viewer for LocalTwin polygons, labels, transit anchors, and camera focus
 - MapLibre GL JS 6 + deck.gl retained as a lazy fallback only
-- SunCalc for time-slider solar azimuth/altitude
 - Recharts loaded on demand for demand, rent-vs-demand, cash-runway, and funding visualizations
 - Vercel as the target hosting platform
 
@@ -30,7 +29,7 @@ VWorld 3D opportunity scene
     ↓
 official admin boundaries / analysis-cell halos / transit anchors
     ↓
-time slider / city lighting
+VWorld 3D buildings + rent-aware spatial comparison
     ↓
 candidate A/B selection
     ↓
@@ -52,7 +51,9 @@ The current central-Daegu corridor is built from reviewed official/public snapsh
 SEMAS businesses, Daegu Metro station ridership, REB commercial rent/vacancy, NAVER
 DataLab relative search interest, official urban-decline indicators, and SGIS
 administrative-dong boundaries. LocalTwin then derives cell-level mobility, rent mapping,
-regeneration context, and spillover deterministically.
+regeneration context, rent benchmarks, and spillover deterministically. Cells without
+an exact R-ONE commercial-area name use an explicitly modelled distance-decay blend of
+the exact-mapped official R-ONE benchmarks; this remains a benchmark, not a store quote.
 
 The derived cell values are `modelled`, not official store-level observations.
 `observedFootfall` is intentionally null because the public build has no measured
