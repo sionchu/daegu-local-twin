@@ -11,3 +11,19 @@ Planned refresh adapters:
 - `fetch_buzz.py` — Naver DataLab/Blog Search through a server-side or local credential
 
 The committed corridor files are intentionally marked `demo` or `snapshot`. A refresh script must preserve the source, retrieval date, geographic level, and limitations for every field it writes.
+
+## Official SEMAS business snapshot
+
+`normalize_semas_businesses.py` accepts the official SEMAS file-data ZIP or its Daegu CSV member. For a ZIP, it selects the single CSV whose `시도명` is `대구광역시`; it does not infer or generate records from other regions.
+
+The corridor filter is the exact point-in-polygon union of every `boundary` in `public/data/opportunity_cells.json`. Boundary points are included, so the filter covers the named 동성로·교동·북성로 corridor cells and the other cells currently present on the LocalTwin map. Source rows are deduplicated after filtering by `상가업소번호`, retaining the first row in source order. The normalized output keeps source major/mid/small codes and names under `sourceCategory`; `category` is the separate LocalTwin mapping. No status field is emitted unless the source provides one, and no density or same-category counts are calculated here.
+
+Example PowerShell invocation:
+
+```powershell
+python scripts/ingest/normalize_semas_businesses.py `
+  --source C:\path\to\official-semas-snapshot.zip `
+  --cells public/data/opportunity_cells.json `
+  --output public/data/businesses.json `
+  --report C:\path\to\semas-quality.json
+```
