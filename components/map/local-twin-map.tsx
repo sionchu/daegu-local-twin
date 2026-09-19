@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useRef, useState } from "react";
 import { GeoJsonLayer, ScatterplotLayer } from "@deck.gl/layers";
-import { MapboxOverlay } from "@deck.gl/mapbox";
+import { MapLibreOverlay } from "@deck.gl/maplibre";
 import { buffer, point } from "@turf/turf";
 import * as maplibregl from "maplibre-gl";
 import * as SunCalc from "suncalc";
@@ -111,7 +111,7 @@ export default function LocalTwinMap({
 }) {
   const containerRef = useRef<HTMLDivElement>(null);
   const mapRef = useRef<maplibregl.Map | null>(null);
-  const overlayRef = useRef<MapboxOverlay | null>(null);
+  const overlayRef = useRef<MapLibreOverlay | null>(null);
   const [ready, setReady] = useState(false);
   const [mapMessage, setMapMessage] = useState("3D 지도 로딩 중");
 
@@ -138,11 +138,11 @@ export default function LocalTwinMap({
 
     map.addControl(new maplibregl.NavigationControl({ visualizePitch: true }), "top-right");
 
-    const overlay = new MapboxOverlay({
+    const overlay = new MapLibreOverlay({
       interleaved: true,
       layers: [],
     });
-    map.addControl(overlay as unknown as maplibregl.IControl);
+    map.addControl(overlay);
 
     mapRef.current = map;
     overlayRef.current = overlay;

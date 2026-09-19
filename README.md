@@ -14,7 +14,7 @@ The public UI is being migrated to a spatial-finance dashboard built with:
 - Next.js 16 / React 19 / TypeScript
 - Tailwind CSS 4 + local shadcn/ui-style primitives
 - MapLibre GL JS 6
-- deck.gl overlay for extruded opportunity cells
+- deck.gl MapLibre-native overlay for extruded opportunity cells
 - Turf.js for a selected-site catchment
 - SunCalc for time-slider solar azimuth/altitude
 - Recharts for demand, rent-vs-demand, cash-runway, and funding visualizations
@@ -95,11 +95,13 @@ NEXT_PUBLIC_DEM_TILEJSON_URL=https://demotiles.maplibre.org/terrain-tiles/tiles.
 npm run typecheck
 npm test
 npm run build
+npx playwright install chromium
+npm run e2e
 python -m unittest scripts.ingest.test_refresh_daegu_transit
 python -m py_compile vision/analyze_footfall.py scripts/ingest/refresh_daegu_transit.py
 ```
 
-GitHub Actions runs the same core checks.
+GitHub Actions also starts the production Next.js build in Chromium and verifies the critical demo path: dashboard load, MapLibre initialization, time slider, candidate finance recalculation, and funding inputs. Failed browser runs retain screenshots, trace, video, and the HTML report as a short-lived Actions artifact.
 
 ## Optional vision pipeline
 

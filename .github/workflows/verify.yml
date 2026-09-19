@@ -7,7 +7,6 @@ on:
       - codex/**
   pull_request:
 
-
 jobs:
   verify:
     runs-on: ubuntu-latest
@@ -24,6 +23,20 @@ jobs:
       - run: npm run typecheck
       - run: npm test
       - run: npm run build
+      - name: Install Playwright Chromium
+        run: npx playwright install --with-deps chromium
+      - name: Run browser smoke tests
+        run: npm run e2e
       - run: python -m unittest scripts.ingest.test_refresh_daegu_transit
       - run: python -m py_compile vision/analyze_footfall.py scripts/ingest/refresh_daegu_transit.py
       - run: git diff --check
+      - name: Upload Playwright evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-evidence
+          path: |
+            playwright-report/
+            test-results/
+          if-no-files-found: ignore
+          retention-days: 14

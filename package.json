@@ -14,13 +14,14 @@
     "build": "next build",
     "start": "next start",
     "typecheck": "tsc --noEmit --pretty false",
-    "test": "vitest run",
-    "check": "npm run typecheck && npm test && npm run build"
+    "test": "vitest run src",
+    "check": "npm run typecheck && npm test && npm run build",
+    "e2e": "playwright test",
+    "e2e:headed": "playwright test --headed"
   },
   "dependencies": {
     "@deck.gl/core": "9.4.0",
     "@deck.gl/layers": "9.4.0",
-    "@deck.gl/mapbox": "9.4.0",
     "@turf/turf": "7.4.0",
     "clsx": "2.1.1",
     "lucide-react": "0.575.0",
@@ -30,7 +31,8 @@
     "react-dom": "19.2.8",
     "recharts": "3.10.1",
     "suncalc": "2.0.2",
-    "tailwind-merge": "3.5.0"
+    "tailwind-merge": "3.5.0",
+    "@deck.gl/maplibre": "9.4.0"
   },
   "devDependencies": {
     "@tailwindcss/postcss": "4.3.3",
@@ -39,7 +41,8 @@
     "@types/react-dom": "19.2.3",
     "tailwindcss": "4.3.3",
     "typescript": "5.9.3",
-    "vitest": "4.1.11"
+    "vitest": "4.1.11",
+    "@playwright/test": "1.63.0"
   },
   "packageManager": "npm@11.6.0"
 }
