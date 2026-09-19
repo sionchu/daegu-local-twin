@@ -32,11 +32,24 @@ type TransitSnapshot = {
   records: TransitRecord[];
 };
 
+type BuildingGeometry = {
+  type: "Polygon" | "MultiPolygon";
+  coordinates: number[][][] | number[][][][];
+};
+
+type BuildingFeature = {
+  properties?: { heightM?: number; source?: string };
+  geometry: BuildingGeometry;
+};
+
+type BuildingCollection = {
+  features?: BuildingFeature[];
+};
+
 type Props = {
   cells: LocationEvidence[];
   selectedCellId?: string;
   activeLayer: MapLayer;
-  selectedTime: Date;
   onSelect: (cellId: string) => void;
   onUnavailable: (reason: string) => void;
 };
@@ -93,6 +106,12 @@ function displayRings(geometry: AdminGeometry) {
   });
 }
 
+function buildingOuterRings(geometry: BuildingGeometry) {
+  return geometry.type === "Polygon"
+    ? [(geometry.coordinates as number[][][])[0]]
+    : (geometry.coordinates as number[][][][]).map((polygon) => polygon[0]);
+}
+
 function ringCenter(ring: number[][]) {
   if (!ring.length) return DAEGU_CENTER;
   const sum = ring.reduce(
@@ -106,7 +125,6 @@ export default function VWorldLocalTwinMap({
   cells,
   selectedCellId,
   activeLayer,
-  selectedTime,
   onSelect,
   onUnavailable,
 }: Props) {
@@ -171,12 +189,18 @@ export default function VWorldLocalTwinMap({
 
         const Cesium = window.Cesium;
 
-        const [adminResponse, transitResponse] = await Promise.all([
+        const [adminResponse, transitResponse, buildingsResponse] = await Promise.all([
           fetch("/data/admin_dong_boundaries.geojson"),
           fetch("/data/transit_station_locations.json"),
+          fetch(
+            `/api/buildings?lon=${DAEGU_CENTER[0]}&lat=${DAEGU_CENTER[1]}&radius=650`,
+          ).catch(() => null),
         ]);
         const admin = (await adminResponse.json()) as AdminBoundaryCollection;
         const transit = (await transitResponse.json()) as TransitSnapshot;
+        const buildings = buildingsResponse?.ok
+          ? ((await buildingsResponse.json()) as BuildingCollection)
+          : { features: [] };
 
         for (const feature of admin.features ?? []) {
           for (const ring of displayRings(feature.geometry)) {
@@ -210,6 +234,40 @@ export default function VWorldLocalTwinMap({
             });
             contextEntitiesRef.current.push(label);
           }
+        }
+
+        let buildingCount = 0;
+        viewer.entities.suspendEvents?.();
+        try {
+          for (const [featureIndex, feature] of (buildings.features ?? []).slice(0, 420).entries()) {
+            const heightM = clamp(Number(feature.properties?.heightM ?? 9), 3, 180);
+            for (const [ringIndex, ring] of buildingOuterRings(feature.geometry).entries()) {
+              if (!ring || ring.length < 4) continue;
+              const coordinates = ring.flat();
+              const building = viewer.entities.add({
+                id: `localtwin-building-${featureIndex}-${ringIndex}`,
+                name: "주변 건물",
+                polygon: {
+                  hierarchy: Cesium.Cartesian3.fromDegreesArray(coordinates),
+                  height: 0,
+                  extrudedHeight: heightM,
+                  material: Cesium.Color.fromCssColorString("#91a0ad").withAlpha(0.34),
+                  outline: false,
+                  heightReference: Cesium.HeightReference?.CLAMP_TO_GROUND,
+                  extrudedHeightReference: Cesium.HeightReference?.RELATIVE_TO_GROUND,
+                  distanceDisplayCondition: new Cesium.DistanceDisplayCondition(0, 3500),
+                },
+                properties: {
+                  kind: "context-building",
+                  source: feature.properties?.source ?? "building-footprint",
+                },
+              });
+              contextEntitiesRef.current.push(building);
+              buildingCount += 1;
+            }
+          }
+        } finally {
+          viewer.entities.resumeEvents?.();
         }
 
         for (const station of transit.records ?? []) {
@@ -261,7 +319,11 @@ export default function VWorldLocalTwinMap({
         };
 
         setReady(true);
-        setStatus("VWorld 3D · Cesium");
+        setStatus(
+          buildingCount > 0
+            ? `VWorld 3D · 주변건물 ${buildingCount.toLocaleString()}동`
+            : "VWorld 3D · Cesium",
+        );
         viewer.scene?.requestRender?.();
       } catch (error) {
         const reason = error instanceof Error ? error.message : String(error);
@@ -350,15 +412,6 @@ export default function VWorldLocalTwinMap({
   }, [activeLayer, cells, clearEntities, ready, selectedCellId]);
 
   useEffect(() => {
-    const viewer = viewerRef.current;
-    const Cesium = window.Cesium;
-    if (!ready || !viewer || !Cesium) return;
-
-    if (viewer.clock) viewer.clock.currentTime = Cesium.JulianDate.fromDate(selectedTime);
-    viewer.scene?.requestRender?.();
-  }, [ready, selectedTime]);
-
-  useEffect(() => {
     if (!ready) return;
     const timer = window.setTimeout(() => {
       const viewer = viewerRef.current;
@@ -435,7 +488,7 @@ export default function VWorldLocalTwinMap({
         {status}
       </div>
       <div className="pointer-events-none absolute bottom-3 left-3 z-10 max-w-[85%] rounded-lg border border-white/10 bg-slate-950/78 px-2.5 py-1.5 text-[10px] leading-4 text-slate-300 backdrop-blur">
-        실선 = 공식 행정동 경계 · 반투명 영역/halo = 모델 분석 셀(실제 상권 경계 아님) · 역 = 공간참조 anchor
+        실선 = 공식 행정동 경계 · 반투명 영역 = 분석 셀(실제 상권 경계 아님) · 회색 건물 = 주변 건물 footprint · 역 = 공간참조 anchor
       </div>
     </div>
   );
