@@ -7,22 +7,23 @@ test.describe("LocalTwin critical evidence path", () => {
 
     await page.goto("/");
     await expect(
-      page.getByRole("heading", { name: "창업 기회지도" }),
+      page.getByRole("heading", { name: "상권 입지 검토" }),
     ).toBeVisible();
 
-    await expect(page.getByRole("button", { name: "종합", exact: true })).toBeVisible();
+    await expect(page.getByRole("button", { name: "입지종합", exact: true })).toBeVisible();
 
     // The primary VWorld renderer and the MapLibre fallback share one spatial-map contract.
     const map = page.getByTestId("spatial-map").first();
     await expect(map).toBeVisible({ timeout: 20_000 });
     await expect.poll(async () => (await map.boundingBox())?.height ?? 0).toBeGreaterThan(400);
+    await expect(page.getByTestId("market-relation-graph")).toBeVisible();
 
     // Below-fold Recharts are intentionally deferred until the chart region approaches view.
     const deferredCharts = page.getByTestId("deferred-map-charts");
     await deferredCharts.scrollIntoViewIfNeeded();
-    await expect(page.getByText("시간대별 이동수요", { exact: true })).toBeVisible();
-    await expect(page.getByText("임대료 vs 수요", { exact: true })).toBeVisible();
-    await expect(page.getByText("12개월 Cash Runway", { exact: true })).toBeVisible();
+    await expect(page.getByText("임대여건과 수요", { exact: true })).toBeVisible();
+    await expect(page.getByText("입지종합 구성", { exact: true })).toBeVisible();
+    await expect(page.getByText("12개월 현금흐름", { exact: true })).toBeVisible();
 
     await expect(page.getByText(/태양 고도/)).toHaveCount(0);
     await expect(page.getByLabel("시간 선택")).toHaveCount(0);
@@ -30,12 +31,41 @@ test.describe("LocalTwin critical evidence path", () => {
     expect(pageErrors).toEqual([]);
   });
 
+  test("keeps the map and review panel side by side at tablet-desktop width", async ({ page }) => {
+    await page.setViewportSize({ width: 1024, height: 800 });
+    await page.goto("/");
+
+    await expect(
+      page.getByRole("heading", { name: "상권 입지 검토" }),
+    ).toBeVisible();
+
+    const map = page.getByTestId("spatial-map").first();
+    const panel = page.getByTestId("candidate-panel");
+    await expect(map).toBeVisible();
+    await expect(panel).toBeVisible();
+
+    const [mapBox, panelBox, layout] = await Promise.all([
+      map.boundingBox(),
+      panel.boundingBox(),
+      page.evaluate(() => ({
+        clientWidth: document.documentElement.clientWidth,
+        scrollWidth: document.documentElement.scrollWidth,
+      })),
+    ]);
+
+    expect(mapBox).not.toBeNull();
+    expect(panelBox).not.toBeNull();
+    expect(panelBox!.x).toBeGreaterThan(mapBox!.x + mapBox!.width - 8);
+    expect(panelBox!.y).toBeLessThan(mapBox!.y + mapBox!.height / 2);
+    expect(layout.scrollWidth).toBe(layout.clientWidth);
+  });
+
   test("recalculates candidate finance assumptions in the compare view", async ({ page }) => {
     await page.goto("/");
     await page.getByRole("button", { name: /후보비교/ }).click();
 
     await expect(
-      page.getByRole("heading", { name: "같은 업종, 다른 생존 조건." }),
+      page.getByRole("heading", { name: "같은 업종, 다른 입지 조건." }),
     ).toBeVisible();
 
     const scenarioA = page.locator('[data-testid="scenario-a"]');
@@ -48,8 +78,8 @@ test.describe("LocalTwin critical evidence path", () => {
     await expect(rentInput).toHaveValue("5200000");
 
     await expect.poll(async () => scenarioA.textContent()).not.toBe(before);
-    await expect(scenarioA.getByText("필요 포착률", { exact: true })).toBeVisible();
-    await expect(scenarioA.getByText("Funding Gap", { exact: true })).toBeVisible();
+    await expect(scenarioA.getByText("필요 수요전환율", { exact: true })).toBeVisible();
+    await expect(scenarioA.getByText("부족자금", { exact: true })).toBeVisible();
   });
 
   test("updates funding stack inputs without leaving the deterministic flow", async ({ page }) => {

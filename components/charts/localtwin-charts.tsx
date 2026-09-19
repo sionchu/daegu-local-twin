@@ -1,8 +1,6 @@
 "use client";
 
 import {
-  Area,
-  AreaChart,
   Bar,
   BarChart,
   CartesianGrid,
@@ -35,29 +33,6 @@ const tooltipStyle = {
   fontSize: 12,
 };
 
-const demandWeights = [
-  [6, 0.18],
-  [7, 0.32],
-  [8, 0.48],
-  [9, 0.58],
-  [10, 0.64],
-  [11, 0.72],
-  [12, 0.84],
-  [13, 0.78],
-  [14, 0.75],
-  [15, 0.81],
-  [16, 0.9],
-  [17, 1.0],
-  [18, 1.12],
-  [19, 1.08],
-  [20, 0.96],
-  [21, 0.83],
-  [22, 0.62],
-  [23, 0.38],
-] as const;
-
-const weightSum = demandWeights.reduce((sum, [, weight]) => sum + weight, 0);
-
 function formatCompact(value: number) {
   if (Math.abs(value) >= 10_000) return (value / 10_000).toFixed(1) + "만";
   if (Math.abs(value) >= 1_000) return (value / 1_000).toFixed(1) + "천";
@@ -66,55 +41,6 @@ function formatCompact(value: number) {
 
 function formatMan(value: number) {
   return Math.round(value / 10_000).toLocaleString("ko-KR") + "만원";
-}
-
-export function DemandTimelineChart({
-  dailyDemand,
-}: {
-  dailyDemand: number | null;
-}) {
-  const data = demandWeights.map(([hour, weight]) => ({
-    hour: String(hour).padStart(2, "0") + ":00",
-    demand: dailyDemand ? Math.round(dailyDemand * (weight / weightSum)) : 0,
-  }));
-  return (
-    <ChartContainer>
-      <AreaChart data={data} margin={{ top: 10, right: 12, left: -18, bottom: 0 }}>
-        <defs>
-          <linearGradient id="demandFill" x1="0" y1="0" x2="0" y2="1">
-            <stop offset="0%" stopColor="var(--chart-1)" stopOpacity={0.45} />
-            <stop offset="100%" stopColor="var(--chart-1)" stopOpacity={0.02} />
-          </linearGradient>
-        </defs>
-        <CartesianGrid stroke="rgba(255,255,255,0.06)" vertical={false} />
-        <XAxis
-          dataKey="hour"
-          tick={{ fill: "#7f93a4", fontSize: 10 }}
-          axisLine={false}
-          tickLine={false}
-          interval={2}
-        />
-        <YAxis
-          tickFormatter={formatCompact}
-          tick={{ fill: "#7f93a4", fontSize: 10 }}
-          axisLine={false}
-          tickLine={false}
-        />
-        <Tooltip
-          contentStyle={tooltipStyle}
-          formatter={(value) => [formatCompact(Number(value)) + " 수요 proxy", "시간대 수요"]}
-        />
-        <Area
-          type="monotone"
-          dataKey="demand"
-          stroke="var(--chart-1)"
-          strokeWidth={2}
-          fill="url(#demandFill)"
-          isAnimationActive={false}
-        />
-      </AreaChart>
-    </ChartContainer>
-  );
 }
 
 export function RentDemandScatterChart({
@@ -144,7 +70,7 @@ export function RentDemandScatterChart({
         <XAxis
           type="number"
           dataKey="rent"
-          name="임대료 benchmark"
+          name="참고 임대료"
           unit="천원/㎡"
           tick={{ fill: "#7f93a4", fontSize: 10 }}
           axisLine={false}
@@ -153,7 +79,7 @@ export function RentDemandScatterChart({
         <YAxis
           type="number"
           dataKey="demand"
-          name="Demand"
+          name="수요여건"
           domain={[0, 100]}
           tick={{ fill: "#7f93a4", fontSize: 10 }}
           axisLine={false}
@@ -163,7 +89,7 @@ export function RentDemandScatterChart({
           cursor={{ strokeDasharray: "3 3" }}
           contentStyle={tooltipStyle}
           formatter={(value, name) => [
-            name === "임대료 benchmark" ? Number(value).toLocaleString("ko-KR") + "천원/㎡" : value,
+            name === "참고 임대료" ? Number(value).toLocaleString("ko-KR") + "천원/㎡" : value,
             name,
           ]}
           labelFormatter={(_, payload) => payload?.[0]?.payload?.name ?? ""}
@@ -252,10 +178,10 @@ export function OpportunityCompositionChart({
 }) {
   const data = [
     { metric: "수요", value: Math.round(scores.demandScore ?? 0) },
-    { metric: "임대여력", value: Math.round(scores.rentRelief ?? 0) },
-    { metric: "쇠퇴·재생", value: Math.round(scores.regeneration ?? 0) },
-    { metric: "Buzz", value: Math.round(scores.buzz ?? 0) },
-    { metric: "파생수요", value: Math.round(scores.spillover ?? 0) },
+    { metric: "임대여건", value: Math.round(scores.rentRelief ?? 0) },
+    { metric: "도시재생", value: Math.round(scores.regeneration ?? 0) },
+    { metric: "검색관심", value: Math.round(scores.buzz ?? 0) },
+    { metric: "주변집객", value: Math.round(scores.spillover ?? 0) },
   ];
 
   return (
@@ -300,7 +226,7 @@ export function FinanceBridgeChart({
     { label: "창업 필요", value: analysis.startupCapitalNeedKrw },
     { label: "초기 지출", value: analysis.upfrontUsesKrw },
     { label: "운전자금", value: analysis.openingWorkingCapitalKrw },
-    { label: "Funding Gap", value: analysis.fundingGapKrw },
+    { label: "부족자금", value: analysis.fundingGapKrw },
   ];
 
   return (

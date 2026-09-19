@@ -7,6 +7,24 @@ import { computeOpportunityScores } from "@/src/model";
 import type { LocationEvidence, MapLayer } from "@/src/types";
 
 const DAEGU_CENTER: [number, number] = [128.5967, 35.8714];
+
+const DAEGU_RENDER_BOUNDS = {
+  west: 128.3511837,
+  south: 35.6067585,
+  east: 128.8994336,
+  north: 36.3271116,
+};
+
+const CENTRAL_SERVICE_BOUNDS = {
+  west: 128.565,
+  south: 35.852,
+  east: 128.615,
+  north: 35.892,
+};
+
+const MIN_CAMERA_HEIGHT_M = 220;
+const MAX_CAMERA_HEIGHT_M = 16_000;
+
 type AdminGeometry = {
   type: "Polygon" | "MultiPolygon";
   coordinates: number[][][] | number[][][][];
@@ -90,13 +108,13 @@ function scoreColor(Cesium: any, score: number | null, alpha: number) {
 }
 
 const LAYER_LABELS: Record<MapLayer, string> = {
-  opportunity: "종합 Opportunity",
-  demand: "상권 수요",
-  transit: "교통 접근",
-  buzz: "관심도",
-  spillover: "파생수요",
-  regeneration: "재생맥락",
-  rent: "임대여력",
+  opportunity: "입지종합",
+  demand: "수요여건",
+  transit: "교통접근",
+  buzz: "검색관심",
+  spillover: "주변집객",
+  regeneration: "도시재생",
+  rent: "임대여건",
 };
 
 function corridorRings(geometry: CorridorGeometry) {
@@ -128,12 +146,6 @@ function zoneCenter(zone: CorridorFeature, cells: LocationEvidence[]) {
     members.reduce((sum, cell) => sum + cell.center.lon, 0) / members.length,
     members.reduce((sum, cell) => sum + cell.center.lat, 0) / members.length,
   ] as [number, number];
-}
-
-function closedDegrees(cell: LocationEvidence) {
-  const points = cell.boundary.map((point) => [point.lon, point.lat]);
-  if (points.length) points.push(points[0]);
-  return points.flat();
 }
 
 function displayRings(geometry: AdminGeometry) {
@@ -173,6 +185,134 @@ function ringCenter(ring: number[][]) {
   return [sum[0] / ring.length, sum[1] / ring.length] as [number, number];
 }
 
+function configureSpatialLimits(viewer: any, Cesium: any) {
+  const globe = viewer.scene?.globe;
+  const controller = viewer.scene?.screenSpaceCameraController;
+  const camera = viewer.camera;
+
+  if (globe?.cartographicLimitRectangle !== undefined) {
+    globe.cartographicLimitRectangle = Cesium.Rectangle.fromDegrees(
+      DAEGU_RENDER_BOUNDS.west,
+      DAEGU_RENDER_BOUNDS.south,
+      DAEGU_RENDER_BOUNDS.east,
+      DAEGU_RENDER_BOUNDS.north,
+    );
+  }
+
+  if (controller) {
+    controller.minimumZoomDistance = MIN_CAMERA_HEIGHT_M;
+    controller.maximumZoomDistance = MAX_CAMERA_HEIGHT_M;
+  }
+
+  if (!camera?.positionCartographic) return () => undefined;
+
+  camera.percentageChanged = 0.025;
+  let adjusting = false;
+  const clampCamera = () => {
+    if (adjusting || !camera.positionCartographic) return;
+    const cartographic = camera.positionCartographic;
+    const lon = Cesium.Math.toDegrees(cartographic.longitude);
+    const lat = Cesium.Math.toDegrees(cartographic.latitude);
+    const height = cartographic.height;
+    const nextLon = clamp(
+      lon,
+      CENTRAL_SERVICE_BOUNDS.west,
+      CENTRAL_SERVICE_BOUNDS.east,
+    );
+    const nextLat = clamp(
+      lat,
+      CENTRAL_SERVICE_BOUNDS.south,
+      CENTRAL_SERVICE_BOUNDS.north,
+    );
+    const nextHeight = clamp(
+      height,
+      MIN_CAMERA_HEIGHT_M,
+      MAX_CAMERA_HEIGHT_M,
+    );
+
+    if (
+      Math.abs(nextLon - lon) < 0.00001 &&
+      Math.abs(nextLat - lat) < 0.00001 &&
+      Math.abs(nextHeight - height) < 1
+    ) {
+      return;
+    }
+
+    adjusting = true;
+    camera.setView({
+      destination: Cesium.Cartesian3.fromDegrees(nextLon, nextLat, nextHeight),
+      orientation: {
+        heading: camera.heading,
+        pitch: camera.pitch,
+        roll: camera.roll,
+      },
+    });
+    viewer.scene?.requestRender?.();
+    window.setTimeout(() => {
+      adjusting = false;
+    }, 0);
+  };
+
+  const removeChanged = camera.changed?.addEventListener?.(clampCamera);
+  const removeMoveEnd = camera.moveEnd?.addEventListener?.(clampCamera);
+  clampCamera();
+
+  return () => {
+    if (typeof removeChanged === "function") removeChanged();
+    if (typeof removeMoveEnd === "function") removeMoveEnd();
+  };
+}
+
+function addDaeguBoundaryMask(
+  viewer: any,
+  Cesium: any,
+  geometry: AdminGeometry | undefined,
+) {
+  if (!geometry) return [];
+  const rings = displayRings(geometry).filter((ring) => ring.length >= 3);
+  if (!rings.length) return [];
+
+  const outer = [
+    [DAEGU_RENDER_BOUNDS.west, DAEGU_RENDER_BOUNDS.south],
+    [DAEGU_RENDER_BOUNDS.east, DAEGU_RENDER_BOUNDS.south],
+    [DAEGU_RENDER_BOUNDS.east, DAEGU_RENDER_BOUNDS.north],
+    [DAEGU_RENDER_BOUNDS.west, DAEGU_RENDER_BOUNDS.north],
+    [DAEGU_RENDER_BOUNDS.west, DAEGU_RENDER_BOUNDS.south],
+  ];
+  const hierarchy = new Cesium.PolygonHierarchy(
+    Cesium.Cartesian3.fromDegreesArray(outer.flat()),
+    rings.map(
+      (ring) =>
+        new Cesium.PolygonHierarchy(
+          Cesium.Cartesian3.fromDegreesArray(ring.flat()),
+        ),
+    ),
+  );
+
+  const mask = viewer.entities.add({
+    name: "대구 행정경계 외곽 마스크",
+    polygon: {
+      hierarchy,
+      material: Cesium.Color.fromCssColorString("#03070b").withAlpha(0.62),
+      heightReference: Cesium.HeightReference?.CLAMP_TO_GROUND,
+    },
+  });
+
+  const boundaries = rings.map((ring) =>
+    viewer.entities.add({
+      name: "대구광역시 경계",
+      polyline: {
+        positions: Cesium.Cartesian3.fromDegreesArray(ring.flat()),
+        width: 2,
+        material: Cesium.Color.fromCssColorString("#dbe7ea").withAlpha(0.42),
+        clampToGround: true,
+      },
+    }),
+  );
+
+  return [mask, ...boundaries];
+}
+
 export default function VWorldLocalTwinMap({
   cells,
   selectedCellId,
@@ -186,6 +326,7 @@ export default function VWorldLocalTwinMap({
   const contextEntitiesRef = useRef<any[]>([]);
   const cellEntitiesRef = useRef<any[]>([]);
   const clickCleanupRef = useRef<(() => void) | null>(null);
+  const spatialLimitCleanupRef = useRef<(() => void) | null>(null);
   const initialSelectionRef = useRef(true);
   const [ready, setReady] = useState(false);
   const [buildingsReady, setBuildingsReady] = useState(false);
@@ -242,16 +383,27 @@ export default function VWorldLocalTwinMap({
         viewer.shadows = false;
 
         const Cesium = window.Cesium;
+        spatialLimitCleanupRef.current = configureSpatialLimits(viewer, Cesium);
 
-        const [adminResponse, transitResponse, corridorResponse] = await Promise.all([
-          fetch("/data/admin_dong_boundaries.geojson"),
-          fetch("/data/transit_station_locations.json"),
-          fetch("/data/corridor_zones.geojson"),
-        ]);
+        const [adminResponse, transitResponse, corridorResponse, daeguResponse] =
+          await Promise.all([
+            fetch("/data/admin_dong_boundaries.geojson"),
+            fetch("/data/transit_station_locations.json"),
+            fetch("/data/corridor_zones.geojson"),
+            fetch("/data/daegu_boundary.geojson"),
+          ]);
         const admin = (await adminResponse.json()) as AdminBoundaryCollection;
         const transit = (await transitResponse.json()) as TransitSnapshot;
         const corridorData = (await corridorResponse.json()) as CorridorCollection;
+        const daeguBoundary = (await daeguResponse.json()) as AdminBoundaryCollection;
         setCorridors(corridorData.features ?? []);
+
+        const maskEntities = addDaeguBoundaryMask(
+          viewer,
+          Cesium,
+          daeguBoundary.features?.[0]?.geometry,
+        );
+        contextEntitiesRef.current.push(...maskEntities);
 
         for (const feature of admin.features ?? []) {
           for (const ring of displayRings(feature.geometry)) {
@@ -357,6 +509,8 @@ export default function VWorldLocalTwinMap({
     return () => {
       cancelled = true;
       clickCleanupRef.current?.();
+      spatialLimitCleanupRef.current?.();
+      spatialLimitCleanupRef.current = null;
       clearEntities(cellEntitiesRef.current);
       clearEntities(contextEntitiesRef.current);
       setBuildingsReady(false);
@@ -540,12 +694,13 @@ export default function VWorldLocalTwinMap({
       data-testid="spatial-map"
       data-map-engine="vworld"
       data-buildings={buildingsReady ? "facility_build" : "unavailable"}
+      data-spatial-limited="daegu-central"
     >
       <div ref={containerRef} id={containerId} className="absolute inset-0 h-full w-full" />
       {!ready ? (
         <div className="pointer-events-none absolute left-4 top-4 z-10 flex items-center gap-2 rounded-full border border-white/10 bg-slate-950/82 px-3 py-1.5 text-[11px] text-slate-100 backdrop-blur">
           <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-amber-300" />
-          VWorld 3D 연결 중
+          3D 지도를 불러오는 중
         </div>
       ) : null}
       <div className="absolute bottom-3 left-3 z-10 max-w-[88%] rounded-lg border border-white/10 bg-slate-950/82 px-3 py-2 text-[10px] leading-4 text-slate-300 backdrop-blur">
@@ -553,7 +708,7 @@ export default function VWorldLocalTwinMap({
           {LAYER_LABELS[activeLayer]} 시각화 · 진한 색일수록 신호 높음
         </div>
         <div>
-          상권권역 = 실제 도로/시장 geometry 기반 모델 corridor · 공식 상권 경계 아님 ·{" "}
+          상권권역 = 실제 도로·시장 기반 분석영역 · 공식 상권 경계 아님 · 대구 밖 지도 제한 ·{" "}
           <a
             href="https://www.openstreetmap.org/copyright"
             target="_blank"
