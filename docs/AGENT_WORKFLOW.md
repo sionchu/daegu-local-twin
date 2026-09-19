@@ -39,6 +39,21 @@ Owns:
 - derived cell-level calculations;
 - release/deployment verification.
 
+## Fresh-start rule
+
+Before reading an issue or creating a work branch, synchronize the checkout with the
+current remote default branch:
+
+```bash
+git fetch origin
+git switch main
+git pull --ff-only origin main
+```
+
+Only then read `docs/AGENT_WORKFLOW.md`, `docs/CRAWL_HANDOFF.md`, and the issue.
+If either canonical document is missing after that sync, stop and report the stale or
+incorrect checkout instead of continuing from an older repository state.
+
 ## Branch ownership
 
 Use one branch per issue. Prefer:
@@ -98,8 +113,8 @@ npm run typecheck
 npm test
 npm run build
 npm run e2e
-python -m unittest scripts.ingest.test_refresh_daegu_transit
-python -m py_compile vision/analyze_footfall.py scripts/ingest/refresh_daegu_transit.py
+python -m unittest discover -s scripts/ingest -p 'test_*.py'
+python -m compileall -q scripts/ingest vision
 git diff --check
 ```
 
