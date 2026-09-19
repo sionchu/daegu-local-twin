@@ -205,7 +205,7 @@ def derive_market_evidence(
             for item in cell.get("provenanceIds", [])
             if item not in {"transit", "buzz", "rent-benchmark", "spillover-model", "cell-market-evidence"}
         ]
-        provenance_ids.extend(["transit", "spillover-model", "cell-market-evidence"])
+        provenance_ids.extend(["transit", "transit-station-locations", "spillover-model", "cell-market-evidence"])
         if buzz_record is not None:
             provenance_ids.append("buzz")
         if rent_record is not None:
