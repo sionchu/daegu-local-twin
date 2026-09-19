@@ -15,7 +15,9 @@
     "start": "next start",
     "typecheck": "tsc --noEmit --pretty false",
     "test": "vitest run",
-    "check": "npm run typecheck && npm test && npm run build"
+    "check": "npm run typecheck && npm test && npm run build",
+    "e2e": "playwright test",
+    "e2e:headed": "playwright test --headed"
   },
   "dependencies": {
     "@deck.gl/core": "9.4.0",
@@ -39,7 +41,8 @@
     "@types/react-dom": "19.2.3",
     "tailwindcss": "4.3.3",
     "typescript": "5.9.3",
-    "vitest": "4.1.11"
+    "vitest": "4.1.11",
+    "@playwright/test": "1.63.0"
   },
   "packageManager": "npm@11.6.0"
 }
