@@ -1,6 +1,6 @@
 {
   "mode": "modelled",
-  "modelVersion": "cell-market-evidence-v1",
+  "modelVersion": "cell-market-evidence-v2",
   "inputs": {
     "transit": {
       "datasetId": "15002503",
@@ -97,7 +97,7 @@
     }
   },
   "transitModel": {
-    "lambdaMeters": 450,
+    "lambdaMeters": 450.0,
     "formula": "TransitDemand(cell)=sum(station averageDailyBusinessHours * exp(-haversineDistance(cell,station)/lambda))",
     "meaning": "modelled station-ridership mobility proxy; not storefront footfall"
   },
@@ -120,6 +120,33 @@
       "method": "exact shared place-name token: 서문시장"
     }
   },
+  "rentInterpolation": {
+    "lambdaMeters": 900.0,
+    "anchorPolicy": "one modelling anchor per exactly mapped official R-ONE area; anchor coordinate = centroid of exact-mapped LocalTwin cell centers",
+    "anchors": [
+      {
+        "officialArea": "동성로중심",
+        "center": {
+          "lat": 35.8715,
+          "lon": 128.6009
+        },
+        "sourceCellIds": [
+          "hex-dongseongro-01",
+          "hex-dongseongro-02"
+        ]
+      },
+      {
+        "officialArea": "서문시장/청라언덕",
+        "center": {
+          "lat": 35.8718,
+          "lon": 128.5862
+        },
+        "sourceCellIds": [
+          "hex-seomun-01"
+        ]
+      }
+    ]
+  },
   "anchorModel": {
     "weights": {
       "transit": 0.55,
@@ -129,7 +156,7 @@
     "missingMetricPolicy": "renormalize weights over available components"
   },
   "spilloverModel": {
-    "lambdaMeters": 350,
+    "lambdaMeters": 350.0,
     "formula": "sum(other anchorStrength * exp(-distance/350m)); min-max normalized",
     "meaning": "modelled neighboring-anchor context; not observed cross-visitation or causality"
   },
@@ -140,7 +167,7 @@
       "transit": {
         "mode": "modelled",
         "formula": "sum(averageDailyBusinessHours(station) * exp(-distance(cell, station)/450m))",
-        "lambdaMeters": 450,
+        "lambdaMeters": 450.0,
         "distanceMethod": "haversine",
         "value": 20038.8,
         "unit": "station-ridership demand proxy / business day",
@@ -164,7 +191,7 @@
             "averageDailyBusinessHours": 56463.6,
             "distanceMeters": 987.7,
             "decay": 0.111381,
-            "contribution": 6289
+            "contribution": 6289.0
           },
           {
             "station": "서문시장역",
@@ -211,16 +238,16 @@
         },
         "components": {
           "transit": 52.31,
-          "buzz": 100,
+          "buzz": 100.0,
           "poi": 88.57
         },
-        "availableWeightRenormalized": 1,
+        "availableWeightRenormalized": 1.0,
         "strength": 71.48
       },
       "spillover": {
         "mode": "modelled",
         "formula": "sum(other anchorStrength * exp(-distance/350m)); min-max normalized",
-        "lambdaMeters": 350,
+        "lambdaMeters": 350.0,
         "selfExcluded": true,
         "raw": 66.880322,
         "contributions": [
@@ -256,8 +283,8 @@
             "fromCellId": "hex-buksungro-02",
             "distanceMeters": 1416.7,
             "decay": 0.017461,
-            "anchorStrength": 0,
-            "contribution": 0
+            "anchorStrength": 0.0,
+            "contribution": 0.0
           },
           {
             "fromCellId": "hex-jungang-01",
@@ -274,7 +301,7 @@
             "contribution": 1.1702
           }
         ],
-        "score": 100
+        "score": 100.0
       }
     },
     {
@@ -283,7 +310,7 @@
       "transit": {
         "mode": "modelled",
         "formula": "sum(averageDailyBusinessHours(station) * exp(-distance(cell, station)/450m))",
-        "lambdaMeters": 450,
+        "lambdaMeters": 450.0,
         "distanceMethod": "haversine",
         "value": 10468.3,
         "unit": "station-ridership demand proxy / business day",
@@ -325,9 +352,9 @@
               "1310"
             ],
             "averageDailyBusinessHours": 25121.3,
-            "distanceMeters": 830,
+            "distanceMeters": 830.0,
             "decay": 0.158112,
-            "contribution": 3972
+            "contribution": 3972.0
           }
         ]
       },
@@ -354,16 +381,16 @@
         },
         "components": {
           "transit": 14.97,
-          "buzz": 100,
+          "buzz": 100.0,
           "poi": 34.48
         },
-        "availableWeightRenormalized": 1,
+        "availableWeightRenormalized": 1.0,
         "strength": 40.13
       },
       "spillover": {
         "mode": "modelled",
         "formula": "sum(other anchorStrength * exp(-distance/350m)); min-max normalized",
-        "lambdaMeters": 350,
+        "lambdaMeters": 350.0,
         "selfExcluded": true,
         "raw": 48.40053,
         "contributions": [
@@ -399,8 +426,8 @@
             "fromCellId": "hex-buksungro-02",
             "distanceMeters": 1857.3,
             "decay": 0.004959,
-            "anchorStrength": 0,
-            "contribution": 0
+            "anchorStrength": 0.0,
+            "contribution": 0.0
           },
           {
             "fromCellId": "hex-jungang-01",
@@ -426,7 +453,7 @@
       "transit": {
         "mode": "modelled",
         "formula": "sum(averageDailyBusinessHours(station) * exp(-distance(cell, station)/450m))",
-        "lambdaMeters": 450,
+        "lambdaMeters": 450.0,
         "distanceMethod": "haversine",
         "value": 20460.7,
         "unit": "station-ridership demand proxy / business day",
@@ -482,11 +509,36 @@
         "mappingMethod": "exact corridor concept by canonical cell-id prefix"
       },
       "rent": {
-        "mode": "unavailable",
+        "mode": "modelled spatial blend of official-area benchmarks",
         "officialArea": null,
-        "rentKrwPerSqm": null,
-        "vacancyPct": null,
-        "reason": "no supported exact official-area mapping; no interpolation performed"
+        "mappingMethod": "distance-decay blend across exact-mapped official R-ONE area anchors; lambda=900m",
+        "rentKrwPerSqm": 23200,
+        "vacancyPct": 11.8,
+        "sourceOfficialAreas": [
+          {
+            "officialArea": "동성로중심",
+            "sourceCellIds": [
+              "hex-dongseongro-01",
+              "hex-dongseongro-02"
+            ],
+            "distanceMeters": 549.2,
+            "rawWeight": 0.543255,
+            "rentKrwPerSqm": 26800,
+            "vacancyPct": 12.8,
+            "normalizedWeight": 0.623293
+          },
+          {
+            "officialArea": "서문시장/청라언덕",
+            "sourceCellIds": [
+              "hex-seomun-01"
+            ],
+            "distanceMeters": 1002.4,
+            "rawWeight": 0.328333,
+            "rentKrwPerSqm": 17300,
+            "vacancyPct": 10.1,
+            "normalizedWeight": 0.376706
+          }
+        ]
       },
       "anchor": {
         "mode": "modelled",
@@ -498,15 +550,15 @@
         "components": {
           "transit": 53.95,
           "buzz": 67.41,
-          "poi": 100
+          "poi": 100.0
         },
-        "availableWeightRenormalized": 1,
+        "availableWeightRenormalized": 1.0,
         "strength": 66.53
       },
       "spillover": {
         "mode": "modelled",
         "formula": "sum(other anchorStrength * exp(-distance/350m)); min-max normalized",
-        "lambdaMeters": 350,
+        "lambdaMeters": 350.0,
         "selfExcluded": true,
         "raw": 54.474455,
         "contributions": [
@@ -533,7 +585,7 @@
           },
           {
             "fromCellId": "hex-buksungro-01",
-            "distanceMeters": 744,
+            "distanceMeters": 744.0,
             "decay": 0.119351,
             "anchorStrength": 11.39,
             "contribution": 1.3594
@@ -542,12 +594,12 @@
             "fromCellId": "hex-buksungro-02",
             "distanceMeters": 1131.5,
             "decay": 0.039446,
-            "anchorStrength": 0,
-            "contribution": 0
+            "anchorStrength": 0.0,
+            "contribution": 0.0
           },
           {
             "fromCellId": "hex-jungang-01",
-            "distanceMeters": 845,
+            "distanceMeters": 845.0,
             "decay": 0.089429,
             "anchorStrength": 55.95,
             "contribution": 5.0036
@@ -569,7 +621,7 @@
       "transit": {
         "mode": "modelled",
         "formula": "sum(averageDailyBusinessHours(station) * exp(-distance(cell, station)/450m))",
-        "lambdaMeters": 450,
+        "lambdaMeters": 450.0,
         "distanceMethod": "haversine",
         "value": 32265.5,
         "unit": "station-ridership demand proxy / business day",
@@ -625,11 +677,36 @@
         "mappingMethod": "exact corridor concept by canonical cell-id prefix"
       },
       "rent": {
-        "mode": "unavailable",
+        "mode": "modelled spatial blend of official-area benchmarks",
         "officialArea": null,
-        "rentKrwPerSqm": null,
-        "vacancyPct": null,
-        "reason": "no supported exact official-area mapping; no interpolation performed"
+        "mappingMethod": "distance-decay blend across exact-mapped official R-ONE area anchors; lambda=900m",
+        "rentKrwPerSqm": 21500,
+        "vacancyPct": 11.3,
+        "sourceOfficialAreas": [
+          {
+            "officialArea": "동성로중심",
+            "sourceCellIds": [
+              "hex-dongseongro-01",
+              "hex-dongseongro-02"
+            ],
+            "distanceMeters": 767.2,
+            "rawWeight": 0.426378,
+            "rentKrwPerSqm": 26800,
+            "vacancyPct": 12.8,
+            "normalizedWeight": 0.443811
+          },
+          {
+            "officialArea": "서문시장/청라언덕",
+            "sourceCellIds": [
+              "hex-seomun-01"
+            ],
+            "distanceMeters": 564.0,
+            "rawWeight": 0.534341,
+            "rentKrwPerSqm": 17300,
+            "vacancyPct": 10.1,
+            "normalizedWeight": 0.556188
+          }
+        ]
       },
       "anchor": {
         "mode": "modelled",
@@ -639,17 +716,17 @@
           "poi": 0.2
         },
         "components": {
-          "transit": 100,
+          "transit": 100.0,
           "buzz": 67.41,
           "poi": 62.29
         },
-        "availableWeightRenormalized": 1,
+        "availableWeightRenormalized": 1.0,
         "strength": 84.31
       },
       "spillover": {
         "mode": "modelled",
         "formula": "sum(other anchorStrength * exp(-distance/350m)); min-max normalized",
-        "lambdaMeters": 350,
+        "lambdaMeters": 350.0,
         "selfExcluded": true,
         "raw": 43.281786,
         "contributions": [
@@ -685,8 +762,8 @@
             "fromCellId": "hex-buksungro-02",
             "distanceMeters": 1040.5,
             "decay": 0.051161,
-            "anchorStrength": 0,
-            "contribution": 0
+            "anchorStrength": 0.0,
+            "contribution": 0.0
           },
           {
             "fromCellId": "hex-jungang-01",
@@ -697,7 +774,7 @@
           },
           {
             "fromCellId": "hex-seomun-01",
-            "distanceMeters": 564,
+            "distanceMeters": 564.0,
             "decay": 0.199575,
             "anchorStrength": 28.56,
             "contribution": 5.6999
@@ -712,7 +789,7 @@
       "transit": {
         "mode": "modelled",
         "formula": "sum(averageDailyBusinessHours(station) * exp(-distance(cell, station)/450m))",
-        "lambdaMeters": 450,
+        "lambdaMeters": 450.0,
         "distanceMethod": "haversine",
         "value": 10979.6,
         "unit": "station-ridership demand proxy / business day",
@@ -746,7 +823,7 @@
             "averageDailyBusinessHours": 11270.1,
             "distanceMeters": 794.1,
             "decay": 0.17125,
-            "contribution": 1930
+            "contribution": 1930.0
           },
           {
             "station": "중앙로역",
@@ -768,11 +845,36 @@
         "mappingMethod": "exact corridor concept by canonical cell-id prefix"
       },
       "rent": {
-        "mode": "unavailable",
+        "mode": "modelled spatial blend of official-area benchmarks",
         "officialArea": null,
-        "rentKrwPerSqm": null,
-        "vacancyPct": null,
-        "reason": "no supported exact official-area mapping; no interpolation performed"
+        "mappingMethod": "distance-decay blend across exact-mapped official R-ONE area anchors; lambda=900m",
+        "rentKrwPerSqm": 20300,
+        "vacancyPct": 11.0,
+        "sourceOfficialAreas": [
+          {
+            "officialArea": "동성로중심",
+            "sourceCellIds": [
+              "hex-dongseongro-01",
+              "hex-dongseongro-02"
+            ],
+            "distanceMeters": 1238.2,
+            "rawWeight": 0.25264,
+            "rentKrwPerSqm": 26800,
+            "vacancyPct": 12.8,
+            "normalizedWeight": 0.31561
+          },
+          {
+            "officialArea": "서문시장/청라언덕",
+            "sourceCellIds": [
+              "hex-seomun-01"
+            ],
+            "distanceMeters": 541.6,
+            "rawWeight": 0.54784,
+            "rentKrwPerSqm": 17300,
+            "vacancyPct": 10.1,
+            "normalizedWeight": 0.684389
+          }
+        ]
       },
       "anchor": {
         "mode": "modelled",
@@ -783,16 +885,16 @@
         },
         "components": {
           "transit": 16.97,
-          "buzz": 0,
+          "buzz": 0.0,
           "poi": 10.29
         },
-        "availableWeightRenormalized": 1,
+        "availableWeightRenormalized": 1.0,
         "strength": 11.39
       },
       "spillover": {
         "mode": "modelled",
         "formula": "sum(other anchorStrength * exp(-distance/350m)); min-max normalized",
-        "lambdaMeters": 350,
+        "lambdaMeters": 350.0,
         "selfExcluded": true,
         "raw": 31.835936,
         "contributions": [
@@ -812,7 +914,7 @@
           },
           {
             "fromCellId": "hex-gyodong-01",
-            "distanceMeters": 744,
+            "distanceMeters": 744.0,
             "decay": 0.119351,
             "anchorStrength": 66.53,
             "contribution": 7.9404
@@ -826,10 +928,10 @@
           },
           {
             "fromCellId": "hex-buksungro-02",
-            "distanceMeters": 399,
+            "distanceMeters": 399.0,
             "decay": 0.319815,
-            "anchorStrength": 0,
-            "contribution": 0
+            "anchorStrength": 0.0,
+            "contribution": 0.0
           },
           {
             "fromCellId": "hex-jungang-01",
@@ -855,7 +957,7 @@
       "transit": {
         "mode": "modelled",
         "formula": "sum(averageDailyBusinessHours(station) * exp(-distance(cell, station)/450m))",
-        "lambdaMeters": 450,
+        "lambdaMeters": 450.0,
         "distanceMethod": "haversine",
         "value": 6629.5,
         "unit": "station-ridership demand proxy / business day",
@@ -911,11 +1013,36 @@
         "mappingMethod": "exact corridor concept by canonical cell-id prefix"
       },
       "rent": {
-        "mode": "unavailable",
+        "mode": "modelled spatial blend of official-area benchmarks",
         "officialArea": null,
-        "rentKrwPerSqm": null,
-        "vacancyPct": null,
-        "reason": "no supported exact official-area mapping; no interpolation performed"
+        "mappingMethod": "distance-decay blend across exact-mapped official R-ONE area anchors; lambda=900m",
+        "rentKrwPerSqm": 19800,
+        "vacancyPct": 10.8,
+        "sourceOfficialAreas": [
+          {
+            "officialArea": "동성로중심",
+            "sourceCellIds": [
+              "hex-dongseongro-01",
+              "hex-dongseongro-02"
+            ],
+            "distanceMeters": 1636.9,
+            "rawWeight": 0.16223,
+            "rentKrwPerSqm": 26800,
+            "vacancyPct": 12.8,
+            "normalizedWeight": 0.261891
+          },
+          {
+            "officialArea": "서문시장/청라언덕",
+            "sourceCellIds": [
+              "hex-seomun-01"
+            ],
+            "distanceMeters": 704.3,
+            "rawWeight": 0.457225,
+            "rentKrwPerSqm": 17300,
+            "vacancyPct": 10.1,
+            "normalizedWeight": 0.738108
+          }
+        ]
       },
       "anchor": {
         "mode": "modelled",
@@ -925,17 +1052,17 @@
           "poi": 0.2
         },
         "components": {
-          "transit": 0,
-          "buzz": 0,
-          "poi": 0
+          "transit": 0.0,
+          "buzz": 0.0,
+          "poi": 0.0
         },
-        "availableWeightRenormalized": 1,
-        "strength": 0
+        "availableWeightRenormalized": 1.0,
+        "strength": 0.0
       },
       "spillover": {
         "mode": "modelled",
         "formula": "sum(other anchorStrength * exp(-distance/350m)); min-max normalized",
-        "lambdaMeters": 350,
+        "lambdaMeters": 350.0,
         "selfExcluded": true,
         "raw": 16.207115,
         "contributions": [
@@ -969,7 +1096,7 @@
           },
           {
             "fromCellId": "hex-buksungro-01",
-            "distanceMeters": 399,
+            "distanceMeters": 399.0,
             "decay": 0.319815,
             "anchorStrength": 11.39,
             "contribution": 3.6427
@@ -989,7 +1116,7 @@
             "contribution": 3.8178
           }
         ],
-        "score": 0
+        "score": 0.0
       }
     },
     {
@@ -998,7 +1125,7 @@
       "transit": {
         "mode": "modelled",
         "formula": "sum(averageDailyBusinessHours(station) * exp(-distance(cell, station)/450m))",
-        "lambdaMeters": 450,
+        "lambdaMeters": 450.0,
         "distanceMethod": "haversine",
         "value": 20559.1,
         "unit": "station-ridership demand proxy / business day",
@@ -1054,11 +1181,36 @@
         "reason": "no exact NAVER corridor concept mapping for this cell"
       },
       "rent": {
-        "mode": "unavailable",
+        "mode": "modelled spatial blend of official-area benchmarks",
         "officialArea": null,
-        "rentKrwPerSqm": null,
-        "vacancyPct": null,
-        "reason": "no supported exact official-area mapping; no interpolation performed"
+        "mappingMethod": "distance-decay blend across exact-mapped official R-ONE area anchors; lambda=900m",
+        "rentKrwPerSqm": 24200,
+        "vacancyPct": 12.0,
+        "sourceOfficialAreas": [
+          {
+            "officialArea": "동성로중심",
+            "sourceCellIds": [
+              "hex-dongseongro-01",
+              "hex-dongseongro-02"
+            ],
+            "distanceMeters": 427.8,
+            "rawWeight": 0.621697,
+            "rentKrwPerSqm": 26800,
+            "vacancyPct": 12.8,
+            "normalizedWeight": 0.722004
+          },
+          {
+            "officialArea": "서문시장/청라언덕",
+            "sourceCellIds": [
+              "hex-seomun-01"
+            ],
+            "distanceMeters": 1286.8,
+            "rawWeight": 0.239375,
+            "rentKrwPerSqm": 17300,
+            "vacancyPct": 10.1,
+            "normalizedWeight": 0.277996
+          }
+        ]
       },
       "anchor": {
         "mode": "modelled",
@@ -1078,7 +1230,7 @@
       "spillover": {
         "mode": "modelled",
         "formula": "sum(other anchorStrength * exp(-distance/350m)); min-max normalized",
-        "lambdaMeters": 350,
+        "lambdaMeters": 350.0,
         "selfExcluded": true,
         "raw": 44.792528,
         "contributions": [
@@ -1098,7 +1250,7 @@
           },
           {
             "fromCellId": "hex-gyodong-01",
-            "distanceMeters": 845,
+            "distanceMeters": 845.0,
             "decay": 0.089429,
             "anchorStrength": 66.53,
             "contribution": 5.9497
@@ -1121,8 +1273,8 @@
             "fromCellId": "hex-buksungro-02",
             "distanceMeters": 1764.4,
             "decay": 0.006466,
-            "anchorStrength": 0,
-            "contribution": 0
+            "anchorStrength": 0.0,
+            "contribution": 0.0
           },
           {
             "fromCellId": "hex-seomun-01",
@@ -1141,7 +1293,7 @@
       "transit": {
         "mode": "modelled",
         "formula": "sum(averageDailyBusinessHours(station) * exp(-distance(cell, station)/450m))",
-        "lambdaMeters": 450,
+        "lambdaMeters": 450.0,
         "distanceMethod": "haversine",
         "value": 15475.6,
         "unit": "station-ridership demand proxy / business day",
@@ -1221,7 +1373,7 @@
       "spillover": {
         "mode": "modelled",
         "formula": "sum(other anchorStrength * exp(-distance/350m)); min-max normalized",
-        "lambdaMeters": 350,
+        "lambdaMeters": 350.0,
         "selfExcluded": true,
         "raw": 27.88906,
         "contributions": [
@@ -1248,7 +1400,7 @@
           },
           {
             "fromCellId": "hex-gyodong-02",
-            "distanceMeters": 564,
+            "distanceMeters": 564.0,
             "decay": 0.199575,
             "anchorStrength": 84.31,
             "contribution": 16.8262
@@ -1264,8 +1416,8 @@
             "fromCellId": "hex-buksungro-02",
             "distanceMeters": 704.3,
             "decay": 0.133675,
-            "anchorStrength": 0,
-            "contribution": 0
+            "anchorStrength": 0.0,
+            "contribution": 0.0
           },
           {
             "fromCellId": "hex-jungang-01",
@@ -1284,7 +1436,8 @@
     "관측된 점포 앞 보행량이 없으므로 observedFootfall은 모든 cell에서 null입니다.",
     "NAVER 값은 동일 비교기간에서 정규화된 상대 검색 관심도이며 절대 검색량·매출·감성이 아닙니다.",
     "REB 임대료는 공식 상권의 소규모 상가 1층 환산임대료(원/㎡) benchmark이며 점포 전체 월세가 아닙니다.",
-    "공식 REB 상권과 정확히 연결할 수 없는 cell의 임대료/공실률은 null로 유지합니다.",
+    "정확히 연결되는 cell은 공식 REB 상권 benchmark를 그대로 사용하고, 나머지 cell은 정확매칭 상권 anchor 간 거리감쇠 보간값을 modelled benchmark로 사용합니다.",
+    "보간 임대료/공실률은 점포 실제 호가·계약값이나 공식 cell-level 통계가 아닙니다.",
     "spilloverScore는 인접 anchor의 결정론적 공간지표이며 실제 교차방문이나 인과효과가 아닙니다."
   ]
 }
