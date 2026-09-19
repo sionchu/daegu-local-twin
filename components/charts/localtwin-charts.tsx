@@ -18,11 +18,13 @@ import {
 } from "recharts";
 
 import { ChartContainer } from "@/components/ui/chart";
-import { computeOpportunityScores } from "@/src/model";
+import {
+  computeOpportunityScores,
+  type OpportunityScores,
+} from "@/src/model";
 import type {
   FinancialAnalysis,
   LocationEvidence,
-  OpportunityScores,
 } from "@/src/types";
 
 const tooltipStyle = {
