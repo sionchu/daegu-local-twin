@@ -82,6 +82,34 @@
       "mode": "official-snapshot"
     },
     {
+      "id": "admin-dong-boundaries",
+      "title": "SGIS 행정구역 통계 및 경계 — 2025년 2분기 행정동 경계",
+      "provider": "국가데이터처 / 공공데이터포털",
+      "url": "https://www.data.go.kr/data/15129688/fileData.do",
+      "sourceUrl": "https://www.data.go.kr/data/15129688/fileData.do",
+      "datasetId": "15129688",
+      "geographicLevel": "대구광역시 중구 행정동",
+      "freshness": "2025-06-30 기준; retrieved 2026-09-19",
+      "datasetVersion": "2025-06-30",
+      "sourceVersion": "2025년 2분기 기준 행정동 경계",
+      "retrievedAt": "2026-09-19T07:10:08Z",
+      "sourceSha256": "F1CF0F9DE453AC7EAACB273F39CEE52851183372B9DDFDA428A967C3A670B2C6",
+      "sourceCrs": "EPSG:5179",
+      "targetCrs": "EPSG:4326 (WGS84)",
+      "fieldsUsed": [
+        "BASE_DATE",
+        "ADM_CD",
+        "ADM_NM",
+        "official boundary geometry"
+      ],
+      "limitations": [
+        "공식 SGIS 2025-06-30 기준 행정동 경계 snapshot이며 실시간 경계가 아님",
+        "공식 원본 ADM_CD와 ADM_NM을 보존하고 EPSG:5179 geometry만 EPSG:4326으로 변환함",
+        "LocalTwin cell center는 공간 테스트로 검증하며 corridor label을 행정동으로 이름 매핑하지 않음"
+      ],
+      "mode": "official-snapshot"
+    },
+    {
       "id": "rent-benchmark",
       "title": "한국부동산원 상업용부동산 임대·공실 benchmark",
       "provider": "한국부동산원 / 공공데이터포털",
