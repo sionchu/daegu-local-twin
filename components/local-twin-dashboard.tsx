@@ -16,7 +16,7 @@ import {
   WalletCards,
 } from "lucide-react";
 import { useCallback, useEffect, useMemo, useReducer, useRef, useState } from "react";
-import SunCalc from "suncalc";
+import * as SunCalc from "suncalc";
 
 import {
   CashRunwayChart,
@@ -486,8 +486,8 @@ export default function LocalTwinDashboard() {
   const selectedTime = dateForKstMinutes(selectedMinutes);
   const currentHour = Math.floor(selectedMinutes / 60);
   const sun = SunCalc.getPosition(selectedTime, DAEGU_LAT, DAEGU_LON);
-  const sunAltitude = (sun.altitude * 180) / Math.PI;
-  const sunAzimuth = (((sun.azimuth * 180) / Math.PI + 180) % 360 + 360) % 360;
+  const sunAltitude = sun.altitude;
+  const sunAzimuth = ((sun.azimuth % 360) + 360) % 360;
   const isDay = sunAltitude > 0;
 
   if (!state.cells.length && !dataError) {
