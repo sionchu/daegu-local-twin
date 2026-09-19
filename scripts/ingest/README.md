@@ -27,3 +27,21 @@ python scripts/ingest/normalize_semas_businesses.py `
   --output public/data/businesses.json `
   --report C:\path\to\semas-quality.json
 ```
+
+
+## Cell spatial evidence derivation
+
+After the official SEMAS business snapshot, urban-decline snapshot, and Jung-gu
+administrative-dong boundaries are committed, refresh the modelled cell-level join with:
+
+```bash
+python scripts/ingest/derive_cell_evidence.py
+```
+
+The derivation is network-free and updates only:
+- `poiCount` and LocalTwin category counts from official SEMAS point records;
+- cell-center → official administrative-dong assignment;
+- `regenerationScore = qualifyingSectorCount / 3 * 100` as a **modelled context score**;
+- `public/data/cell_spatial_evidence.json` as the audit sidecar.
+
+It does not alter transit, rent, Buzz, spillover, or mobility/footfall values.
