@@ -265,7 +265,7 @@ function ScenarioEditor({
           />
           <MetricTile
             label="필요 전환"
-            value={formatPercent(analysis.requiredConversionRate)}
+            value={formatPercent(analysis.requiredCaptureRate)}
             accent
           />
         </div>
@@ -328,8 +328,8 @@ function ScenarioEditor({
           />
           <NumberField
             label="가정 전환율"
-            value={scenario.assumptions.assumedConversionRate * 100}
-            onChange={(value) => onPatch({ assumedConversionRate: value / 100 })}
+            value={scenario.assumptions.assumedCaptureRate * 100}
+            onChange={(value) => onPatch({ assumedCaptureRate: value / 100 })}
             suffix="%"
             step={0.1}
           />
@@ -714,8 +714,8 @@ export default function LocalTwinDashboard() {
                       <MetricTile
                         label="월세 Benchmark"
                         value={
-                          selectedCell.rentBenchmark
-                            ? formatMan(selectedCell.rentBenchmark)
+                          selectedCell.rentBenchmarkKrwPerSqm
+                            ? formatMan(selectedCell.rentBenchmarkKrwPerSqm)
                             : "데이터 부족"
                         }
                       />
@@ -777,7 +777,7 @@ export default function LocalTwinDashboard() {
                       />
                       <MetricTile
                         label="필요 전환"
-                        value={formatPercent(activeAnalysis.requiredConversionRate)}
+                        value={formatPercent(activeAnalysis.requiredCaptureRate)}
                         accent
                       />
                       <MetricTile
@@ -950,12 +950,12 @@ export default function LocalTwinDashboard() {
                 <CardContent className="grid grid-cols-2 gap-2 md:grid-cols-4">
                   <MetricTile
                     label="A 필요 전환"
-                    value={formatPercent(activeAnalysis.requiredConversionRate)}
+                    value={formatPercent(activeAnalysis.requiredCaptureRate)}
                     accent
                   />
                   <MetricTile
                     label="B 필요 전환"
-                    value={formatPercent(compareAnalysis.requiredConversionRate)}
+                    value={formatPercent(compareAnalysis.requiredCaptureRate)}
                   />
                   <MetricTile
                     label="A Funding Gap"
