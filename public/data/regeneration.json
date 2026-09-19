@@ -1,9 +1,1056 @@
 {
-  "mode": "demo",
-  "records": [
-    {"area":"교동","regenerationContextScore":63,"interpretation":"도시재생/쇠퇴 맥락 신호"},
-    {"area":"북성로","regenerationContextScore":86,"interpretation":"도시재생/쇠퇴 맥락 신호"},
-    {"area":"대신동","regenerationContextScore":74,"interpretation":"도시재생/쇠퇴 맥락 신호"}
+  "mode": "official-snapshot",
+  "provider": "국토교통부 / 도시재생종합정보체계",
+  "datasetId": "city.go.kr:nttId=9611",
+  "sourceFileId": "FILE_000000000046447",
+  "sourceFileName": "도시쇠퇴현황25.12.31기준.xlsx",
+  "sourceUrl": "https://www.city.go.kr/mobile/notice/notice/noticeList/view.do?nttId=9611",
+  "sourceDownloadUrl": "https://www.city.go.kr/cmm/fms/FileDown.do?atchFileId=FILE_000000000046447&fileSn=0",
+  "sourceVersion": "2025-12-31",
+  "retrievedAt": "2026-09-19T06:34:56.8539044Z",
+  "sourceSha256": "1CCD33E89D5A2E5FABB0A8BA5CFD6CDDC007169F0C68DEA3A7961761FF158163",
+  "officialGeographyLevel": "읍면동(행정동)",
+  "officialGeographyScope": {
+    "provinceName": "대구광역시",
+    "districtName": "대구광역시 중구"
+  },
+  "sourceRecordCount": 3590,
+  "normalizedRecordCount": 12,
+  "requestedAreas": [
+    {
+      "label": "교동",
+      "status": "not_present_in_official_geography",
+      "officialMapping": null
+    },
+    {
+      "label": "북성로",
+      "status": "not_present_in_official_geography",
+      "officialMapping": null
+    },
+    {
+      "label": "대신동",
+      "status": "exact_official_name",
+      "officialMapping": "대신동"
+    }
   ],
-  "limitation":"도시재생 맥락은 미래 상업 성공을 뜻하지 않음"
+  "indicatorDefinitions": [
+    {
+      "column": "G",
+      "name": "과거대비인구변화(%)",
+      "description": "최근 30년간의 인구가 가장 많았던 시기대비 현재의 인구 증감률",
+      "criterion": "20%이상 감소지역(-100 ~ -20)",
+      "surveyYear": "2025년",
+      "source": "인구총조사(통계청)",
+      "publishedAt": "2026년 7월"
+    },
+    {
+      "column": "H",
+      "name": "최근인구변화(년수)",
+      "description": "최근 5년간 3년 이상 연속으로 인구가 감소한 지역",
+      "criterion": "3년이상 연속감소(3 ~ 5)",
+      "surveyYear": "2025년",
+      "source": "주민등록인구통계(행정안전부)",
+      "publishedAt": "2026년 1월"
+    },
+    {
+      "column": "I",
+      "name": "과거대비사업체변화(%)",
+      "description": "최근 10년간 총 사업체수가 가장 많았던 시기 대비 현재의 총 사업체수의 증감률",
+      "criterion": "5%이상 감소지역(-100 ~ -5)",
+      "surveyYear": "2024년",
+      "source": "전국사업체조사(통계청)",
+      "publishedAt": "2025년 9월"
+    },
+    {
+      "column": "J",
+      "name": "최근사업체변화(년수)",
+      "description": "최근 5년간 3년 이상 연속으로 총 사업체수가 감소한 지역",
+      "criterion": "3년이상 연속감소(3 ~ 5)",
+      "surveyYear": "2024년",
+      "source": "전국사업체조사(통계청)",
+      "publishedAt": "2025년 9월"
+    },
+    {
+      "column": "K",
+      "name": "노후건축물비율(%)",
+      "description": "전체 건축물 중에서 준공된 후 20년 이상이 지난 건축물이 차지하는 비율",
+      "criterion": "50%이상(50 ~ 100)",
+      "surveyYear": "2025년",
+      "source": "건물통합정보(국토교통부)",
+      "publishedAt": "2025년 12월"
+    }
+  ],
+  "records": [
+    {
+      "geography": {
+        "level": "읍면동(행정동)",
+        "provinceName": "대구광역시",
+        "districtName": "대구광역시 중구",
+        "name": "남산1동"
+      },
+      "source": {
+        "datasetId": "city.go.kr:nttId=9611",
+        "fileId": "FILE_000000000046447",
+        "sheet": "진단결과_총괄표",
+        "row": 1695
+      },
+      "raw": {
+        "diagnosisFlags": {
+          "populationSocial": "O",
+          "industryEconomy": "O",
+          "physicalEnvironment": "O"
+        },
+        "indicators": {
+          "pastPopulationChangeRate": {
+            "name": "과거대비인구변화(%)",
+            "rawValue": "-39.164049287267453",
+            "value": -39.16404928726745,
+            "unit": "percent",
+            "valueType": "rate",
+            "sourceCell": "G1695"
+          },
+          "recentPopulationDeclineYears": {
+            "name": "최근인구변화(년수)",
+            "rawValue": "3",
+            "value": 3,
+            "unit": "years",
+            "valueType": "count",
+            "sourceCell": "H1695"
+          },
+          "pastBusinessChangeRate": {
+            "name": "과거대비사업체변화(%)",
+            "rawValue": "-5.8340180772391133",
+            "value": -5.834018077239113,
+            "unit": "percent",
+            "valueType": "rate",
+            "sourceCell": "I1695"
+          },
+          "recentBusinessDeclineYears": {
+            "name": "최근사업체변화(년수)",
+            "rawValue": "3",
+            "value": 3,
+            "unit": "years",
+            "valueType": "count",
+            "sourceCell": "J1695"
+          },
+          "oldBuildingRatio": {
+            "name": "노후건축물비율(%)",
+            "rawValue": "83.047210300000003",
+            "value": 83.0472103,
+            "unit": "percent",
+            "valueType": "rate",
+            "sourceCell": "K1695"
+          }
+        },
+        "qualifyingSectorCount": "3",
+        "meetsTwoOrMoreSectors": "O",
+        "sourceColumns": {
+          "A": "대구광역시",
+          "B": "대구광역시 중구",
+          "C": "남산1동",
+          "D": "O",
+          "E": "O",
+          "F": "O",
+          "G": "-39.164049287267453",
+          "H": "3",
+          "I": "-5.8340180772391133",
+          "J": "3",
+          "K": "83.047210300000003",
+          "L": "3",
+          "M": "O"
+        }
+      }
+    },
+    {
+      "geography": {
+        "level": "읍면동(행정동)",
+        "provinceName": "대구광역시",
+        "districtName": "대구광역시 중구",
+        "name": "남산2동"
+      },
+      "source": {
+        "datasetId": "city.go.kr:nttId=9611",
+        "fileId": "FILE_000000000046447",
+        "sheet": "진단결과_총괄표",
+        "row": 1696
+      },
+      "raw": {
+        "diagnosisFlags": {
+          "populationSocial": "X",
+          "industryEconomy": "X",
+          "physicalEnvironment": "O"
+        },
+        "indicators": {
+          "pastPopulationChangeRate": {
+            "name": "과거대비인구변화(%)",
+            "rawValue": "-7.6624246483590124",
+            "value": -7.662424648359012,
+            "unit": "percent",
+            "valueType": "rate",
+            "sourceCell": "G1696"
+          },
+          "recentPopulationDeclineYears": {
+            "name": "최근인구변화(년수)",
+            "rawValue": "1",
+            "value": 1,
+            "unit": "years",
+            "valueType": "count",
+            "sourceCell": "H1696"
+          },
+          "pastBusinessChangeRate": {
+            "name": "과거대비사업체변화(%)",
+            "rawValue": "1.5873015873015872",
+            "value": 1.5873015873015872,
+            "unit": "percent",
+            "valueType": "rate",
+            "sourceCell": "I1696"
+          },
+          "recentBusinessDeclineYears": {
+            "name": "최근사업체변화(년수)",
+            "rawValue": "0",
+            "value": 0,
+            "unit": "years",
+            "valueType": "count",
+            "sourceCell": "J1696"
+          },
+          "oldBuildingRatio": {
+            "name": "노후건축물비율(%)",
+            "rawValue": "82.160194169999997",
+            "value": 82.16019417,
+            "unit": "percent",
+            "valueType": "rate",
+            "sourceCell": "K1696"
+          }
+        },
+        "qualifyingSectorCount": "1",
+        "meetsTwoOrMoreSectors": "X",
+        "sourceColumns": {
+          "A": "대구광역시",
+          "B": "대구광역시 중구",
+          "C": "남산2동",
+          "D": "X",
+          "E": "X",
+          "F": "O",
+          "G": "-7.6624246483590124",
+          "H": "1",
+          "I": "1.5873015873015872",
+          "J": "0",
+          "K": "82.160194169999997",
+          "L": "1",
+          "M": "X"
+        }
+      }
+    },
+    {
+      "geography": {
+        "level": "읍면동(행정동)",
+        "provinceName": "대구광역시",
+        "districtName": "대구광역시 중구",
+        "name": "남산3동"
+      },
+      "source": {
+        "datasetId": "city.go.kr:nttId=9611",
+        "fileId": "FILE_000000000046447",
+        "sheet": "진단결과_총괄표",
+        "row": 1697
+      },
+      "raw": {
+        "diagnosisFlags": {
+          "populationSocial": "O",
+          "industryEconomy": "X",
+          "physicalEnvironment": "O"
+        },
+        "indicators": {
+          "pastPopulationChangeRate": {
+            "name": "과거대비인구변화(%)",
+            "rawValue": "-43.230662573041499",
+            "value": -43.2306625730415,
+            "unit": "percent",
+            "valueType": "rate",
+            "sourceCell": "G1697"
+          },
+          "recentPopulationDeclineYears": {
+            "name": "최근인구변화(년수)",
+            "rawValue": "5",
+            "value": 5,
+            "unit": "years",
+            "valueType": "count",
+            "sourceCell": "H1697"
+          },
+          "pastBusinessChangeRate": {
+            "name": "과거대비사업체변화(%)",
+            "rawValue": "-4.7846889952153111",
+            "value": -4.784688995215311,
+            "unit": "percent",
+            "valueType": "rate",
+            "sourceCell": "I1697"
+          },
+          "recentBusinessDeclineYears": {
+            "name": "최근사업체변화(년수)",
+            "rawValue": "2",
+            "value": 2,
+            "unit": "years",
+            "valueType": "count",
+            "sourceCell": "J1697"
+          },
+          "oldBuildingRatio": {
+            "name": "노후건축물비율(%)",
+            "rawValue": "85.967130209999993",
+            "value": 85.96713021,
+            "unit": "percent",
+            "valueType": "rate",
+            "sourceCell": "K1697"
+          }
+        },
+        "qualifyingSectorCount": "2",
+        "meetsTwoOrMoreSectors": "O",
+        "sourceColumns": {
+          "A": "대구광역시",
+          "B": "대구광역시 중구",
+          "C": "남산3동",
+          "D": "O",
+          "E": "X",
+          "F": "O",
+          "G": "-43.230662573041499",
+          "H": "5",
+          "I": "-4.7846889952153111",
+          "J": "2",
+          "K": "85.967130209999993",
+          "L": "2",
+          "M": "O"
+        }
+      }
+    },
+    {
+      "geography": {
+        "level": "읍면동(행정동)",
+        "provinceName": "대구광역시",
+        "districtName": "대구광역시 중구",
+        "name": "남산4동"
+      },
+      "source": {
+        "datasetId": "city.go.kr:nttId=9611",
+        "fileId": "FILE_000000000046447",
+        "sheet": "진단결과_총괄표",
+        "row": 1698
+      },
+      "raw": {
+        "diagnosisFlags": {
+          "populationSocial": "X",
+          "industryEconomy": "X",
+          "physicalEnvironment": "O"
+        },
+        "indicators": {
+          "pastPopulationChangeRate": {
+            "name": "과거대비인구변화(%)",
+            "rawValue": "-10.579874928936894",
+            "value": -10.579874928936894,
+            "unit": "percent",
+            "valueType": "rate",
+            "sourceCell": "G1698"
+          },
+          "recentPopulationDeclineYears": {
+            "name": "최근인구변화(년수)",
+            "rawValue": "2",
+            "value": 2,
+            "unit": "years",
+            "valueType": "count",
+            "sourceCell": "H1698"
+          },
+          "pastBusinessChangeRate": {
+            "name": "과거대비사업체변화(%)",
+            "rawValue": "5.2995391705069128",
+            "value": 5.299539170506913,
+            "unit": "percent",
+            "valueType": "rate",
+            "sourceCell": "I1698"
+          },
+          "recentBusinessDeclineYears": {
+            "name": "최근사업체변화(년수)",
+            "rawValue": "0",
+            "value": 0,
+            "unit": "years",
+            "valueType": "count",
+            "sourceCell": "J1698"
+          },
+          "oldBuildingRatio": {
+            "name": "노후건축물비율(%)",
+            "rawValue": "73.705179279999996",
+            "value": 73.70517928,
+            "unit": "percent",
+            "valueType": "rate",
+            "sourceCell": "K1698"
+          }
+        },
+        "qualifyingSectorCount": "1",
+        "meetsTwoOrMoreSectors": "X",
+        "sourceColumns": {
+          "A": "대구광역시",
+          "B": "대구광역시 중구",
+          "C": "남산4동",
+          "D": "X",
+          "E": "X",
+          "F": "O",
+          "G": "-10.579874928936894",
+          "H": "2",
+          "I": "5.2995391705069128",
+          "J": "0",
+          "K": "73.705179279999996",
+          "L": "1",
+          "M": "X"
+        }
+      }
+    },
+    {
+      "geography": {
+        "level": "읍면동(행정동)",
+        "provinceName": "대구광역시",
+        "districtName": "대구광역시 중구",
+        "name": "대봉1동"
+      },
+      "source": {
+        "datasetId": "city.go.kr:nttId=9611",
+        "fileId": "FILE_000000000046447",
+        "sheet": "진단결과_총괄표",
+        "row": 1699
+      },
+      "raw": {
+        "diagnosisFlags": {
+          "populationSocial": "X",
+          "industryEconomy": "O",
+          "physicalEnvironment": "O"
+        },
+        "indicators": {
+          "pastPopulationChangeRate": {
+            "name": "과거대비인구변화(%)",
+            "rawValue": "-10.182389177436891",
+            "value": -10.18238917743689,
+            "unit": "percent",
+            "valueType": "rate",
+            "sourceCell": "G1699"
+          },
+          "recentPopulationDeclineYears": {
+            "name": "최근인구변화(년수)",
+            "rawValue": "2",
+            "value": 2,
+            "unit": "years",
+            "valueType": "count",
+            "sourceCell": "H1699"
+          },
+          "pastBusinessChangeRate": {
+            "name": "과거대비사업체변화(%)",
+            "rawValue": "-0.48750761730652042",
+            "value": -0.4875076173065204,
+            "unit": "percent",
+            "valueType": "rate",
+            "sourceCell": "I1699"
+          },
+          "recentBusinessDeclineYears": {
+            "name": "최근사업체변화(년수)",
+            "rawValue": "3",
+            "value": 3,
+            "unit": "years",
+            "valueType": "count",
+            "sourceCell": "J1699"
+          },
+          "oldBuildingRatio": {
+            "name": "노후건축물비율(%)",
+            "rawValue": "76.433121020000002",
+            "value": 76.43312102,
+            "unit": "percent",
+            "valueType": "rate",
+            "sourceCell": "K1699"
+          }
+        },
+        "qualifyingSectorCount": "2",
+        "meetsTwoOrMoreSectors": "O",
+        "sourceColumns": {
+          "A": "대구광역시",
+          "B": "대구광역시 중구",
+          "C": "대봉1동",
+          "D": "X",
+          "E": "O",
+          "F": "O",
+          "G": "-10.182389177436891",
+          "H": "2",
+          "I": "-0.48750761730652042",
+          "J": "3",
+          "K": "76.433121020000002",
+          "L": "2",
+          "M": "O"
+        }
+      }
+    },
+    {
+      "geography": {
+        "level": "읍면동(행정동)",
+        "provinceName": "대구광역시",
+        "districtName": "대구광역시 중구",
+        "name": "대봉2동"
+      },
+      "source": {
+        "datasetId": "city.go.kr:nttId=9611",
+        "fileId": "FILE_000000000046447",
+        "sheet": "진단결과_총괄표",
+        "row": 1700
+      },
+      "raw": {
+        "diagnosisFlags": {
+          "populationSocial": "X",
+          "industryEconomy": "X",
+          "physicalEnvironment": "O"
+        },
+        "indicators": {
+          "pastPopulationChangeRate": {
+            "name": "과거대비인구변화(%)",
+            "rawValue": "-17.903364969801551",
+            "value": -17.90336496980155,
+            "unit": "percent",
+            "valueType": "rate",
+            "sourceCell": "G1700"
+          },
+          "recentPopulationDeclineYears": {
+            "name": "최근인구변화(년수)",
+            "rawValue": "1",
+            "value": 1,
+            "unit": "years",
+            "valueType": "count",
+            "sourceCell": "H1700"
+          },
+          "pastBusinessChangeRate": {
+            "name": "과거대비사업체변화(%)",
+            "rawValue": "12.307692307692308",
+            "value": 12.307692307692308,
+            "unit": "percent",
+            "valueType": "rate",
+            "sourceCell": "I1700"
+          },
+          "recentBusinessDeclineYears": {
+            "name": "최근사업체변화(년수)",
+            "rawValue": "1",
+            "value": 1,
+            "unit": "years",
+            "valueType": "count",
+            "sourceCell": "J1700"
+          },
+          "oldBuildingRatio": {
+            "name": "노후건축물비율(%)",
+            "rawValue": "76.535087720000007",
+            "value": 76.53508772,
+            "unit": "percent",
+            "valueType": "rate",
+            "sourceCell": "K1700"
+          }
+        },
+        "qualifyingSectorCount": "1",
+        "meetsTwoOrMoreSectors": "X",
+        "sourceColumns": {
+          "A": "대구광역시",
+          "B": "대구광역시 중구",
+          "C": "대봉2동",
+          "D": "X",
+          "E": "X",
+          "F": "O",
+          "G": "-17.903364969801551",
+          "H": "1",
+          "I": "12.307692307692308",
+          "J": "1",
+          "K": "76.535087720000007",
+          "L": "1",
+          "M": "X"
+        }
+      }
+    },
+    {
+      "geography": {
+        "level": "읍면동(행정동)",
+        "provinceName": "대구광역시",
+        "districtName": "대구광역시 중구",
+        "name": "대신동"
+      },
+      "source": {
+        "datasetId": "city.go.kr:nttId=9611",
+        "fileId": "FILE_000000000046447",
+        "sheet": "진단결과_총괄표",
+        "row": 1701
+      },
+      "raw": {
+        "diagnosisFlags": {
+          "populationSocial": "X",
+          "industryEconomy": "O",
+          "physicalEnvironment": "O"
+        },
+        "indicators": {
+          "pastPopulationChangeRate": {
+            "name": "과거대비인구변화(%)",
+            "rawValue": "-9.3089221248066067",
+            "value": -9.308922124806607,
+            "unit": "percent",
+            "valueType": "rate",
+            "sourceCell": "G1701"
+          },
+          "recentPopulationDeclineYears": {
+            "name": "최근인구변화(년수)",
+            "rawValue": "2",
+            "value": 2,
+            "unit": "years",
+            "valueType": "count",
+            "sourceCell": "H1701"
+          },
+          "pastBusinessChangeRate": {
+            "name": "과거대비사업체변화(%)",
+            "rawValue": "-5.8412268831754623",
+            "value": -5.841226883175462,
+            "unit": "percent",
+            "valueType": "rate",
+            "sourceCell": "I1701"
+          },
+          "recentBusinessDeclineYears": {
+            "name": "최근사업체변화(년수)",
+            "rawValue": "4",
+            "value": 4,
+            "unit": "years",
+            "valueType": "count",
+            "sourceCell": "J1701"
+          },
+          "oldBuildingRatio": {
+            "name": "노후건축물비율(%)",
+            "rawValue": "85.909568870000001",
+            "value": 85.90956887,
+            "unit": "percent",
+            "valueType": "rate",
+            "sourceCell": "K1701"
+          }
+        },
+        "qualifyingSectorCount": "2",
+        "meetsTwoOrMoreSectors": "O",
+        "sourceColumns": {
+          "A": "대구광역시",
+          "B": "대구광역시 중구",
+          "C": "대신동",
+          "D": "X",
+          "E": "O",
+          "F": "O",
+          "G": "-9.3089221248066067",
+          "H": "2",
+          "I": "-5.8412268831754623",
+          "J": "4",
+          "K": "85.909568870000001",
+          "L": "2",
+          "M": "O"
+        }
+      }
+    },
+    {
+      "geography": {
+        "level": "읍면동(행정동)",
+        "provinceName": "대구광역시",
+        "districtName": "대구광역시 중구",
+        "name": "동인동"
+      },
+      "source": {
+        "datasetId": "city.go.kr:nttId=9611",
+        "fileId": "FILE_000000000046447",
+        "sheet": "진단결과_총괄표",
+        "row": 1702
+      },
+      "raw": {
+        "diagnosisFlags": {
+          "populationSocial": "X",
+          "industryEconomy": "O",
+          "physicalEnvironment": "O"
+        },
+        "indicators": {
+          "pastPopulationChangeRate": {
+            "name": "과거대비인구변화(%)",
+            "rawValue": "7.1841947715026944",
+            "value": 7.184194771502694,
+            "unit": "percent",
+            "valueType": "rate",
+            "sourceCell": "G1702"
+          },
+          "recentPopulationDeclineYears": {
+            "name": "최근인구변화(년수)",
+            "rawValue": "2",
+            "value": 2,
+            "unit": "years",
+            "valueType": "count",
+            "sourceCell": "H1702"
+          },
+          "pastBusinessChangeRate": {
+            "name": "과거대비사업체변화(%)",
+            "rawValue": "-15.232606010703995",
+            "value": -15.232606010703995,
+            "unit": "percent",
+            "valueType": "rate",
+            "sourceCell": "I1702"
+          },
+          "recentBusinessDeclineYears": {
+            "name": "최근사업체변화(년수)",
+            "rawValue": "3",
+            "value": 3,
+            "unit": "years",
+            "valueType": "count",
+            "sourceCell": "J1702"
+          },
+          "oldBuildingRatio": {
+            "name": "노후건축물비율(%)",
+            "rawValue": "82.928275040000003",
+            "value": 82.92827504,
+            "unit": "percent",
+            "valueType": "rate",
+            "sourceCell": "K1702"
+          }
+        },
+        "qualifyingSectorCount": "2",
+        "meetsTwoOrMoreSectors": "O",
+        "sourceColumns": {
+          "A": "대구광역시",
+          "B": "대구광역시 중구",
+          "C": "동인동",
+          "D": "X",
+          "E": "O",
+          "F": "O",
+          "G": "7.1841947715026944",
+          "H": "2",
+          "I": "-15.232606010703995",
+          "J": "3",
+          "K": "82.928275040000003",
+          "L": "2",
+          "M": "O"
+        }
+      }
+    },
+    {
+      "geography": {
+        "level": "읍면동(행정동)",
+        "provinceName": "대구광역시",
+        "districtName": "대구광역시 중구",
+        "name": "삼덕동"
+      },
+      "source": {
+        "datasetId": "city.go.kr:nttId=9611",
+        "fileId": "FILE_000000000046447",
+        "sheet": "진단결과_총괄표",
+        "row": 1703
+      },
+      "raw": {
+        "diagnosisFlags": {
+          "populationSocial": "X",
+          "industryEconomy": "O",
+          "physicalEnvironment": "O"
+        },
+        "indicators": {
+          "pastPopulationChangeRate": {
+            "name": "과거대비인구변화(%)",
+            "rawValue": "5.2153868318685959",
+            "value": 5.215386831868596,
+            "unit": "percent",
+            "valueType": "rate",
+            "sourceCell": "G1703"
+          },
+          "recentPopulationDeclineYears": {
+            "name": "최근인구변화(년수)",
+            "rawValue": "2",
+            "value": 2,
+            "unit": "years",
+            "valueType": "count",
+            "sourceCell": "H1703"
+          },
+          "pastBusinessChangeRate": {
+            "name": "과거대비사업체변화(%)",
+            "rawValue": "-5.2185548617305972",
+            "value": -5.218554861730597,
+            "unit": "percent",
+            "valueType": "rate",
+            "sourceCell": "I1703"
+          },
+          "recentBusinessDeclineYears": {
+            "name": "최근사업체변화(년수)",
+            "rawValue": "3",
+            "value": 3,
+            "unit": "years",
+            "valueType": "count",
+            "sourceCell": "J1703"
+          },
+          "oldBuildingRatio": {
+            "name": "노후건축물비율(%)",
+            "rawValue": "72.948073699999995",
+            "value": 72.9480737,
+            "unit": "percent",
+            "valueType": "rate",
+            "sourceCell": "K1703"
+          }
+        },
+        "qualifyingSectorCount": "2",
+        "meetsTwoOrMoreSectors": "O",
+        "sourceColumns": {
+          "A": "대구광역시",
+          "B": "대구광역시 중구",
+          "C": "삼덕동",
+          "D": "X",
+          "E": "O",
+          "F": "O",
+          "G": "5.2153868318685959",
+          "H": "2",
+          "I": "-5.2185548617305972",
+          "J": "3",
+          "K": "72.948073699999995",
+          "L": "2",
+          "M": "O"
+        }
+      }
+    },
+    {
+      "geography": {
+        "level": "읍면동(행정동)",
+        "provinceName": "대구광역시",
+        "districtName": "대구광역시 중구",
+        "name": "성내1동"
+      },
+      "source": {
+        "datasetId": "city.go.kr:nttId=9611",
+        "fileId": "FILE_000000000046447",
+        "sheet": "진단결과_총괄표",
+        "row": 1704
+      },
+      "raw": {
+        "diagnosisFlags": {
+          "populationSocial": "X",
+          "industryEconomy": "O",
+          "physicalEnvironment": "O"
+        },
+        "indicators": {
+          "pastPopulationChangeRate": {
+            "name": "과거대비인구변화(%)",
+            "rawValue": "2.019571101394968",
+            "value": 2.019571101394968,
+            "unit": "percent",
+            "valueType": "rate",
+            "sourceCell": "G1704"
+          },
+          "recentPopulationDeclineYears": {
+            "name": "최근인구변화(년수)",
+            "rawValue": "2",
+            "value": 2,
+            "unit": "years",
+            "valueType": "count",
+            "sourceCell": "H1704"
+          },
+          "pastBusinessChangeRate": {
+            "name": "과거대비사업체변화(%)",
+            "rawValue": "-7.4020581332370465",
+            "value": -7.4020581332370465,
+            "unit": "percent",
+            "valueType": "rate",
+            "sourceCell": "I1704"
+          },
+          "recentBusinessDeclineYears": {
+            "name": "최근사업체변화(년수)",
+            "rawValue": "3",
+            "value": 3,
+            "unit": "years",
+            "valueType": "count",
+            "sourceCell": "J1704"
+          },
+          "oldBuildingRatio": {
+            "name": "노후건축물비율(%)",
+            "rawValue": "81.813125700000001",
+            "value": 81.8131257,
+            "unit": "percent",
+            "valueType": "rate",
+            "sourceCell": "K1704"
+          }
+        },
+        "qualifyingSectorCount": "2",
+        "meetsTwoOrMoreSectors": "O",
+        "sourceColumns": {
+          "A": "대구광역시",
+          "B": "대구광역시 중구",
+          "C": "성내1동",
+          "D": "X",
+          "E": "O",
+          "F": "O",
+          "G": "2.019571101394968",
+          "H": "2",
+          "I": "-7.4020581332370465",
+          "J": "3",
+          "K": "81.813125700000001",
+          "L": "2",
+          "M": "O"
+        }
+      }
+    },
+    {
+      "geography": {
+        "level": "읍면동(행정동)",
+        "provinceName": "대구광역시",
+        "districtName": "대구광역시 중구",
+        "name": "성내2동"
+      },
+      "source": {
+        "datasetId": "city.go.kr:nttId=9611",
+        "fileId": "FILE_000000000046447",
+        "sheet": "진단결과_총괄표",
+        "row": 1705
+      },
+      "raw": {
+        "diagnosisFlags": {
+          "populationSocial": "X",
+          "industryEconomy": "X",
+          "physicalEnvironment": "O"
+        },
+        "indicators": {
+          "pastPopulationChangeRate": {
+            "name": "과거대비인구변화(%)",
+            "rawValue": "51.406926406926409",
+            "value": 51.40692640692641,
+            "unit": "percent",
+            "valueType": "rate",
+            "sourceCell": "G1705"
+          },
+          "recentPopulationDeclineYears": {
+            "name": "최근인구변화(년수)",
+            "rawValue": "1",
+            "value": 1,
+            "unit": "years",
+            "valueType": "count",
+            "sourceCell": "H1705"
+          },
+          "pastBusinessChangeRate": {
+            "name": "과거대비사업체변화(%)",
+            "rawValue": "3.2764190124596215",
+            "value": 3.2764190124596215,
+            "unit": "percent",
+            "valueType": "rate",
+            "sourceCell": "I1705"
+          },
+          "recentBusinessDeclineYears": {
+            "name": "최근사업체변화(년수)",
+            "rawValue": "2",
+            "value": 2,
+            "unit": "years",
+            "valueType": "count",
+            "sourceCell": "J1705"
+          },
+          "oldBuildingRatio": {
+            "name": "노후건축물비율(%)",
+            "rawValue": "78.980013779999993",
+            "value": 78.98001378,
+            "unit": "percent",
+            "valueType": "rate",
+            "sourceCell": "K1705"
+          }
+        },
+        "qualifyingSectorCount": "1",
+        "meetsTwoOrMoreSectors": "X",
+        "sourceColumns": {
+          "A": "대구광역시",
+          "B": "대구광역시 중구",
+          "C": "성내2동",
+          "D": "X",
+          "E": "X",
+          "F": "O",
+          "G": "51.406926406926409",
+          "H": "1",
+          "I": "3.2764190124596215",
+          "J": "2",
+          "K": "78.980013779999993",
+          "L": "1",
+          "M": "X"
+        }
+      }
+    },
+    {
+      "geography": {
+        "level": "읍면동(행정동)",
+        "provinceName": "대구광역시",
+        "districtName": "대구광역시 중구",
+        "name": "성내3동"
+      },
+      "source": {
+        "datasetId": "city.go.kr:nttId=9611",
+        "fileId": "FILE_000000000046447",
+        "sheet": "진단결과_총괄표",
+        "row": 1706
+      },
+      "raw": {
+        "diagnosisFlags": {
+          "populationSocial": "X",
+          "industryEconomy": "X",
+          "physicalEnvironment": "O"
+        },
+        "indicators": {
+          "pastPopulationChangeRate": {
+            "name": "과거대비인구변화(%)",
+            "rawValue": "138.67532936293091",
+            "value": 138.6753293629309,
+            "unit": "percent",
+            "valueType": "rate",
+            "sourceCell": "G1706"
+          },
+          "recentPopulationDeclineYears": {
+            "name": "최근인구변화(년수)",
+            "rawValue": "1",
+            "value": 1,
+            "unit": "years",
+            "valueType": "count",
+            "sourceCell": "H1706"
+          },
+          "pastBusinessChangeRate": {
+            "name": "과거대비사업체변화(%)",
+            "rawValue": "7.4301295160190861",
+            "value": 7.430129516019086,
+            "unit": "percent",
+            "valueType": "rate",
+            "sourceCell": "I1706"
+          },
+          "recentBusinessDeclineYears": {
+            "name": "최근사업체변화(년수)",
+            "rawValue": "2",
+            "value": 2,
+            "unit": "years",
+            "valueType": "count",
+            "sourceCell": "J1706"
+          },
+          "oldBuildingRatio": {
+            "name": "노후건축물비율(%)",
+            "rawValue": "80.377358490000006",
+            "value": 80.37735849,
+            "unit": "percent",
+            "valueType": "rate",
+            "sourceCell": "K1706"
+          }
+        },
+        "qualifyingSectorCount": "1",
+        "meetsTwoOrMoreSectors": "X",
+        "sourceColumns": {
+          "A": "대구광역시",
+          "B": "대구광역시 중구",
+          "C": "성내3동",
+          "D": "X",
+          "E": "X",
+          "F": "O",
+          "G": "138.67532936293091",
+          "H": "1",
+          "I": "7.4301295160190861",
+          "J": "2",
+          "K": "80.377358490000006",
+          "L": "1",
+          "M": "X"
+        }
+      }
+    }
+  ],
+  "modelled": {
+    "localTwinDeclineContextScore": null,
+    "note": "이 data-only snapshot은 공식 raw 지표만 보존하며 0~100 LocalTwin score를 산출하지 않습니다."
+  },
+  "limitations": [
+    "공식 지리단위는 읍면동(행정동)이며 동성로·교동·북성로 corridor 경계가 아닙니다.",
+    "교동과 북성로는 원본 공식 읍면동명에 없으므로 어떤 읍면동에도 임의 매핑하지 않았습니다.",
+    "지표는 도시쇠퇴 진단 맥락의 공식 지표이며 미래 매출, 점포 생존, 또는 사업 성공을 예측하지 않습니다.",
+    "지표별 조사 기준연도와 공표시점은 indicatorDefinitions에 원문대로 보존했습니다.",
+    "이 파일에는 LocalTwin의 0~100 파생 score가 없으며, cell-level 계산과 지도 반영은 후속 integration 범위입니다."
+  ]
 }

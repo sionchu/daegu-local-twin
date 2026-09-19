@@ -1,16 +1,162 @@
 {
-  "generatedAt":"2026-09-19",
-  "grid":{"kind":"hex-equivalent","resolution":"single corridor cell","note":"V0는 하나의 일관된 육각형 셀 체계를 사용합니다. 셀 숫자는 공개자료 adapter 계약을 보여주는 데모 snapshot입니다."},
-  "sources":[
-    {"id":"smb-poi","title":"소상공인시장진흥공단 상가(상권)정보","provider":"소상공인시장진흥공단 / 공공데이터포털","url":"https://www.data.go.kr/data/15083033/fileData.do","sourceUrl":"https://www.data.go.kr/data/15083033/fileData.do","apiUrl":"https://www.data.go.kr/data/15012005/openapi.do","datasetId":"15083033","apiDatasetId":"15012005","retrievedAt":"2026-09-19T14:50:38+09:00","datasetVersion":"20260630","datasetDate":"2026-06-30","sourceSha256":"57AA361544108FF4FC73334F87D2CED61E41FE8638DD70BCD842930F865D2386","geographicLevel":"점포","freshness":"snapshot date 2026-06-30; retrieved 2026-09-19","fieldsUsed":["source business identifier","business name","longitude","latitude","source major/mid/small category codes and names","LocalTwin category mapping"],"limitations":"공식 파일은 영업 중인 전국 상가업소 기준이며 CSV에 개별 점포 영업상태 필드가 없어 status를 기록하지 않음. 대구광역시 행을 현재 LocalTwin 8개 셀 경계의 point-in-polygon union으로 필터링했으며, cell별 POI density·same-category count·경쟁밀도는 이 snapshot에서 산출하지 않음. 원본 ZIP은 커밋하지 않음","mode":"official-snapshot"},
-    {"id":"localdata","title":"LOCALDATA 지방행정 인허가정보","provider":"공공데이터포털","url":"https://www.localdata.go.kr/","geographicLevel":"행정 인허가","freshness":"adapter target","fieldsUsed":["operating/open/closure context"],"limitations":"폐업 이유를 추론하지 않으며 현재 snapshot 수치에는 사용하지 않음","mode":"snapshot"},
-    {"id":"transit","title":"대구교통공사 역별·일별·시간대별 승하차","provider":"공공데이터포털","url":"https://www.data.go.kr/data/15002503/fileData.do","geographicLevel":"역·시간대","freshness":"adapter target","fieldsUsed":["station passenger proxy","distance-decay transit score"],"limitations":"V0 숫자는 official statistical proxy를 흉내 낸 demo snapshot; 직선거리 사용","mode":"demo"},
-    {"id":"regeneration","title":"도시재생 진단정보","provider":"국토교통부 / 공공데이터포털","url":"https://www.data.go.kr/dataset/15034507/openapi.do","geographicLevel":"지역/진단 단위","freshness":"adapter target","fieldsUsed":["regeneration/decline context"],"limitations":"미래 상업 성공 또는 매출을 의미하지 않음","mode":"demo"},
-    {"id":"rent-benchmark","title":"한국부동산원 상업용부동산 임대·공실 benchmark","provider":"한국부동산원 / 공공데이터포털","url":"https://www.data.go.kr/data/15134761/openapi.do","geographicLevel":"상권/지역 benchmark","freshness":"adapter target","fieldsUsed":["rent benchmark","vacancy benchmark"],"limitations":"해당 점포의 실제 보증금·월세·공실이 아님. 실제 점포값은 사용자 입력","mode":"demo"},
-    {"id":"buzz","title":"Naver DataLab Search Trend / Blog Search","provider":"NAVER Developers","url":"https://developers.naver.com/docs/serviceapi/datalab/search/search.md","geographicLevel":"검색어·기간","freshness":"adapter target","fieldsUsed":["relative interest","mention velocity"],"limitations":"상대지수이며 절대 검색량·감성·매출이 아님; 공개 build에는 secret 미포함","mode":"demo"},
-    {"id":"spillover-model","title":"거리감쇠 기반 파생수요 지표","provider":"LocalTwin deterministic model","url":"https://github.com/GeoDS/T-Huff","geographicLevel":"셀 간 관계","freshness":"computed at build/runtime","fieldsUsed":["anchor strength","straight-line distance","exp decay"],"limitations":"관측된 교차방문/인과적 spillover가 아님; T-Huff calibration은 future path","mode":"demo"},
-    {"id":"footfall","title":"RF-DETR + tracker + zone aggregation pipeline","provider":"LocalTwin optional offline vision","url":"https://github.com/roboflow/rf-detr","geographicLevel":"camera zone/time bucket","freshness":"pipeline contract","fieldsUsed":["aggregate in/out counts","mean occupancy"],"limitations":"얼굴·신원·re-ID를 저장하지 않음; 공개 snapshot은 demo aggregate","mode":"demo"},
-    {"id":"dgsinbo","title":"대구신용보증재단 보증상품 안내","provider":"대구신용보증재단","url":"https://www.dgsinbo.or.kr/page/10039/10043.tc","geographicLevel":"대구광역시 / 상품","freshness":"2026-09-19 page review","fieldsUsed":["support review item","guarantee consultation path"],"limitations":"선정·보증·대출 승인이나 한도를 예측하지 않음","mode":"snapshot"}
+  "generatedAt": "2026-09-19",
+  "grid": {
+    "kind": "hex-equivalent",
+    "resolution": "single corridor cell",
+    "note": "V0는 하나의 일관된 육각형 셀 체계를 사용합니다. 셀 숫자는 공개자료 adapter 계약을 보여주는 데모 snapshot입니다."
+  },
+  "sources": [
+    {
+      "id": "smb-poi",
+      "title": "소상공인시장진흥공단 상가(상권)정보",
+      "provider": "소상공인시장진흥공단 / 공공데이터포털",
+      "url": "https://www.data.go.kr/data/15083033/fileData.do",
+      "sourceUrl": "https://www.data.go.kr/data/15083033/fileData.do",
+      "apiUrl": "https://www.data.go.kr/data/15012005/openapi.do",
+      "datasetId": "15083033",
+      "apiDatasetId": "15012005",
+      "retrievedAt": "2026-09-19T14:50:38+09:00",
+      "datasetVersion": "20260630",
+      "datasetDate": "2026-06-30",
+      "sourceSha256": "57AA361544108FF4FC73334F87D2CED61E41FE8638DD70BCD842930F865D2386",
+      "geographicLevel": "점포",
+      "freshness": "snapshot date 2026-06-30; retrieved 2026-09-19",
+      "fieldsUsed": [
+        "source business identifier",
+        "business name",
+        "longitude",
+        "latitude",
+        "source major/mid/small category codes and names",
+        "LocalTwin category mapping"
+      ],
+      "limitations": "공식 파일은 영업 중인 전국 상가업소 기준이며 CSV에 개별 점포 영업상태 필드가 없어 status를 기록하지 않음. 대구광역시 행을 현재 LocalTwin 8개 셀 경계의 point-in-polygon union으로 필터링했으며, cell별 POI density·same-category count·경쟁밀도는 이 snapshot에서 산출하지 않음. 원본 ZIP은 커밋하지 않음",
+      "mode": "official-snapshot"
+    },
+    {
+      "id": "localdata",
+      "title": "LOCALDATA 지방행정 인허가정보",
+      "provider": "공공데이터포털",
+      "url": "https://www.localdata.go.kr/",
+      "geographicLevel": "행정 인허가",
+      "freshness": "adapter target",
+      "fieldsUsed": [
+        "operating/open/closure context"
+      ],
+      "limitations": "폐업 이유를 추론하지 않으며 현재 snapshot 수치에는 사용하지 않음",
+      "mode": "snapshot"
+    },
+    {
+      "id": "transit",
+      "title": "대구교통공사 역별·일별·시간대별 승하차",
+      "provider": "공공데이터포털",
+      "url": "https://www.data.go.kr/data/15002503/fileData.do",
+      "geographicLevel": "역·시간대",
+      "freshness": "adapter target",
+      "fieldsUsed": [
+        "station passenger proxy",
+        "distance-decay transit score"
+      ],
+      "limitations": "V0 숫자는 official statistical proxy를 흉내 낸 demo snapshot; 직선거리 사용",
+      "mode": "demo"
+    },
+    {
+      "id": "regeneration",
+      "title": "도시쇠퇴현황 자료(2025년 12월 기준)",
+      "provider": "국토교통부 / 도시재생종합정보체계",
+      "url": "https://www.city.go.kr/mobile/notice/notice/noticeList/view.do?nttId=9611",
+      "sourceDownloadUrl": "https://www.city.go.kr/cmm/fms/FileDown.do?atchFileId=FILE_000000000046447&fileSn=0",
+      "datasetId": "city.go.kr:nttId=9611",
+      "legacyIssueDatasetId": "15034507",
+      "sourceFileId": "FILE_000000000046447",
+      "sourceSha256": "1CCD33E89D5A2E5FABB0A8BA5CFD6CDDC007169F0C68DEA3A7961761FF158163",
+      "geographicLevel": "읍면동(행정동)",
+      "sourceVersion": "2025-12-31",
+      "retrievedAt": "2026-09-19T06:34:56.8539044Z",
+      "freshness": "2025-12-31 official snapshot",
+      "fieldsUsed": [
+        "official raw decline indicators",
+        "diagnosis flags",
+        "indicator definitions"
+      ],
+      "limitations": "공식 읍면동 단위이며 동성로·교동·북성로를 임의 매핑하지 않음. 미래 상업 성공·매출·점포별 성과를 의미하지 않으며 LocalTwin 0~100 score와 cell-level 계산은 포함하지 않음.",
+      "mode": "official-snapshot"
+    },
+    {
+      "id": "rent-benchmark",
+      "title": "한국부동산원 상업용부동산 임대·공실 benchmark",
+      "provider": "한국부동산원 / 공공데이터포털",
+      "url": "https://www.data.go.kr/data/15134761/openapi.do",
+      "geographicLevel": "상권/지역 benchmark",
+      "freshness": "adapter target",
+      "fieldsUsed": [
+        "rent benchmark",
+        "vacancy benchmark"
+      ],
+      "limitations": "해당 점포의 실제 보증금·월세·공실이 아님. 실제 점포값은 사용자 입력",
+      "mode": "demo"
+    },
+    {
+      "id": "buzz",
+      "title": "Naver DataLab Search Trend / Blog Search",
+      "provider": "NAVER Developers",
+      "url": "https://developers.naver.com/docs/serviceapi/datalab/search/search.md",
+      "geographicLevel": "검색어·기간",
+      "freshness": "adapter target",
+      "fieldsUsed": [
+        "relative interest",
+        "mention velocity"
+      ],
+      "limitations": "상대지수이며 절대 검색량·감성·매출이 아님; 공개 build에는 secret 미포함",
+      "mode": "demo"
+    },
+    {
+      "id": "spillover-model",
+      "title": "거리감쇠 기반 파생수요 지표",
+      "provider": "LocalTwin deterministic model",
+      "url": "https://github.com/GeoDS/T-Huff",
+      "geographicLevel": "셀 간 관계",
+      "freshness": "computed at build/runtime",
+      "fieldsUsed": [
+        "anchor strength",
+        "straight-line distance",
+        "exp decay"
+      ],
+      "limitations": "관측된 교차방문/인과적 spillover가 아님; T-Huff calibration은 future path",
+      "mode": "demo"
+    },
+    {
+      "id": "footfall",
+      "title": "RF-DETR + tracker + zone aggregation pipeline",
+      "provider": "LocalTwin optional offline vision",
+      "url": "https://github.com/roboflow/rf-detr",
+      "geographicLevel": "camera zone/time bucket",
+      "freshness": "pipeline contract",
+      "fieldsUsed": [
+        "aggregate in/out counts",
+        "mean occupancy"
+      ],
+      "limitations": "얼굴·신원·re-ID를 저장하지 않음; 공개 snapshot은 demo aggregate",
+      "mode": "demo"
+    },
+    {
+      "id": "dgsinbo",
+      "title": "대구신용보증재단 보증상품 안내",
+      "provider": "대구신용보증재단",
+      "url": "https://www.dgsinbo.or.kr/page/10039/10043.tc",
+      "geographicLevel": "대구광역시 / 상품",
+      "freshness": "2026-09-19 page review",
+      "fieldsUsed": [
+        "support review item",
+        "guarantee consultation path"
+      ],
+      "limitations": "선정·보증·대출 승인이나 한도를 예측하지 않음",
+      "mode": "snapshot"
+    }
   ],
-  "privacyBoundary":["aggregate analytics only","no face crops or embeddings","no person names or persistent cross-camera identity","video input must be permitted/authorized before offline processing"]
+  "privacyBoundary": [
+    "aggregate analytics only",
+    "no face crops or embeddings",
+    "no person names or persistent cross-camera identity",
+    "video input must be permitted/authorized before offline processing"
+  ]
 }
