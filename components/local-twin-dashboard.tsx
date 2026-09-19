@@ -78,8 +78,8 @@ type ProvenanceSource = {
   geographicLevel: string;
   freshness: string;
   fieldsUsed: string[];
-  limitations: string;
-  mode: "live" | "snapshot" | "official-snapshot" | "modelled" | "demo";
+  limitations: string | string[];
+  mode: "live" | "snapshot" | "official-snapshot" | "public-snapshot" | "modelled" | "demo";
 };
 
 type Provenance = {
@@ -132,6 +132,12 @@ function formatNumber(value: number | null) {
   return value === null || !Number.isFinite(value)
     ? "데이터 부족"
     : Math.round(value).toLocaleString("ko-KR");
+}
+
+function formatRentPerSqm(value: number | null) {
+  return value === null || !Number.isFinite(value)
+    ? "데이터 부족"
+    : (value / 1_000).toFixed(1) + "천원/㎡";
 }
 
 function qualityLabel(quality: EvidenceQuality) {
@@ -264,7 +270,7 @@ function ScenarioEditor({
             value={Math.ceil(analysis.breakEvenCustomersPerDay) + "명/일"}
           />
           <MetricTile
-            label="필요 전환"
+            label="필요 포착률"
             value={formatPercent(analysis.requiredCaptureRate)}
             accent
           />
@@ -327,7 +333,7 @@ function ScenarioEditor({
             step={500}
           />
           <NumberField
-            label="가정 전환율"
+            label="가정 포착률"
             value={scenario.assumptions.assumedCaptureRate * 100}
             onChange={(value) => onPatch({ assumedCaptureRate: value / 100 })}
             suffix="%"
@@ -453,13 +459,13 @@ export default function LocalTwinDashboard() {
     activeScenario && activeCell
       ? analyzeFinancials(
           activeScenario.assumptions,
-          activeCell.observedFootfall,
+          activeCell.transitDemand,
           activeScenario.stressPreset,
         )
       : null;
   const activeBaseAnalysis =
     activeScenario && activeCell
-      ? analyzeFinancials(activeScenario.assumptions, activeCell.observedFootfall, "base")
+      ? analyzeFinancials(activeScenario.assumptions, activeCell.transitDemand, "base")
       : null;
   const activeStressPreset: StressPreset =
     activeScenario?.stressPreset === "base" || !activeScenario
@@ -469,7 +475,7 @@ export default function LocalTwinDashboard() {
     activeScenario && activeCell
       ? analyzeFinancials(
           activeScenario.assumptions,
-          activeCell.observedFootfall,
+          activeCell.transitDemand,
           activeStressPreset,
         )
       : null;
@@ -478,7 +484,7 @@ export default function LocalTwinDashboard() {
     compareScenario && compareCell
       ? analyzeFinancials(
           compareScenario.assumptions,
-          compareCell.observedFootfall,
+          compareCell.transitDemand,
           compareScenario.stressPreset,
         )
       : null;
@@ -571,7 +577,7 @@ export default function LocalTwinDashboard() {
                         조건을 금융 시뮬레이션으로 연결합니다.
                       </p>
                     </div>
-                    <Badge variant="amber">공모전 V0 · 일부 Demo Snapshot</Badge>
+                    <Badge variant="blue">공식 Snapshot + 결정론적 파생</Badge>
                   </div>
 
                   <div className="flex gap-2 overflow-x-auto pb-1">
@@ -707,17 +713,14 @@ export default function LocalTwinDashboard() {
 
                     <div className="grid grid-cols-2 gap-2">
                       <MetricTile
-                        label="이동수요"
-                        value={formatNumber(selectedCell.observedFootfall)}
-                        note="명/일 proxy"
+                        label="이동수요 proxy"
+                        value={formatNumber(selectedCell.transitDemand)}
+                        note="공식 역 승하차 × 거리감쇠 · 점포 앞 보행량 아님"
                       />
                       <MetricTile
-                        label="월세 Benchmark"
-                        value={
-                          selectedCell.rentBenchmarkKrwPerSqm
-                            ? formatMan(selectedCell.rentBenchmarkKrwPerSqm)
-                            : "데이터 부족"
-                        }
+                        label="임대료 Benchmark"
+                        value={formatRentPerSqm(selectedCell.rentBenchmarkKrwPerSqm)}
+                        note="소규모 상가 1층 환산임대료 · 점포 전체 월세 아님"
                       />
                       <MetricTile
                         label="Buzz momentum"
@@ -797,12 +800,12 @@ export default function LocalTwinDashboard() {
                   </CardHeader>
                   <CardContent className="space-y-2 text-[10px] leading-4 text-slate-500">
                     <p>
-                      현재 corridor의 이동수요·임대·Buzz 수치는 공식 adapter 구조를
-                      검증하기 위한 demo snapshot이 포함됩니다.
+                      이동수요는 공식 역 승하차를 거리감쇠한 모델값, 임대는 공식 R-ONE
+                      상권 benchmark, Buzz는 NAVER 공개 상대 관심도 snapshot을 사용합니다.
                     </p>
                     <p>
-                      출처 레지스터 {provenance?.sources.length ?? 0}개 · 실제 공개데이터가
-                      들어오면 observed / official / modelled 상태를 분리해 갱신합니다.
+                      출처 레지스터 {provenance?.sources.length ?? 0}개 · 관측된 점포 앞
+                      보행량은 없으며 공간 결합·거리감쇠·spillover는 modelled로 분리합니다.
                     </p>
                   </CardContent>
                 </Card>
@@ -817,13 +820,13 @@ export default function LocalTwinDashboard() {
                     <CardTitle>시간대별 이동수요</CardTitle>
                   </div>
                   <CardDescription>
-                    현재는 일 이동수요 proxy에 demo 시간 프로파일을 적용. 공식 시간별
-                    승하차 snapshot으로 교체 예정.
+                    공식 역 승하차에서 파생한 일 이동수요 proxy에 시연용 시간 분포를
+                    적용합니다. 시간대 곡선 자체는 관측치가 아닙니다.
                   </CardDescription>
                 </CardHeader>
                 <CardContent>
                   <DemandTimelineChart
-                    dailyDemand={selectedCell.observedFootfall}
+                    dailyDemand={selectedCell.transitDemand}
                     currentHour={currentHour}
                   />
                 </CardContent>
@@ -1112,7 +1115,7 @@ export default function LocalTwinDashboard() {
       </main>
 
       <footer className="border-t border-white/8 px-4 py-4 text-center text-[10px] text-slate-600">
-        LocalTwin Daegu · 일부 데이터는 공개자료 snapshot 또는 시연용 가정 · 절대 매출/성공확률 예측이 아님
+        LocalTwin Daegu · 공식/공개 snapshot + 결정론적 파생 + 사용자 시나리오 가정 · 절대 매출/성공확률 예측이 아님
       </footer>
     </div>
   );
