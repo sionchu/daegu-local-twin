@@ -509,17 +509,20 @@ export default function LocalTwinDashboard() {
       <header className="sticky top-0 z-50 border-b border-white/8 bg-[color:var(--background)]/88 backdrop-blur-xl">
         <div className="mx-auto flex max-w-[1680px] items-center gap-4 px-4 py-3 lg:px-6">
           <button
-            className="flex shrink-0 items-center gap-3 text-left"
+            className="group shrink-0 text-left"
             onClick={() => setView("map")}
+            aria-label="LocalTwin Daegu 홈"
           >
-            <div className="grid h-9 w-9 place-items-center rounded-xl border border-emerald-300/20 bg-emerald-300/10 text-xs font-black tracking-tight text-emerald-200">
-              LT
-            </div>
-            <div>
-              <div className="text-sm font-bold tracking-tight">LocalTwin Daegu</div>
-              <div className="text-[9px] uppercase tracking-[0.18em] text-slate-500">
-                Spatial Finance Twin
+            <div className="flex items-baseline gap-2">
+              <div className="text-[15px] font-extrabold tracking-[-0.035em] text-white transition group-hover:text-emerald-100">
+                LocalTwin
               </div>
+              <div className="text-[11px] font-semibold tracking-[0.12em] text-emerald-300">
+                DAEGU
+              </div>
+            </div>
+            <div className="mt-0.5 text-[9px] font-medium uppercase tracking-[0.19em] text-slate-500">
+              Spatial Finance Twin
             </div>
           </button>
 
