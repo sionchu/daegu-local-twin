@@ -3,6 +3,7 @@ import {
   analyzeFinancials,
   computeOpportunityScores,
   createScenario,
+  defaultAssumptions,
   distanceDecay,
   initialState,
   monthlyFixedCost,
@@ -62,6 +63,10 @@ const cell = (cellId: string, footfall: number, rent: number): LocationEvidence 
 });
 
 describe("deterministic financial engine", () => {
+  it("uses a conservative default capture-rate assumption for station-derived demand", () => {
+    expect(defaultAssumptions().assumedCaptureRate).toBe(0.0024);
+  });
+
   it("calculates startup capital and keeps working-capital reserve distinct from upfront uses", () => {
     expect(upfrontUses(assumptions)).toBe(19_000_000);
     expect(startupCapitalNeed(assumptions)).toBe(23_800_000);
@@ -83,7 +88,7 @@ describe("deterministic financial engine", () => {
     expect(monthlyFixedCost(assumptions)).toBe(2_400_000);
   });
 
-  it("calculates break-even revenue, customers, conversion and funding gap", () => {
+  it("calculates break-even revenue, customers, capture rate and funding gap", () => {
     const result = analyzeFinancials(assumptions, 2_000);
     expect(result.monthlyBreakEvenRevenueKrw).toBe(3_200_000);
     expect(result.monthlyBreakEvenCustomers).toBeCloseTo(320, 2);
@@ -100,7 +105,7 @@ describe("deterministic financial engine", () => {
     expect(result.paybackMonth).not.toBeNull();
   });
 
-  it("separates footfall stress from capture-rate stress", () => {
+  it("separates mobility-demand stress from capture-rate stress", () => {
     const base = analyzeFinancials(assumptions, 2_000, "base");
     const footfallDown = analyzeFinancials(assumptions, 2_000, "footfallDown");
     const conversionDown = analyzeFinancials(assumptions, 2_000, "conversionDown");
