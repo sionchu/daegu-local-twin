@@ -391,7 +391,7 @@ export default function LocalTwinMap({
 
   return (
     <div className="relative h-full min-h-[520px] overflow-hidden rounded-2xl bg-slate-950">
-      <div ref={containerRef} className="absolute inset-0" />
+      <div ref={containerRef} className="h-full w-full" />
       <div className="pointer-events-none absolute left-4 top-4 z-10 flex items-center gap-2 rounded-full border border-white/10 bg-slate-950/80 px-3 py-1.5 text-[11px] text-slate-200 backdrop-blur">
         <span
           className={
