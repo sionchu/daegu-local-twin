@@ -131,8 +131,8 @@ describe("deterministic financial engine", () => {
 describe("spatial normalization and state", () => {
   it("keeps missing metrics null and renormalizes available score weights", () => {
     expect(normalizeMetric([null, 10, 20], null)).toBeNull();
-    const a = cell("a", 100, 2_000_000);
-    const b = { ...cell("b", 200, 4_000_000), transitDemand: null, buzzLevel: null };
+    const a = cell("a", 100, 20_000);
+    const b = { ...cell("b", 200, 40_000), transitDemand: null, buzzLevel: null };
     const scores = computeOpportunityScores(a, [a, b]);
     expect(scores.demandScore).not.toBeNull();
     expect(scores.opportunityScore).not.toBeNull();
@@ -141,9 +141,9 @@ describe("spatial normalization and state", () => {
   });
 
   it("makes opportunity distinct from pure demand by including rent relief and regeneration", () => {
-    const highDemandHighCost = { ...cell("a", 300, 6_000_000), regenerationScore: 0 };
-    const middle = { ...cell("b", 200, 3_000_000), regenerationScore: 50 };
-    const lowDemandLowCost = { ...cell("c", 100, 1_000_000), regenerationScore: 100 };
+    const highDemandHighCost = { ...cell("a", 300, 60_000), regenerationScore: 0 };
+    const middle = { ...cell("b", 200, 30_000), regenerationScore: 50 };
+    const lowDemandLowCost = { ...cell("c", 100, 10_000), regenerationScore: 100 };
     const scores = computeOpportunityScores(highDemandHighCost, [highDemandHighCost, middle, lowDemandLowCost]);
     expect(scores.demandScore).toBeCloseTo(100, 6);
     expect(scores.opportunityScore).toBeCloseTo(55, 6);
@@ -155,8 +155,8 @@ describe("spatial normalization and state", () => {
   });
 
   it("selects A and B, clones scenarios, and does not mutate siblings", () => {
-    const a = cell("a", 100, 2_000_000);
-    const b = cell("b", 200, 3_000_000);
+    const a = cell("a", 100, 20_000);
+    const b = cell("b", 200, 30_000);
     const base = initialState([a, b]);
     const selected = reducer(base, { type: "SELECT_CELL", cellId: "b", slot: "A" });
     expect(selected.scenarios.find((item) => item.id === "scenario-a")?.locationCellId).toBe("b");
@@ -171,7 +171,7 @@ describe("spatial normalization and state", () => {
   });
 
   it("updates category-sensitive defaults without overwriting location-specific rent", () => {
-    const a = cell("a", 100, 2_000_000);
+    const a = cell("a", 100, 20_000);
     const base = initialState([a]);
     const scenario = base.scenarios[0];
     const customRent = reducer(base, {
