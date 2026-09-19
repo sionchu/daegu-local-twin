@@ -21,9 +21,11 @@ data governed by their own licenses and terms.
 - **OpenFreeMap** provides the default hosted style/vector source used by the demo.
   Map data is OpenStreetMap-derived; preserve the provider/OpenStreetMap attribution
   shown by the map and review provider terms before production-scale use.
-- **MapLibre demo terrain tiles** provide the default raster-DEM demo endpoint.
-  This is a prototype dependency and should be replaced with a deployment-approved DEM
-  provider or self-hosted source before production use.
+- **AWS Open Data Terrain Tiles** (`elevation-tiles-prod`) provide the default
+  raster-DEM fallback in Terrarium encoding. The dataset is managed by Mapzen/Tilezen;
+  preserve the full Joerd terrain-data attribution requirements documented at
+  `https://github.com/tilezen/joerd/blob/master/docs/attribution.md`.
+  `NEXT_PUBLIC_DEM_TILEJSON_URL` may override this with a deployment-approved source.
 
 ## Optional computer vision
 
