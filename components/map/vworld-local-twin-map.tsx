@@ -197,9 +197,7 @@ export default function VWorldLocalTwinMap({
           fetch("/data/transit_station_locations.json"),
           hasNativeBuildingLayer
             ? Promise.resolve(null)
-            : fetch(
-                `/api/buildings?lon=${DAEGU_CENTER[0]}&lat=${DAEGU_CENTER[1]}&radius=650`,
-              ).catch(() => null),
+            : fetch("/data/buildings_central_daegu.geojson").catch(() => null),
         ]);
         const admin = (await adminResponse.json()) as AdminBoundaryCollection;
         const transit = (await transitResponse.json()) as TransitSnapshot;
@@ -244,7 +242,7 @@ export default function VWorldLocalTwinMap({
         let buildingCount = 0;
         viewer.entities.suspendEvents?.();
         try {
-          for (const [featureIndex, feature] of (buildings.features ?? []).slice(0, 420).entries()) {
+          for (const [featureIndex, feature] of (buildings.features ?? []).slice(0, 360).entries()) {
             const heightM = clamp(Number(feature.properties?.heightM ?? 9), 3, 180);
             for (const [ringIndex, ring] of buildingOuterRings(feature.geometry).entries()) {
               if (!ring || ring.length < 4) continue;
