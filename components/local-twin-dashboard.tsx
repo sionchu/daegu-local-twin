@@ -635,8 +635,8 @@ export default function LocalTwinDashboard() {
           </div>
         ) : null}
 
-        {view === "map" && selectedCell && selectedScores ? (
-          <>
+        {selectedCell && selectedScores ? (
+          <div className={view === "map" ? "contents" : "hidden"}>
             <section className="grid min-w-0 gap-5 xl:grid-cols-[minmax(0,1fr)_370px]">
               <Card className="min-w-0 overflow-hidden">
                 <CardHeader className="gap-4 border-b border-white/8 pb-4">
@@ -954,7 +954,7 @@ export default function LocalTwinDashboard() {
                 </section>
               )}
             />
-          </>
+          </div>
         ) : null}
 
         {view === "compare" &&
