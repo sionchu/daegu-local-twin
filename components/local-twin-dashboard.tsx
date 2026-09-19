@@ -3,28 +3,26 @@
 import dynamic from "next/dynamic";
 import {
   ArrowLeftRight,
-  Building2,
   Clock3,
   Database,
   DollarSign,
-  Layers3,
   MapPin,
   Moon,
-  Mountain,
   Sun,
   TrendingUp,
   WalletCards,
 } from "lucide-react";
-import { useCallback, useEffect, useMemo, useReducer, useRef, useState } from "react";
+import {
+  type ReactNode,
+  useCallback,
+  useEffect,
+  useMemo,
+  useReducer,
+  useRef,
+  useState,
+} from "react";
 import * as SunCalc from "suncalc";
 
-import {
-  CashRunwayChart,
-  DemandTimelineChart,
-  FinanceBridgeChart,
-  OpportunityCompositionChart,
-  RentDemandScatterChart,
-} from "@/components/charts/localtwin-charts";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
@@ -59,14 +57,59 @@ import {
 } from "@/src/types";
 import { registerLocalTwinTools } from "@/src/webmcp";
 
-const LocalTwinMap = dynamic(() => import("@/components/map/local-twin-map"), {
-  ssr: false,
-  loading: () => (
-    <div className="grid min-h-[520px] place-items-center rounded-2xl bg-slate-950 text-sm text-slate-400">
-      MapLibre 3D 엔진을 준비하고 있습니다.
-    </div>
-  ),
-});
+const LocalTwinMap = dynamic(
+  () => import("@/components/map/local-twin-spatial-map"),
+  {
+    ssr: false,
+    loading: () => (
+      <div className="grid min-h-[520px] place-items-center rounded-2xl bg-slate-950 text-sm text-slate-400">
+        VWorld 3D 공간 엔진을 준비하고 있습니다.
+      </div>
+    ),
+  },
+);
+
+const chartLoading = () => (
+  <div className="grid h-64 place-items-center rounded-xl border border-white/6 bg-white/[0.02] text-xs text-slate-600">
+    분석 차트를 불러오는 중…
+  </div>
+);
+
+const DemandTimelineChart = dynamic(
+  () =>
+    import("@/components/charts/localtwin-charts").then(
+      (module) => module.DemandTimelineChart,
+    ),
+  { ssr: false, loading: chartLoading },
+);
+const RentDemandScatterChart = dynamic(
+  () =>
+    import("@/components/charts/localtwin-charts").then(
+      (module) => module.RentDemandScatterChart,
+    ),
+  { ssr: false, loading: chartLoading },
+);
+const OpportunityCompositionChart = dynamic(
+  () =>
+    import("@/components/charts/localtwin-charts").then(
+      (module) => module.OpportunityCompositionChart,
+    ),
+  { ssr: false, loading: chartLoading },
+);
+const CashRunwayChart = dynamic(
+  () =>
+    import("@/components/charts/localtwin-charts").then(
+      (module) => module.CashRunwayChart,
+    ),
+  { ssr: false, loading: chartLoading },
+);
+const FinanceBridgeChart = dynamic(
+  () =>
+    import("@/components/charts/localtwin-charts").then(
+      (module) => module.FinanceBridgeChart,
+    ),
+  { ssr: false, loading: chartLoading },
+);
 
 type View = "map" | "compare" | "funding";
 
@@ -151,6 +194,41 @@ function qualityVariant(quality: EvidenceQuality) {
   if (quality === "demo") return "amber" as const;
   if (quality === "modelled") return "blue" as const;
   return "default" as const;
+}
+
+function DeferredSection({
+  render,
+}: {
+  render: () => ReactNode;
+}) {
+  const ref = useRef<HTMLDivElement>(null);
+  const [visible, setVisible] = useState(false);
+
+  useEffect(() => {
+    if (visible || !ref.current) return;
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        if (!entry?.isIntersecting) return;
+        setVisible(true);
+        observer.disconnect();
+      },
+      { rootMargin: "240px" },
+    );
+    observer.observe(ref.current);
+    return () => observer.disconnect();
+  }, [visible]);
+
+  return (
+    <div ref={ref} className="min-h-[520px]">
+      {visible ? (
+        render()
+      ) : (
+        <div className="grid h-[520px] place-items-center rounded-2xl border border-white/6 bg-white/[0.015] text-xs text-slate-600">
+          스크롤하면 분석 차트를 불러옵니다.
+        </div>
+      )}
+    </div>
+  );
 }
 
 function MetricTile({
@@ -389,9 +467,6 @@ export default function LocalTwinDashboard() {
   const [view, setView] = useState<View>("map");
   const [selectedCellId, setSelectedCellId] = useState<string>();
   const [selectedMinutes, setSelectedMinutes] = useState(18 * 60);
-  const [showTerrain, setShowTerrain] = useState(true);
-  const [showBuildings, setShowBuildings] = useState(true);
-  const [showExtrusion, setShowExtrusion] = useState(true);
   const [programs, setPrograms] = useState<SupportProgram[]>([]);
   const [provenance, setProvenance] = useState<Provenance>();
   const [dataError, setDataError] = useState<string>();
@@ -605,9 +680,6 @@ export default function LocalTwinDashboard() {
                       selectedCellId={selectedCellId}
                       activeLayer={state.activeLayer}
                       selectedTime={selectedTime}
-                      showTerrain={showTerrain}
-                      showBuildings={showBuildings}
-                      showExtrusion={showExtrusion}
                       onSelect={handleMapSelect}
                     />
                   </div>
@@ -635,31 +707,19 @@ export default function LocalTwinDashboard() {
                         </div>
                       </div>
 
-                      <div className="flex flex-wrap gap-2">
-                        <Button
-                          size="sm"
-                          variant={showTerrain ? "default" : "outline"}
-                          onClick={() => setShowTerrain((value) => !value)}
-                        >
-                          <Mountain className="h-3.5 w-3.5" />
-                          DEM
-                        </Button>
-                        <Button
-                          size="sm"
-                          variant={showBuildings ? "default" : "outline"}
-                          onClick={() => setShowBuildings((value) => !value)}
-                        >
-                          <Building2 className="h-3.5 w-3.5" />
-                          건물
-                        </Button>
-                        <Button
-                          size="sm"
-                          variant={showExtrusion ? "default" : "outline"}
-                          onClick={() => setShowExtrusion((value) => !value)}
-                        >
-                          <Layers3 className="h-3.5 w-3.5" />
-                          3D 지표
-                        </Button>
+                      <div className="flex flex-wrap gap-2 text-[10px] text-slate-400">
+                        <span className="rounded-full border border-emerald-300/15 bg-emerald-300/5 px-2.5 py-1">
+                          VWorld 3D city context
+                        </span>
+                        <span className="rounded-full border border-white/8 bg-white/[0.025] px-2.5 py-1">
+                          공식 행정동 경계
+                        </span>
+                        <span className="rounded-full border border-white/8 bg-white/[0.025] px-2.5 py-1">
+                          분석 셀 halo
+                        </span>
+                        <span className="rounded-full border border-white/8 bg-white/[0.025] px-2.5 py-1">
+                          지하철 anchor
+                        </span>
                       </div>
                     </div>
 
@@ -687,7 +747,7 @@ export default function LocalTwinDashboard() {
                     <div className="flex items-start justify-between gap-3">
                       <div>
                         <div className="text-[10px] uppercase tracking-[0.18em] text-slate-500">
-                          Selected cell
+                          Selected analysis cell
                         </div>
                         <CardTitle className="mt-1 text-xl">{selectedCell.label}</CardTitle>
                         <CardDescription>{selectedCell.district}</CardDescription>
@@ -757,8 +817,8 @@ export default function LocalTwinDashboard() {
                     </div>
 
                     <div className="rounded-xl border border-white/8 bg-white/[0.025] p-3 text-[10px] leading-4 text-slate-500">
-                      3D 높이는 실제 건물높이가 아니라 선택 지표를 시각화한 index extrusion입니다.
-                      실제 건물은 OpenStreetMap 기반 별도 레이어로 표시됩니다.
+                      반투명 영역은 실제 상권 경계가 아니라 공간 모델링을 위한 분석 셀입니다.
+                      공식 행정동 경계·지하철 anchor와 분리해 표시합니다.
                     </div>
                   </CardContent>
                 </Card>
@@ -815,81 +875,85 @@ export default function LocalTwinDashboard() {
               </aside>
             </section>
 
-            <section className="grid gap-5 lg:grid-cols-2">
-              <Card>
-                <CardHeader>
-                  <div className="flex items-center gap-2">
-                    <Clock3 className="h-4 w-4 text-emerald-200" />
-                    <CardTitle>시간대별 이동수요</CardTitle>
-                  </div>
-                  <CardDescription>
-                    공식 역 승하차에서 파생한 일 이동수요 proxy에 시연용 시간 분포를
-                    적용합니다. 시간대 곡선 자체는 관측치가 아닙니다.
-                  </CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <DemandTimelineChart
-                    dailyDemand={selectedCell.transitDemand}
-                    currentHour={currentHour}
-                  />
-                </CardContent>
-              </Card>
+            <DeferredSection
+              render={() => (
+                <section className="grid gap-5 lg:grid-cols-2">
+                  <Card>
+                    <CardHeader>
+                      <div className="flex items-center gap-2">
+                        <Clock3 className="h-4 w-4 text-emerald-200" />
+                        <CardTitle>시간대별 이동수요</CardTitle>
+                      </div>
+                      <CardDescription>
+                        공식 역 승하차에서 파생한 일 이동수요 proxy에 시연용 시간 분포를
+                        적용합니다. 시간대 곡선 자체는 관측치가 아닙니다.
+                      </CardDescription>
+                    </CardHeader>
+                    <CardContent>
+                      <DemandTimelineChart
+                        dailyDemand={selectedCell.transitDemand}
+                        currentHour={currentHour}
+                      />
+                    </CardContent>
+                  </Card>
 
-              <Card>
-                <CardHeader>
-                  <div className="flex items-center gap-2">
-                    <DollarSign className="h-4 w-4 text-amber-200" />
-                    <CardTitle>임대료 vs 수요</CardTitle>
-                  </div>
-                  <CardDescription>
-                    공식 상권 임대 benchmark가 연결된 셀만 표시합니다. ㎡당 환산임대료와
-                    모델 수요의 상대적 위치를 비교합니다.
-                  </CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <RentDemandScatterChart
-                    cells={state.cells}
-                    selectedCellId={selectedCellId}
-                  />
-                </CardContent>
-              </Card>
+                  <Card>
+                    <CardHeader>
+                      <div className="flex items-center gap-2">
+                        <DollarSign className="h-4 w-4 text-amber-200" />
+                        <CardTitle>임대료 vs 수요</CardTitle>
+                      </div>
+                      <CardDescription>
+                        공식 상권 임대 benchmark가 연결된 셀만 표시합니다. ㎡당 환산임대료와
+                        모델 수요의 상대적 위치를 비교합니다.
+                      </CardDescription>
+                    </CardHeader>
+                    <CardContent>
+                      <RentDemandScatterChart
+                        cells={state.cells}
+                        selectedCellId={selectedCellId}
+                      />
+                    </CardContent>
+                  </Card>
 
-              <Card>
-                <CardHeader>
-                  <div className="flex items-center gap-2">
-                    <TrendingUp className="h-4 w-4 text-sky-200" />
-                    <CardTitle>Opportunity 분해</CardTitle>
-                  </div>
-                  <CardDescription>
-                    하나의 magic score로 숨기지 않고 주요 신호를 분리합니다.
-                  </CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <OpportunityCompositionChart scores={selectedScores} />
-                </CardContent>
-              </Card>
+                  <Card>
+                    <CardHeader>
+                      <div className="flex items-center gap-2">
+                        <TrendingUp className="h-4 w-4 text-sky-200" />
+                        <CardTitle>Opportunity 분해</CardTitle>
+                      </div>
+                      <CardDescription>
+                        하나의 magic score로 숨기지 않고 주요 신호를 분리합니다.
+                      </CardDescription>
+                    </CardHeader>
+                    <CardContent>
+                      <OpportunityCompositionChart scores={selectedScores} />
+                    </CardContent>
+                  </Card>
 
-              {activeBaseAnalysis && activeStressAnalysis ? (
-                <Card>
-                  <CardHeader>
-                    <div className="flex items-center gap-2">
-                      <WalletCards className="h-4 w-4 text-emerald-200" />
-                      <CardTitle>12개월 Cash Runway</CardTitle>
-                    </div>
-                    <CardDescription>
-                      기본 가정과 {stressPresetLabels[activeStressPreset]} 시나리오 비교.
-                    </CardDescription>
-                  </CardHeader>
-                  <CardContent>
-                    <CashRunwayChart
-                      base={activeBaseAnalysis}
-                      stressed={activeStressAnalysis}
-                      stressLabel={stressPresetLabels[activeStressPreset]}
-                    />
-                  </CardContent>
-                </Card>
-              ) : null}
-            </section>
+                  {activeBaseAnalysis && activeStressAnalysis ? (
+                    <Card>
+                      <CardHeader>
+                        <div className="flex items-center gap-2">
+                          <WalletCards className="h-4 w-4 text-emerald-200" />
+                          <CardTitle>12개월 Cash Runway</CardTitle>
+                        </div>
+                        <CardDescription>
+                          기본 가정과 {stressPresetLabels[activeStressPreset]} 시나리오 비교.
+                        </CardDescription>
+                      </CardHeader>
+                      <CardContent>
+                        <CashRunwayChart
+                          base={activeBaseAnalysis}
+                          stressed={activeStressAnalysis}
+                          stressLabel={stressPresetLabels[activeStressPreset]}
+                        />
+                      </CardContent>
+                    </Card>
+                  ) : null}
+                </section>
+              )}
+            />
           </>
         ) : null}
 
