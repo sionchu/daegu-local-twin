@@ -12,3 +12,5 @@ coverage/
 *.log
 .venv/
 data/raw/
+playwright-report/
+test-results/
