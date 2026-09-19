@@ -7,8 +7,6 @@ import {
   Database,
   DollarSign,
   MapPin,
-  Moon,
-  Sun,
   TrendingUp,
   WalletCards,
 } from "lucide-react";
@@ -21,8 +19,6 @@ import {
   useRef,
   useState,
 } from "react";
-import * as SunCalc from "suncalc";
-
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
@@ -131,12 +127,12 @@ type Provenance = {
 };
 
 const layerLabels: Record<MapLayer, string> = {
-  opportunity: "종합 Opportunity",
-  demand: "상권 수요",
-  transit: "교통 접근",
-  buzz: "Buzz",
+  opportunity: "종합",
+  demand: "수요",
+  transit: "교통",
+  buzz: "관심도",
   spillover: "파생수요",
-  regeneration: "쇠퇴·재생 맥락",
+  regeneration: "재생맥락",
   rent: "임대여력",
 };
 
@@ -145,21 +141,6 @@ const viewMeta: Record<View, { index: string; label: string }> = {
   compare: { index: "02", label: "후보비교" },
   funding: { index: "03", label: "자금계획" },
 };
-
-const DAEGU_LAT = 35.8714;
-const DAEGU_LON = 128.5967;
-
-function pad(value: number) {
-  return String(value).padStart(2, "0");
-}
-
-function timeLabel(minutes: number) {
-  return pad(Math.floor(minutes / 60)) + ":" + pad(minutes % 60);
-}
-
-function dateForKstMinutes(minutes: number) {
-  return new Date("2026-09-19T" + timeLabel(minutes) + ":00+09:00");
-}
 
 function formatMan(value: number) {
   return Math.round(value / 10_000).toLocaleString("ko-KR") + "만원";
@@ -466,7 +447,6 @@ export default function LocalTwinDashboard() {
 
   const [view, setView] = useState<View>("map");
   const [selectedCellId, setSelectedCellId] = useState<string>();
-  const [selectedMinutes, setSelectedMinutes] = useState(18 * 60);
   const [programs, setPrograms] = useState<SupportProgram[]>([]);
   const [provenance, setProvenance] = useState<Provenance>();
   const [dataError, setDataError] = useState<string>();
@@ -564,12 +544,7 @@ export default function LocalTwinDashboard() {
         )
       : null;
 
-  const selectedTime = dateForKstMinutes(selectedMinutes);
-  const currentHour = Math.floor(selectedMinutes / 60);
-  const sun = SunCalc.getPosition(selectedTime, DAEGU_LAT, DAEGU_LON);
-  const sunAltitude = sun.altitude;
-  const sunAzimuth = ((sun.azimuth % 360) + 360) % 360;
-  const isDay = sunAltitude > 0;
+  const currentHour = 18;
 
   if (!state.cells.length && !dataError) {
     return (
@@ -679,65 +654,10 @@ export default function LocalTwinDashboard() {
                       cells={state.cells}
                       selectedCellId={selectedCellId}
                       activeLayer={state.activeLayer}
-                      selectedTime={selectedTime}
                       onSelect={handleMapSelect}
                     />
                   </div>
 
-                  <div className="mt-4 rounded-2xl border border-white/8 bg-slate-950/40 p-4">
-                    <div className="flex flex-wrap items-center justify-between gap-3">
-                      <div className="flex items-center gap-3">
-                        <div
-                          className={
-                            "grid h-9 w-9 place-items-center rounded-xl " +
-                            (isDay
-                              ? "bg-amber-300/10 text-amber-200"
-                              : "bg-sky-300/10 text-sky-200")
-                          }
-                        >
-                          {isDay ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
-                        </div>
-                        <div>
-                          <div className="text-sm font-semibold text-white">
-                            2026.09.19 · {timeLabel(selectedMinutes)}
-                          </div>
-                          <div className="text-[10px] text-slate-500">
-                            태양 고도 {sunAltitude.toFixed(1)}° · 방위 {sunAzimuth.toFixed(0)}°
-                          </div>
-                        </div>
-                      </div>
-
-                      <div className="flex flex-wrap gap-2 text-[10px] text-slate-400">
-                        <span className="rounded-full border border-emerald-300/15 bg-emerald-300/5 px-2.5 py-1">
-                          VWorld 3D city context
-                        </span>
-                        <span className="rounded-full border border-white/8 bg-white/[0.025] px-2.5 py-1">
-                          공식 행정동 경계
-                        </span>
-                        <span className="rounded-full border border-white/8 bg-white/[0.025] px-2.5 py-1">
-                          분석 셀 halo
-                        </span>
-                        <span className="rounded-full border border-white/8 bg-white/[0.025] px-2.5 py-1">
-                          지하철 anchor
-                        </span>
-                      </div>
-                    </div>
-
-                    <div className="mt-4 grid grid-cols-[42px_minmax(0,1fr)_42px] items-center gap-3">
-                      <span className="text-[10px] text-slate-600">06:00</span>
-                      <input
-                        aria-label="시간 선택"
-                        className="localtwin-range w-full"
-                        type="range"
-                        min={6 * 60}
-                        max={23 * 60}
-                        step={15}
-                        value={selectedMinutes}
-                        onChange={(event) => setSelectedMinutes(Number(event.target.value))}
-                      />
-                      <span className="text-right text-[10px] text-slate-600">23:00</span>
-                    </div>
-                  </div>
                 </CardContent>
               </Card>
 
@@ -747,7 +667,7 @@ export default function LocalTwinDashboard() {
                     <div className="flex items-start justify-between gap-3">
                       <div>
                         <div className="text-[10px] uppercase tracking-[0.18em] text-slate-500">
-                          Selected analysis cell
+                          분석 후보
                         </div>
                         <CardTitle className="mt-1 text-xl">{selectedCell.label}</CardTitle>
                         <CardDescription>{selectedCell.district}</CardDescription>
@@ -760,17 +680,15 @@ export default function LocalTwinDashboard() {
                   <CardContent className="space-y-4 pt-5">
                     <div className="flex items-end justify-between gap-4">
                       <div>
-                        <div className="text-[11px] text-slate-500">종합 Opportunity</div>
+                        <div className="text-[11px] text-slate-500">기회지수</div>
                         <div className="mt-1 text-5xl font-semibold tracking-[-0.06em] text-white">
                           {Math.round(selectedScores.opportunityScore ?? 0)}
                         </div>
                       </div>
                       <div className="text-right text-[10px] leading-4 text-slate-500">
-                        Demand 55%
+                        상대지표 / 100
                         <br />
-                        Rent relief 25%
-                        <br />
-                        재생맥락 20%
+                        수요 55 · 임대 25 · 재생 20
                       </div>
                     </div>
 
@@ -783,7 +701,7 @@ export default function LocalTwinDashboard() {
                       <MetricTile
                         label="임대료 Benchmark"
                         value={formatRentPerSqm(selectedCell.rentBenchmarkKrwPerSqm)}
-                        note="소규모 상가 1층 환산임대료 · 점포 전체 월세 아님"
+                        note="R-ONE 2026 Q2 기반 · 정확매칭/공간보간 benchmark · 점포 호가 아님"
                       />
                       <MetricTile
                         label="Buzz momentum"
