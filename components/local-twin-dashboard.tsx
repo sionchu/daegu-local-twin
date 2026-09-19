@@ -219,7 +219,7 @@ function DeferredSection({
   }, [visible]);
 
   return (
-    <div ref={ref} className="min-h-[520px]">
+    <div ref={ref} className="min-h-[520px]" data-testid="deferred-map-charts">
       {visible ? (
         render()
       ) : (
