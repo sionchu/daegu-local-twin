@@ -3,6 +3,7 @@ import {
   analyzeFinancials,
   computeOpportunityScores,
   createScenario,
+  defaultAssumptions,
   distanceDecay,
   initialState,
   monthlyFixedCost,
@@ -30,7 +31,7 @@ const assumptions: StartupAssumptions = {
   averageTicketKrw: 10_000,
   variableCostRatio: 0.25,
   operatingDaysPerMonth: 25,
-  assumedConversionRate: 0.04,
+  assumedCaptureRate: 0.04,
   ownerCashKrw: 24_000_000,
   grantKrw: 1_000_000,
   assumedFinancingKrw: 0,
@@ -55,13 +56,17 @@ const cell = (cellId: string, footfall: number, rent: number): LocationEvidence 
   buzzMomentum: 0.1,
   spilloverScore: footfall / 10,
   regenerationScore: 50,
-  rentBenchmark: rent,
+  rentBenchmarkKrwPerSqm: rent,
   vacancyBenchmark: 10,
   evidenceQuality: "demo",
   provenanceIds: ["test"],
 });
 
 describe("deterministic financial engine", () => {
+  it("uses a conservative default capture-rate assumption for station-derived demand", () => {
+    expect(defaultAssumptions().assumedCaptureRate).toBe(0.0024);
+  });
+
   it("calculates startup capital and keeps working-capital reserve distinct from upfront uses", () => {
     expect(upfrontUses(assumptions)).toBe(19_000_000);
     expect(startupCapitalNeed(assumptions)).toBe(23_800_000);
@@ -83,12 +88,12 @@ describe("deterministic financial engine", () => {
     expect(monthlyFixedCost(assumptions)).toBe(2_400_000);
   });
 
-  it("calculates break-even revenue, customers, conversion and funding gap", () => {
+  it("calculates break-even revenue, customers, capture rate and funding gap", () => {
     const result = analyzeFinancials(assumptions, 2_000);
     expect(result.monthlyBreakEvenRevenueKrw).toBe(3_200_000);
     expect(result.monthlyBreakEvenCustomers).toBeCloseTo(320, 2);
     expect(result.breakEvenCustomersPerDay).toBeCloseTo(12.8, 2);
-    expect(result.requiredConversionRate).toBeCloseTo(0.0064, 5);
+    expect(result.requiredCaptureRate).toBeCloseTo(0.0064, 5);
     expect(result.fundingGapKrw).toBe(0);
   });
 
@@ -100,15 +105,15 @@ describe("deterministic financial engine", () => {
     expect(result.paybackMonth).not.toBeNull();
   });
 
-  it("separates footfall stress from conversion stress", () => {
+  it("separates mobility-demand stress from capture-rate stress", () => {
     const base = analyzeFinancials(assumptions, 2_000, "base");
     const footfallDown = analyzeFinancials(assumptions, 2_000, "footfallDown");
     const conversionDown = analyzeFinancials(assumptions, 2_000, "conversionDown");
 
-    expect(footfallDown.effectiveDailyFootfall).toBe(1_600);
-    expect(conversionDown.effectiveDailyFootfall).toBe(2_000);
-    expect(footfallDown.requiredConversionRate!).toBeGreaterThan(base.requiredConversionRate!);
-    expect(conversionDown.requiredConversionRate).toBeCloseTo(base.requiredConversionRate!, 8);
+    expect(footfallDown.effectiveDailyDemandProxy).toBe(1_600);
+    expect(conversionDown.effectiveDailyDemandProxy).toBe(2_000);
+    expect(footfallDown.requiredCaptureRate!).toBeGreaterThan(base.requiredCaptureRate!);
+    expect(conversionDown.requiredCaptureRate).toBeCloseTo(base.requiredCaptureRate!, 8);
     expect(footfallDown.steadyStateRevenueKrw).toBeLessThan(base.steadyStateRevenueKrw);
     expect(conversionDown.steadyStateRevenueKrw).toBeLessThan(base.steadyStateRevenueKrw);
   });
@@ -126,8 +131,8 @@ describe("deterministic financial engine", () => {
 describe("spatial normalization and state", () => {
   it("keeps missing metrics null and renormalizes available score weights", () => {
     expect(normalizeMetric([null, 10, 20], null)).toBeNull();
-    const a = cell("a", 100, 2_000_000);
-    const b = { ...cell("b", 200, 4_000_000), transitDemand: null, buzzLevel: null };
+    const a = cell("a", 100, 20_000);
+    const b = { ...cell("b", 200, 40_000), transitDemand: null, buzzLevel: null };
     const scores = computeOpportunityScores(a, [a, b]);
     expect(scores.demandScore).not.toBeNull();
     expect(scores.opportunityScore).not.toBeNull();
@@ -136,9 +141,9 @@ describe("spatial normalization and state", () => {
   });
 
   it("makes opportunity distinct from pure demand by including rent relief and regeneration", () => {
-    const highDemandHighCost = { ...cell("a", 300, 6_000_000), regenerationScore: 0 };
-    const middle = { ...cell("b", 200, 3_000_000), regenerationScore: 50 };
-    const lowDemandLowCost = { ...cell("c", 100, 1_000_000), regenerationScore: 100 };
+    const highDemandHighCost = { ...cell("a", 300, 60_000), regenerationScore: 0 };
+    const middle = { ...cell("b", 200, 30_000), regenerationScore: 50 };
+    const lowDemandLowCost = { ...cell("c", 100, 10_000), regenerationScore: 100 };
     const scores = computeOpportunityScores(highDemandHighCost, [highDemandHighCost, middle, lowDemandLowCost]);
     expect(scores.demandScore).toBeCloseTo(100, 6);
     expect(scores.opportunityScore).toBeCloseTo(55, 6);
@@ -150,8 +155,8 @@ describe("spatial normalization and state", () => {
   });
 
   it("selects A and B, clones scenarios, and does not mutate siblings", () => {
-    const a = cell("a", 100, 2_000_000);
-    const b = cell("b", 200, 3_000_000);
+    const a = cell("a", 100, 20_000);
+    const b = cell("b", 200, 30_000);
     const base = initialState([a, b]);
     const selected = reducer(base, { type: "SELECT_CELL", cellId: "b", slot: "A" });
     expect(selected.scenarios.find((item) => item.id === "scenario-a")?.locationCellId).toBe("b");
@@ -166,7 +171,7 @@ describe("spatial normalization and state", () => {
   });
 
   it("updates category-sensitive defaults without overwriting location-specific rent", () => {
-    const a = cell("a", 100, 2_000_000);
+    const a = cell("a", 100, 20_000);
     const base = initialState([a]);
     const scenario = base.scenarios[0];
     const customRent = reducer(base, {

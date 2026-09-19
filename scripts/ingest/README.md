@@ -2,15 +2,10 @@
 
 The public V0 keeps expensive joins offline. Adapters should write normalized, provenance-stamped JSON under `public/data/` and must never put API keys in the browser bundle.
 
-Planned refresh adapters:
-
-- `fetch_businesses.py` — 소상공인시장진흥공단 상가(상권)정보
-- `fetch_transit.py` — 대구교통공사 역별 승하차
-- `fetch_regeneration.py` — 도시재생 진단정보
-- `fetch_rent_benchmark.py` — 한국부동산원 상업용 benchmark
-- `fetch_buzz.py` — Naver DataLab/Blog Search through a server-side or local credential
-
-The committed corridor files are intentionally marked `demo` or `snapshot`. A refresh script must preserve the source, retrieval date, geographic level, and limitations for every field it writes.
+Committed refresh adapters now cover SEMAS businesses, Daegu Metro ridership, urban
+decline, SGIS boundaries, REB rent/vacancy, and NAVER DataLab public exports. Every
+snapshot preserves source, retrieval date, geography, semantics, and limitations.
+Credentials never enter the browser bundle or committed artifacts.
 
 ## Official SEMAS business snapshot
 
@@ -45,3 +40,24 @@ The derivation is network-free and updates only:
 - `public/data/cell_spatial_evidence.json` as the audit sidecar.
 
 It does not alter transit, rent, Buzz, spillover, or mobility/footfall values.
+
+
+## Cell market evidence derivation
+
+After transit, REB, and NAVER snapshots are refreshed, regenerate the remaining market
+inputs with:
+
+```bash
+python scripts/ingest/derive_market_evidence.py
+```
+
+This network-free step:
+- computes `transitDemand` from official 10:00–22:00 station ridership using 450 m
+  exponential distance decay;
+- sets `observedFootfall` to `null`;
+- maps NAVER relative interest only to exact corridor concepts;
+- maps REB rent/vacancy only where an explicit official-area name match is supported;
+- derives anchor strength and 350 m neighboring spillover;
+- writes `public/data/cell_market_evidence.json` for audit.
+
+REB rent stays in KRW/㎡ and is never converted into a storefront's total monthly rent.

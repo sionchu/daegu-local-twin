@@ -43,7 +43,7 @@ export const defaultAssumptions = (category: BusinessCategory = "cafe"): Startup
     averageTicketKrw: categoryDefaults[category].averageTicketKrw,
     variableCostRatio: categoryDefaults[category].variableCostRatio,
     operatingDaysPerMonth: 26,
-    assumedConversionRate: 0.024,
+    assumedCaptureRate: 0.0024,
     ownerCashKrw: 55_000_000,
     grantKrw: 0,
     assumedFinancingKrw: 35_000_000,
@@ -237,8 +237,8 @@ export function computeOpportunityScores(cell: LocationEvidence, allCells: Locat
     ? weighted.reduce((sum, [value, weight]) => sum + (value === null ? 0 : value * (weight / availableWeight)), 0)
     : null;
   const rentRelief = normalizeMetric(
-    allCells.map((item) => item.rentBenchmark === null ? null : -item.rentBenchmark),
-    cell.rentBenchmark === null ? null : -cell.rentBenchmark,
+    allCells.map((item) => item.rentBenchmarkKrwPerSqm === null ? null : -item.rentBenchmarkKrwPerSqm),
+    cell.rentBenchmarkKrwPerSqm === null ? null : -cell.rentBenchmarkKrwPerSqm,
   );
   const regeneration = cell.regenerationScore === null
     ? null
@@ -311,7 +311,7 @@ export function contributionPerCustomer(assumptions: StartupAssumptions) {
 
 export function applyStressPreset(assumptions: StartupAssumptions, preset: StressPreset): StartupAssumptions {
   const next = { ...assumptions };
-  if (["conversionDown", "combined"].includes(preset)) next.assumedConversionRate *= 0.8;
+  if (["conversionDown", "combined"].includes(preset)) next.assumedCaptureRate *= 0.8;
   if (["costUp", "combined"].includes(preset)) next.variableCostRatio = Math.min(0.99, next.variableCostRatio + 0.10);
   if (["rentUp", "combined"].includes(preset)) next.monthlyRentKrw *= 1.10;
   if (["rateUp", "combined"].includes(preset)) next.financingAnnualRate += 0.01;
@@ -320,7 +320,7 @@ export function applyStressPreset(assumptions: StartupAssumptions, preset: Stres
 
 export function analyzeFinancials(
   rawAssumptions: StartupAssumptions,
-  relevantDailyFootfall: number | null,
+  relevantDailyDemandProxy: number | null,
   preset: StressPreset = "base",
 ): FinancialAnalysis {
   const assumptions = applyStressPreset(rawAssumptions, preset);
@@ -332,14 +332,14 @@ export function analyzeFinancials(
   const monthlyBreakEvenCustomers = monthlyFixedCostKrw / contribution;
   const breakEvenCustomersPerDay = monthlyBreakEvenCustomers / assumptions.operatingDaysPerMonth;
   const monthlyBreakEvenRevenueKrw = monthlyFixedCostKrw / (1 - assumptions.variableCostRatio);
-  const effectiveDailyFootfall = relevantDailyFootfall && relevantDailyFootfall > 0
-    ? relevantDailyFootfall * (["footfallDown", "combined"].includes(preset) ? 0.8 : 1)
+  const effectiveDailyDemandProxy = relevantDailyDemandProxy && relevantDailyDemandProxy > 0
+    ? relevantDailyDemandProxy * (["footfallDown", "combined"].includes(preset) ? 0.8 : 1)
     : null;
-  const requiredConversionRate = effectiveDailyFootfall && effectiveDailyFootfall > 0
-    ? breakEvenCustomersPerDay / effectiveDailyFootfall
+  const requiredCaptureRate = effectiveDailyDemandProxy && effectiveDailyDemandProxy > 0
+    ? breakEvenCustomersPerDay / effectiveDailyDemandProxy
     : null;
-  const steadyStateRevenueKrw = effectiveDailyFootfall && effectiveDailyFootfall > 0
-    ? effectiveDailyFootfall * assumptions.assumedConversionRate * assumptions.averageTicketKrw * assumptions.operatingDaysPerMonth
+  const steadyStateRevenueKrw = effectiveDailyDemandProxy && effectiveDailyDemandProxy > 0
+    ? effectiveDailyDemandProxy * assumptions.assumedCaptureRate * assumptions.averageTicketKrw * assumptions.operatingDaysPerMonth
     : 0;
   const sourceCashKrw = assumptions.ownerCashKrw + assumptions.grantKrw + assumptions.assumedFinancingKrw + assumptions.otherFundingKrw;
   const fundingGapKrw = Math.max(0, startupCapitalNeedKrw - sourceCashKrw);
@@ -368,8 +368,8 @@ export function analyzeFinancials(
     monthlyBreakEvenRevenueKrw,
     monthlyBreakEvenCustomers,
     breakEvenCustomersPerDay,
-    requiredConversionRate,
-    effectiveDailyFootfall,
+    requiredCaptureRate,
+    effectiveDailyDemandProxy,
     steadyStateRevenueKrw,
     fundingGapKrw,
     breakEvenMonth,

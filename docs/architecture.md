@@ -28,14 +28,18 @@ decision engine remains deterministic and demoable without a live backend.
 - The selected candidate gets a Turf-generated 300 m geodesic catchment.
 - SunCalc provides solar azimuth/altitude for the time slider; MapLibre lighting and
   hillshade direction use it as a visualization input.
-- The current time-demand chart uses an explicitly labelled demo intraday profile until
-  official hourly station snapshots are ingested.
+- The current time-demand chart uses an explicitly labelled demo intraday profile over
+  the modelled daily mobility proxy. The committed transit snapshot preserves daily
+  business-hour aggregates, so the intraday curve itself is not an observation.
 
 ## Decision semantics
 
-DemandScore is a transparent weighted signal, not success probability.
-Opportunity adds rent relief and regeneration context. Financial outputs come only from
-the deterministic engine in `src/model.ts`.
+DemandScore is a transparent weighted signal, not success probability. Transit demand
+is a station-ridership distance-decay proxy; NAVER is relative search interest; REB rent
+is an official area benchmark in KRW/㎡; spillover is a deterministic neighboring-anchor
+index. Opportunity adds rent relief and regeneration context. Financial outputs come
+only from the deterministic engine in `src/model.ts`, which applies a scenario capture
+rate to the mobility proxy rather than claiming observed storefront conversion.
 
 ## Optional AI/CV
 

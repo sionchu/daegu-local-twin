@@ -34,7 +34,7 @@ candidate A/B selection
     ↓
 actual deposit + rent + business assumptions
     ↓
-BEP · customers/day · required conversion
+BEP · customers/day · required capture rate
     ↓
 12-month cash runway · payback · Funding Gap
     ↓
@@ -46,11 +46,16 @@ official support / guarantee / finance review candidates
 Every source-backed value must remain distinguishable as `observed`, `official`,
 `modelled`, or `demo`.
 
-The current central-Daegu corridor still contains explicitly labelled demo values for
-mobility, rent, Buzz, and spillover fields. SEMAS business points and official Jung-gu
-decline/boundary snapshots are now integrated through a deterministic, modelled
-cell-level join. The UI must not present any of these derived cell values as official
-store-level statistics or business-success probabilities.
+The current central-Daegu corridor is built from reviewed official/public snapshots:
+SEMAS businesses, Daegu Metro station ridership, REB commercial rent/vacancy, NAVER
+DataLab relative search interest, official urban-decline indicators, and SGIS
+administrative-dong boundaries. LocalTwin then derives cell-level mobility, rent mapping,
+regeneration context, and spillover deterministically.
+
+The derived cell values are `modelled`, not official store-level observations.
+`observedFootfall` is intentionally null because the public build has no measured
+storefront micro-footfall. Financial scenarios use the station-ridership mobility proxy
+with a user-editable capture-rate assumption.
 
 Canonical source metadata lives in:
 
@@ -60,8 +65,10 @@ Current product snapshots:
 
 - `public/data/opportunity_cells.json`
 - `public/data/cell_spatial_evidence.json`
+- `public/data/cell_market_evidence.json`
 - `public/data/admin_dong_boundaries.geojson`
 - `public/data/transit.json`
+- `public/data/transit_station_locations.json`
 - `public/data/businesses.json`
 - `public/data/rent_benchmark.json`
 - `public/data/regeneration.json`
@@ -101,11 +108,11 @@ npm test
 npm run build
 npx playwright install chromium
 npm run e2e
-python -m unittest scripts.ingest.test_refresh_daegu_transit
-python -m py_compile vision/analyze_footfall.py scripts/ingest/refresh_daegu_transit.py
+python -m unittest discover -s scripts/ingest -p 'test_*.py'
+python -m compileall -q scripts/ingest vision
 ```
 
-GitHub Actions also starts the production Next.js build in Chromium and verifies the critical demo path: dashboard load, MapLibre initialization, time slider, candidate finance recalculation, and funding inputs. Failed browser runs retain screenshots, trace, video, and the HTML report as a short-lived Actions artifact.
+GitHub Actions also starts the production Next.js build in Chromium and verifies the critical evidence path: dashboard load, MapLibre initialization, time slider, candidate finance recalculation, and funding inputs. Failed browser runs retain screenshots, trace, video, and the HTML report as a short-lived Actions artifact.
 
 ## Optional vision pipeline
 

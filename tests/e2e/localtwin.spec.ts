@@ -1,6 +1,6 @@
 import { expect, test } from "@playwright/test";
 
-test.describe("LocalTwin critical demo path", () => {
+test.describe("LocalTwin critical evidence path", () => {
   test("loads the spatial dashboard and updates time controls", async ({ page }) => {
     const pageErrors: string[] = [];
     page.on("pageerror", (error) => pageErrors.push(error.message));
@@ -45,7 +45,7 @@ test.describe("LocalTwin critical demo path", () => {
     await expect(rentInput).toHaveValue("5200000");
 
     await expect.poll(async () => scenarioA.textContent()).not.toBe(before);
-    await expect(scenarioA.getByText("필요 전환", { exact: true })).toBeVisible();
+    await expect(scenarioA.getByText("필요 포착률", { exact: true })).toBeVisible();
     await expect(scenarioA.getByText("Funding Gap", { exact: true })).toBeVisible();
   });
 

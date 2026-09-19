@@ -3,7 +3,7 @@
   "grid": {
     "kind": "hex-equivalent",
     "resolution": "single corridor cell",
-    "note": "V0는 하나의 일관된 육각형 셀 체계를 사용합니다. 셀 숫자는 공개자료 adapter 계약을 보여주는 데모 snapshot입니다."
+    "note": "V0는 하나의 일관된 셀 체계 위에 공식/공개 snapshot을 deterministic 공간 결합·거리감쇠·상대정규화로 파생합니다. 관측된 점포 앞 micro-footfall은 포함하지 않습니다."
   },
   "sources": [
     {
@@ -66,6 +66,22 @@
       ],
       "limitations": "역 단위 승하차 실측 통계이며 개별 점포 앞 보행량이나 pedestrian footfall이 아님. 점포·셀 수요로 사용하려면 역-셀 거리감쇠 등 별도 모델 변환이 필요하며 이 snapshot에는 포함하지 않음",
       "mode": "official-snapshot"
+    },
+    {
+      "id": "transit-station-locations",
+      "title": "대구 도시철도 대상역 위치 참조",
+      "provider": "대구교통공사/철도 데이터 포털 참조 + 공개 좌표 참조",
+      "url": "https://data.kric.go.kr/rips/M_01_01/detail.do?id=213&lcd=A&page=1",
+      "geographicLevel": "역 좌표",
+      "freshness": "철도 데이터 포털 위치 데이터셋 수정 2026-02-05; 좌표 참조 확인 2026-09-19",
+      "fieldsUsed": [
+        "station name",
+        "station number cross-check",
+        "latitude",
+        "longitude"
+      ],
+      "limitations": "승하차 통계와 별도 위치 참조입니다. 좌표는 역-셀 거리감쇠를 위한 보조 공간정보이며 점포 앞 보행량을 의미하지 않습니다. 개별 좌표 reference URL은 public/data/transit_station_locations.json에 기록합니다.",
+      "mode": "snapshot"
     },
     {
       "id": "regeneration",
@@ -210,18 +226,40 @@
     },
     {
       "id": "spillover-model",
-      "title": "거리감쇠 기반 파생수요 지표",
+      "title": "인접 anchor 거리감쇠 파생수요 지표",
       "provider": "LocalTwin deterministic model",
-      "url": "https://github.com/GeoDS/T-Huff",
+      "url": "https://github.com/sionchu/daegu-local-twin/blob/main/scripts/ingest/derive_market_evidence.py",
       "geographicLevel": "셀 간 관계",
-      "freshness": "computed at build/runtime",
+      "freshness": "computed from committed transit / NAVER / SEMAS snapshots",
       "fieldsUsed": [
-        "anchor strength",
-        "straight-line distance",
-        "exp decay"
+        "anchorStrength",
+        "modelled transitDemand",
+        "NAVER relative interest where available",
+        "official POI count",
+        "cell-to-cell distance",
+        "350m exponential decay"
       ],
-      "limitations": "관측된 교차방문/인과적 spillover가 아님; T-Huff calibration은 future path",
-      "mode": "demo"
+      "limitations": "관측된 교차방문 또는 인과적 spillover가 아닙니다. 다른 셀의 anchor strength를 350m 거리감쇠 후 합산하고 0–100으로 상대정규화한 modelled 공간맥락 지표입니다.",
+      "mode": "modelled"
+    },
+    {
+      "id": "cell-market-evidence",
+      "title": "LocalTwin cell-level market evidence derivation",
+      "provider": "LocalTwin deterministic model",
+      "url": "https://github.com/sionchu/daegu-local-twin/blob/main/scripts/ingest/derive_market_evidence.py",
+      "geographicLevel": "LocalTwin cell",
+      "freshness": "derived from transit 20260731, REB 2026 Q2, NAVER through 2026-09-07, SEMAS 2026-06-30",
+      "fieldsUsed": [
+        "transitDemand",
+        "buzzLevel",
+        "buzzMomentum",
+        "rentBenchmarkKrwPerSqm",
+        "vacancyBenchmark",
+        "anchorStrength",
+        "spilloverScore"
+      ],
+      "limitations": "공식/공개 원자료를 LocalTwin 셀에 연결한 modelled 파생값입니다. transitDemand는 역 승하차 거리감쇠 proxy이고, NAVER는 상대 관심도, REB는 ㎡당 상권 benchmark입니다. 관측 점포 보행량·실제 점포 월세·매출·성공확률을 의미하지 않습니다.",
+      "mode": "modelled"
     },
     {
       "id": "footfall",
@@ -229,13 +267,13 @@
       "provider": "LocalTwin optional offline vision",
       "url": "https://github.com/roboflow/rf-detr",
       "geographicLevel": "camera zone/time bucket",
-      "freshness": "pipeline contract",
+      "freshness": "optional pipeline contract; not active in current cell evidence",
       "fieldsUsed": [
         "aggregate in/out counts",
         "mean occupancy"
       ],
-      "limitations": "얼굴·신원·re-ID를 저장하지 않음; 공개 snapshot은 demo aggregate",
-      "mode": "demo"
+      "limitations": "선택적 offline vision pipeline 계약이며 현재 opportunity_cells의 observedFootfall에는 사용하지 않습니다. 공개 셀 데이터의 observedFootfall은 null이고 얼굴·신원·re-ID를 저장하지 않습니다.",
+      "mode": "snapshot"
     },
     {
       "id": "dgsinbo",
