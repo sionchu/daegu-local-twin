@@ -116,6 +116,7 @@ export async function startVWorld(
   return new Promise<{ viewer: any; map: any }>((resolve, reject) => {
     let settled = false;
     let map: any;
+    const deadline = Date.now() + 15_000;
     const finish = () => {
       const viewer = resolveViewer(map);
       if (!viewer?.entities || settled) return false;
@@ -124,14 +125,19 @@ export async function startVWorld(
       resolve({ viewer, map });
       return true;
     };
-    const timeout = window.setTimeout(() => {
-      if (!settled) reject(new Error("VWorld 3D initialization timed out"));
-    }, 15_000);
+    const waitForViewer = () => {
+      if (finish()) return;
+      if (Date.now() >= deadline) {
+        settled = true;
+        reject(new Error("VWorld 3D initialization timed out"));
+        return;
+      }
+      window.setTimeout(waitForViewer, 100);
+    };
 
     const originalCallback = vw.ws3dInitCallBack;
     vw.ws3dInitCallBack = () => {
-      window.clearTimeout(timeout);
-      finish();
+      waitForViewer();
       if (typeof originalCallback === "function") originalCallback();
     };
 
@@ -151,7 +157,7 @@ export async function startVWorld(
     map.setLogoVisible?.(false);
     map.setNavigationZoomVisible?.(false);
     map.start();
-    if (finish()) window.clearTimeout(timeout);
+    waitForViewer();
   });
 }
 
