@@ -110,6 +110,22 @@
       "mode": "official-snapshot"
     },
     {
+      "id": "cell-spatial-evidence",
+      "title": "LocalTwin cell-level spatial evidence derivation",
+      "provider": "LocalTwin deterministic model",
+      "url": "https://github.com/sionchu/daegu-local-twin/blob/main/scripts/ingest/derive_cell_evidence.py",
+      "geographicLevel": "LocalTwin cell",
+      "freshness": "derived from SEMAS 2026-06-30, SGIS boundary 2025-06-30, decline snapshot 2025-12-31",
+      "fieldsUsed": [
+        "poiCount",
+        "sameCategoryCounts",
+        "cell-to-admin-dong assignment",
+        "regenerationScore"
+      ],
+      "limitations": "셀 단위 값은 공식 원자료를 공간적으로 결합한 modelled 파생값. sameCategoryCount는 기본 카페 시나리오 호환 필드이며 service 대분류를 정확한 경쟁업종으로 해석하지 않음. 경계 snapshot(2025-06-30)과 쇠퇴지표 기준일(2025-12-31)의 시점 차이가 있음.",
+      "mode": "modelled"
+    },
+    {
       "id": "rent-benchmark",
       "title": "한국부동산원 상업용부동산 임대·공실 benchmark",
       "provider": "한국부동산원 / 공공데이터포털",
