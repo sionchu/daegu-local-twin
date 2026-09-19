@@ -44,7 +44,7 @@ export type LocationEvidence = {
   buzzMomentum: number | null;
   spilloverScore: number | null;
   regenerationScore: number | null;
-  rentBenchmark: number | null;
+  rentBenchmarkKrwPerSqm: number | null;
   vacancyBenchmark: number | null;
   evidenceQuality: EvidenceQuality;
   provenanceIds: string[];
@@ -63,7 +63,7 @@ export type StressPreset =
 export const stressPresetLabels: Record<StressPreset, string> = {
   base: "기본",
   footfallDown: "이동수요 -20%",
-  conversionDown: "전환율 -20%",
+  conversionDown: "포착률 -20%",
   costUp: "원가율 +10%p",
   rentUp: "임대료 +10%",
   rateUp: "금리 +1%p",
@@ -86,7 +86,7 @@ export type StartupAssumptions = {
   averageTicketKrw: number;
   variableCostRatio: number;
   operatingDaysPerMonth: number;
-  assumedConversionRate: number;
+  assumedCaptureRate: number;
   ownerCashKrw: number;
   grantKrw: number;
   assumedFinancingKrw: number;
@@ -121,8 +121,8 @@ export type FinancialAnalysis = {
   monthlyBreakEvenRevenueKrw: number;
   monthlyBreakEvenCustomers: number;
   breakEvenCustomersPerDay: number;
-  requiredConversionRate: number | null;
-  effectiveDailyFootfall: number | null;
+  requiredCaptureRate: number | null;
+  effectiveDailyDemandProxy: number | null;
   steadyStateRevenueKrw: number;
   fundingGapKrw: number;
   breakEvenMonth: number | null;
