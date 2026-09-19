@@ -79,7 +79,7 @@ type ProvenanceSource = {
   freshness: string;
   fieldsUsed: string[];
   limitations: string;
-  mode: "live" | "snapshot" | "demo";
+  mode: "live" | "snapshot" | "official-snapshot" | "modelled" | "demo";
 };
 
 type Provenance = {
