@@ -1,0 +1,72 @@
+{
+  "mode": "reference-snapshot",
+  "coordinateSystem": "EPSG:4326",
+  "officialLocationDatasetReference": {
+    "title": "대구교통공사 역위치(위도,경도)",
+    "provider": "대구교통공사 / 철도 데이터 포털",
+    "url": "https://data.kric.go.kr/rips/M_01_01/detail.do?id=213&lcd=A&page=1",
+    "modifiedAt": "2026-02-05",
+    "note": "철도 데이터 포털에 대구교통공사 역사 위·경도 데이터셋이 공개되어 있음을 확인한 참조입니다."
+  },
+  "records": [
+    {
+      "station": "중앙로역",
+      "stationNumbers": [
+        "1310"
+      ],
+      "latitude": 35.870846478,
+      "longitude": 128.593988747,
+      "coordinateSource": {
+        "provider": "Rail.Blue",
+        "url": "https://rail.blue/railroad/logis/stationinfo.aspx?id=700131",
+        "accessedAt": "2026-09-19"
+      }
+    },
+    {
+      "station": "반월당역",
+      "stationNumbers": [
+        "1300",
+        "2300"
+      ],
+      "latitude": 35.86440276,
+      "longitude": 128.593350427,
+      "coordinateSource": {
+        "provider": "Rail.Blue",
+        "url": "https://rail.blue/railroad/logis/stationinfo.aspx?id=700130",
+        "accessedAt": "2026-09-19"
+      }
+    },
+    {
+      "station": "서문시장역",
+      "stationNumbers": [
+        "3280"
+      ],
+      "latitude": 35.8727777778,
+      "longitude": 128.5808333333,
+      "coordinateSource": {
+        "provider": "Wikidata",
+        "url": "https://www.wikidata.org/wiki/Q15847466",
+        "accessedAt": "2026-09-19",
+        "note": "coordinate location 35°52′22″N, 128°34′51″E; station code 328"
+      }
+    },
+    {
+      "station": "대구역",
+      "stationNumbers": [
+        "1320"
+      ],
+      "latitude": 35.876329158,
+      "longitude": 128.597099198,
+      "coordinateSource": {
+        "provider": "Rail.Blue",
+        "url": "https://rail.blue/railroad/logis/stationinfo.aspx?id=700132",
+        "accessedAt": "2026-09-19"
+      }
+    }
+  ],
+  "limitations": [
+    "승하차 통계의 공식 출처와 역 좌표 참조 출처는 서로 다릅니다.",
+    "역 좌표는 역-셀 거리감쇠 모델을 위한 보조 공간참조이며 점포 앞 보행량을 의미하지 않습니다.",
+    "공식 철도 데이터 포털의 대구교통공사 역위치 데이터셋 존재를 별도로 기록하고 좌표값은 각 공개 참조 URL로 감사 가능하게 유지합니다."
+  ]
+}
