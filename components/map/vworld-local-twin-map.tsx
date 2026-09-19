@@ -119,7 +119,7 @@ export default function VWorldLocalTwinMap({
   const clickCleanupRef = useRef<(() => void) | null>(null);
   const initialSelectionRef = useRef(true);
   const [ready, setReady] = useState(false);
-  const [status, setStatus] = useState("VWorld 3D 연결 중");
+  const [buildingsReady, setBuildingsReady] = useState(false);
   const containerId = "localtwin-vworld-map";
 
   const selectedCell = useMemo(
@@ -165,7 +165,7 @@ export default function VWorldLocalTwinMap({
         if (viewer.scene) {
           viewer.scene.requestRenderMode = true;
           viewer.scene.maximumRenderTimeChange = Number.POSITIVE_INFINITY;
-          if (viewer.scene.globe) viewer.scene.globe.enableLighting = true;
+          if (viewer.scene.globe) viewer.scene.globe.enableLighting = false;
           viewer.scene.fxaa = true;
         }
         if (viewer.clock) viewer.clock.shouldAnimate = false;
@@ -263,7 +263,6 @@ export default function VWorldLocalTwinMap({
         };
 
         setReady(true);
-        setStatus("VWorld 3D");
         viewer.scene?.requestRender?.();
 
         void (async () => {
@@ -282,7 +281,7 @@ export default function VWorldLocalTwinMap({
               return;
             }
             buildingTilesetRef.current = viewer.scene.primitives.add(tileset);
-            setStatus("VWorld 3D · 건물");
+            setBuildingsReady(true);
             viewer.scene?.requestRender?.();
           } catch {
             // Building tiles are visual context only. Keep the core VWorld scene usable.
@@ -290,7 +289,6 @@ export default function VWorldLocalTwinMap({
         })();
       } catch (error) {
         const reason = error instanceof Error ? error.message : String(error);
-        setStatus("VWorld 연결 불가 · 경량 지도 전환");
         onUnavailable(reason);
       }
     })();
@@ -304,6 +302,7 @@ export default function VWorldLocalTwinMap({
         viewerRef.current.scene.primitives.remove(buildingTilesetRef.current);
       }
       buildingTilesetRef.current = null;
+      setBuildingsReady(false);
       disposeVWorld(viewerRef.current);
       viewerRef.current = null;
       mapRef.current = null;
@@ -443,17 +442,15 @@ export default function VWorldLocalTwinMap({
       className="relative h-full min-h-[520px] overflow-hidden rounded-2xl bg-[#071018]"
       data-testid="spatial-map"
       data-map-engine="vworld"
+      data-buildings={buildingsReady ? "vworld" : "loading"}
     >
       <div ref={containerRef} id={containerId} className="absolute inset-0 h-full w-full" />
-      <div className="pointer-events-none absolute left-4 top-4 z-10 flex items-center gap-2 rounded-full border border-white/10 bg-slate-950/82 px-3 py-1.5 text-[11px] text-slate-100 backdrop-blur">
-        <span
-          className={
-            "h-1.5 w-1.5 rounded-full " +
-            (ready ? "bg-emerald-300" : "animate-pulse bg-amber-300")
-          }
-        />
-        {status}
-      </div>
+      {!ready ? (
+        <div className="pointer-events-none absolute left-4 top-4 z-10 flex items-center gap-2 rounded-full border border-white/10 bg-slate-950/82 px-3 py-1.5 text-[11px] text-slate-100 backdrop-blur">
+          <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-amber-300" />
+          VWorld 3D 연결 중
+        </div>
+      ) : null}
       <div className="pointer-events-none absolute bottom-3 left-3 z-10 max-w-[85%] rounded-lg border border-white/10 bg-slate-950/78 px-2.5 py-1.5 text-[10px] leading-4 text-slate-300 backdrop-blur">
         공식 행정동 경계 · 분석 셀(모델, 실제 상권 경계 아님) · 지하철 위치
       </div>
