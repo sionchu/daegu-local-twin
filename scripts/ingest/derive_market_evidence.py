@@ -22,6 +22,7 @@ from typing import Any, Mapping, Sequence
 
 TRANSIT_LAMBDA_METERS = 450.0
 SPILLOVER_LAMBDA_METERS = 350.0
+RENT_PROXY_LAMBDA_METERS = 900.0
 ANCHOR_WEIGHTS = {"transit": 0.55, "buzz": 0.25, "poi": 0.20}
 
 BUZZ_PREFIX_MAP = {
@@ -191,11 +192,15 @@ def derive_market_evidence(
         if rent_record is None:
             cell["rentBenchmarkKrwPerSqm"] = None
             cell["vacancyBenchmark"] = None
+            cell["rentBenchmarkMode"] = "pending-proxy"
+            cell["rentBenchmarkSource"] = None
         else:
             cell["rentBenchmarkKrwPerSqm"] = int(
                 rent_record["localTwin"]["rentPerSquareMeter"]["value"]
             )
             cell["vacancyBenchmark"] = float(rent_record["localTwin"]["vacancy"]["value"])
+            cell["rentBenchmarkMode"] = "official-area-mapped"
+            cell["rentBenchmarkSource"] = rent_mapping["officialArea"]
         cell.pop("rentBenchmark", None)
 
         # Remove source IDs that previously pointed at demo cell values, then add only
@@ -264,6 +269,83 @@ def derive_market_evidence(
                 ),
             }
         )
+
+    # Fill remaining rent gaps with a transparent distance-weighted proxy derived
+    # only from cells that have a supported direct mapping to official REB areas.
+    # This improves spatial coverage without presenting interpolated values as official.
+    direct_by_area: dict[str, dict[str, Any]] = {}
+    for cell in updated:
+        mapping = RENT_CELL_MAP.get(cell["cellId"])
+        if mapping is None:
+            continue
+        area = mapping["officialArea"]
+        bucket = direct_by_area.setdefault(
+            area,
+            {
+                "centers": [],
+                "rent": float(cell["rentBenchmarkKrwPerSqm"]),
+                "vacancy": float(cell["vacancyBenchmark"]),
+            },
+        )
+        bucket["centers"].append(cell["center"])
+
+    rent_anchors: list[dict[str, Any]] = []
+    for area, bucket in sorted(direct_by_area.items()):
+        centers = bucket["centers"]
+        rent_anchors.append(
+            {
+                "officialArea": area,
+                "center": {
+                    "lat": sum(float(point["lat"]) for point in centers) / len(centers),
+                    "lon": sum(float(point["lon"]) for point in centers) / len(centers),
+                },
+                "rentKrwPerSqm": bucket["rent"],
+                "vacancyPct": bucket["vacancy"],
+            }
+        )
+
+    for cell in updated:
+        if cell["rentBenchmarkKrwPerSqm"] is not None:
+            continue
+        center = {"lat": float(cell["center"]["lat"]), "lon": float(cell["center"]["lon"])}
+        contributions: list[dict[str, Any]] = []
+        total_weight = 0.0
+        rent_sum = 0.0
+        vacancy_sum = 0.0
+        for anchor in rent_anchors:
+            distance = distance_meters(center, anchor["center"])
+            weight = decay(distance, RENT_PROXY_LAMBDA_METERS)
+            total_weight += weight
+            rent_sum += float(anchor["rentKrwPerSqm"]) * weight
+            vacancy_sum += float(anchor["vacancyPct"]) * weight
+            contributions.append(
+                {
+                    "officialArea": anchor["officialArea"],
+                    "distanceMeters": round(distance, 1),
+                    "weight": round(weight, 6),
+                    "rentKrwPerSqm": int(anchor["rentKrwPerSqm"]),
+                    "vacancyPct": anchor["vacancyPct"],
+                }
+            )
+        if total_weight <= 0:
+            raise ValueError(f"no rent proxy anchors for {cell['cellId']}")
+
+        cell["rentBenchmarkKrwPerSqm"] = int(round((rent_sum / total_weight) / 100.0) * 100)
+        cell["vacancyBenchmark"] = round(vacancy_sum / total_weight, 1)
+        cell["rentBenchmarkMode"] = "adjacent-official-proxy"
+        cell["rentBenchmarkSource"] = "REB official areas distance-weighted proxy"
+        if "rent-benchmark" not in cell["provenanceIds"]:
+            cell["provenanceIds"].append("rent-benchmark")
+
+        record = next(item for item in records if item["cellId"] == cell["cellId"])
+        record["rent"] = {
+            "mode": "modelled interpolation of official-area benchmarks",
+            "formula": "distance-weighted mean of directly mapped REB area benchmarks",
+            "lambdaMeters": RENT_PROXY_LAMBDA_METERS,
+            "rentKrwPerSqm": cell["rentBenchmarkKrwPerSqm"],
+            "vacancyPct": cell["vacancyBenchmark"],
+            "contributions": contributions,
+        }
 
     # Second pass: build anchor strengths from non-demo inputs.
     transit_values = [float(cell["transitDemand"]) for cell in updated]
@@ -357,7 +439,7 @@ def derive_market_evidence(
 
     sidecar = {
         "mode": "modelled",
-        "modelVersion": "cell-market-evidence-v1",
+        "modelVersion": "cell-market-evidence-v2",
         "inputs": {
             "transit": {
                 "datasetId": transit.get("datasetId"),
@@ -393,6 +475,12 @@ def derive_market_evidence(
         },
         "buzzMapping": BUZZ_PREFIX_MAP,
         "rentMapping": RENT_CELL_MAP,
+        "rentProxyModel": {
+            "lambdaMeters": RENT_PROXY_LAMBDA_METERS,
+            "formula": "distance-weighted mean of directly mapped REB official-area benchmarks",
+            "meaning": "modelled adjacent-market proxy for cells without an exact official-area mapping",
+            "officialValuePolicy": "direct mappings remain official-area benchmarks; proxies are explicitly labelled modelled",
+        },
         "anchorModel": {
             "weights": ANCHOR_WEIGHTS,
             "missingMetricPolicy": "renormalize weights over available components",
@@ -408,7 +496,7 @@ def derive_market_evidence(
             "관측된 점포 앞 보행량이 없으므로 observedFootfall은 모든 cell에서 null입니다.",
             "NAVER 값은 동일 비교기간에서 정규화된 상대 검색 관심도이며 절대 검색량·매출·감성이 아닙니다.",
             "REB 임대료는 공식 상권의 소규모 상가 1층 환산임대료(원/㎡) benchmark이며 점포 전체 월세가 아닙니다.",
-            "공식 REB 상권과 정확히 연결할 수 없는 cell의 임대료/공실률은 null로 유지합니다.",
+            "공식 REB 상권과 정확히 연결되는 cell은 직접 benchmark를 사용하고, 나머지는 직접매핑된 공식 상권 benchmark 사이를 거리감쇠 보간한 modelled proxy로 명시합니다.",
             "spilloverScore는 인접 anchor의 결정론적 공간지표이며 실제 교차방문이나 인과효과가 아닙니다.",
         ],
     }
