@@ -20,10 +20,8 @@ The product should feel like a decision instrument, not a generic analytics dash
 - Official administrative boundaries are thin context lines.
 - Opportunity cells are soft translucent surfaces/halos and are explicitly labelled as
   model analysis units, not real commercial-district boundaries.
-- Persistent place labels and transit anchors must make each cell spatially legible.
+- Persistent place labels, transit anchors, and VWorld buildings must make each cell spatially legible.
 - The MapLibre/deck.gl path is a lazy reliability fallback, not the primary visual layer.
-- Time slider must affect solar lighting and chart focus without implying causal demand
-  measurement.
 - Charts answer a decision question:
   - when is demand concentrated?
   - where is demand high relative to rent?
