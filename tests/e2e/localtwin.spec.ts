@@ -15,8 +15,10 @@ test.describe("LocalTwin critical evidence path", () => {
     await expect(page.getByText("임대료 vs 수요", { exact: true })).toBeVisible();
     await expect(page.getByText("12개월 Cash Runway", { exact: true })).toBeVisible();
 
-    // MapLibre initializes even if a remote map provider is temporarily slow.
-    await expect(page.locator(".maplibregl-map")).toHaveCount(1, { timeout: 20_000 });
+    // MapLibre must have real layout dimensions, not just exist in the DOM.
+    const map = page.locator(".maplibregl-map");
+    await expect(map).toBeVisible({ timeout: 20_000 });
+    await expect.poll(async () => (await map.boundingBox())?.height ?? 0).toBeGreaterThan(400);
 
     const timeSlider = page.getByLabel("시간 선택");
     await expect(timeSlider).toHaveValue(String(18 * 60));
