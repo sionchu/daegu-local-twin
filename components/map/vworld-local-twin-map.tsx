@@ -169,13 +169,27 @@ export default function VWorldLocalTwinMap({
         if (viewer.clock) viewer.clock.shouldAnimate = false;
         viewer.shadows = false;
 
+        const Cesium = window.Cesium;
+        viewer.camera?.setView?.({
+          destination: Cesium.Cartesian3.fromDegrees(
+            DAEGU_CENTER[0],
+            DAEGU_CENTER[1],
+            2600,
+          ),
+          orientation: {
+            heading: 0,
+            pitch: Cesium.Math.toRadians(-52),
+            roll: 0,
+          },
+        });
+        viewer.scene?.requestRender?.();
+
         const [adminResponse, transitResponse] = await Promise.all([
           fetch("/data/admin_dong_boundaries.geojson"),
           fetch("/data/transit_station_locations.json"),
         ]);
         const admin = (await adminResponse.json()) as AdminBoundaryCollection;
         const transit = (await transitResponse.json()) as TransitSnapshot;
-        const Cesium = window.Cesium;
 
         for (const feature of admin.features ?? []) {
           for (const ring of displayRings(feature.geometry)) {
