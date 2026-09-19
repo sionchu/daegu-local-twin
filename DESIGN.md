@@ -2,13 +2,28 @@
 
 ## Visual thesis
 
-An evidence desk for a founder making a cash-risk decision: dark slate surfaces, teal demand signals, amber cost/risk signals, and restrained grid/corridor geometry. The map is the working surface; explanatory copy stays short and adjacent to the decision.
+A spatial evidence desk for a founder making a cash-risk decision: dark slate surfaces,
+teal demand signals, amber cost/risk signals, and a real 3D map as the primary working
+surface.
+
+The product should feel like a decision instrument, not a generic analytics dashboard.
 
 ## Interface rules
 
-- Maximum three primary views: 기회지도, 후보비교, 자금계획.
-- Teal is used for observed/positive evidence and candidate A; amber is used for cost/risk and candidate B.
-- Every normalized metric shows its denominator or source note nearby.
-- `demo`/`modelled` is textual, never color-only.
-- Mobile keeps the map, layer strip, and selected-cell panel usable without horizontal overflow.
-- Focus states use a visible teal outline; reduced motion disables transitions.
+- Maximum three primary views: **3D 기회지도, 후보비교, 자금계획**.
+- The map stays visually dominant on desktop.
+- Teal represents positive/demand evidence and candidate A.
+- Amber represents cost/stress attention and candidate B.
+- Every normalized metric shows its source/status nearby.
+- `demo` / `modelled` / `official` is textual, never color-only.
+- 3D opportunity height is explicitly labelled as an index extrusion.
+- OpenStreetMap building height and DEM terrain are separate from opportunity data.
+- Time slider must affect solar lighting and chart focus without implying causal demand
+  measurement.
+- Charts answer a decision question:
+  - when is demand concentrated?
+  - where is demand high relative to rent?
+  - how fast does cash deplete?
+  - how is startup funding composed?
+- Mobile must reflow without page-level horizontal overflow.
+- Focus states remain visible and reduced-motion settings are respected.
