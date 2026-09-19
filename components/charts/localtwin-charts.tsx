@@ -135,13 +135,13 @@ export function RentDemandScatterChart({
   selectedCellId?: string;
 }) {
   const data = cells
-    .filter((cell) => cell.rentBenchmark !== null)
+    .filter((cell) => cell.rentBenchmarkKrwPerSqm !== null)
     .map((cell) => {
       const scores = computeOpportunityScores(cell, cells);
       return {
         id: cell.cellId,
         name: cell.label,
-        rent: (cell.rentBenchmark ?? 0) / 10_000,
+        rent: (cell.rentBenchmarkKrwPerSqm ?? 0) / 10_000,
         demand: Math.round(scores.demandScore ?? 0),
         selected: cell.cellId === selectedCellId,
       };
