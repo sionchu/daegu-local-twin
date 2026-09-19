@@ -18,9 +18,12 @@ The product should feel like a decision instrument, not a generic analytics dash
 - `demo` / `modelled` / `official` is textual, never color-only.
 - VWorld city context is geographic context, never opportunity evidence.
 - Official administrative boundaries are thin context lines.
-- Opportunity cells are soft translucent surfaces/halos and are explicitly labelled as
-  model analysis units, not real commercial-district boundaries.
-- Persistent place labels, transit anchors, and VWorld buildings must make each cell spatially legible.
+- The primary spatial overlay is a filled/bordered corridor polygon derived from real
+  road/market geometry. It is explicitly labelled as a model corridor, not an official
+  commercial-district boundary.
+- Exact candidate cells remain secondary selectable points inside those corridors.
+- Persistent corridor labels, transit anchors, official administrative boundaries, and
+  VWorld buildings must make the geography legible at a glance.
 - The MapLibre/deck.gl path is a lazy reliability fallback, not the primary visual layer.
 - Charts answer a decision question:
   - when is demand concentrated?

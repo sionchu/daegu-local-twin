@@ -31,6 +31,26 @@ type TransitSnapshot = {
   records: TransitRecord[];
 };
 
+type CorridorGeometry = {
+  type: "Polygon" | "MultiPolygon";
+  coordinates: number[][][] | number[][][][];
+};
+
+type CorridorFeature = {
+  properties: {
+    zoneId: string;
+    label: string;
+    memberCellIds: string[];
+    boundaryMeaning?: string;
+    sourceProvider?: string;
+  };
+  geometry: CorridorGeometry;
+};
+
+type CorridorCollection = {
+  features: CorridorFeature[];
+};
+
 type Props = {
   cells: LocationEvidence[];
   selectedCellId?: string;
@@ -63,10 +83,51 @@ function scoreColor(Cesium: any, score: number | null, alpha: number) {
     return Cesium.Color.fromCssColorString("#64748b").withAlpha(alpha);
   }
   const t = clamp(score / 100, 0, 1);
-  if (t < 0.5) {
-    return Cesium.Color.fromCssColorString("#46cbbb").withAlpha(alpha);
-  }
-  return Cesium.Color.fromCssColorString("#f4b860").withAlpha(alpha);
+  if (t < 0.25) return Cesium.Color.fromCssColorString("#3d6073").withAlpha(alpha);
+  if (t < 0.5) return Cesium.Color.fromCssColorString("#2f9e9a").withAlpha(alpha);
+  if (t < 0.75) return Cesium.Color.fromCssColorString("#d5a548").withAlpha(alpha);
+  return Cesium.Color.fromCssColorString("#ef7b45").withAlpha(alpha);
+}
+
+const LAYER_LABELS: Record<MapLayer, string> = {
+  opportunity: "종합 Opportunity",
+  demand: "상권 수요",
+  transit: "교통 접근",
+  buzz: "관심도",
+  spillover: "파생수요",
+  regeneration: "재생맥락",
+  rent: "임대여력",
+};
+
+function corridorRings(geometry: CorridorGeometry) {
+  return geometry.type === "Polygon"
+    ? [(geometry.coordinates as number[][][])[0]]
+    : (geometry.coordinates as number[][][][]).map((polygon) => polygon[0]);
+}
+
+function zoneScore(
+  zone: CorridorFeature,
+  cells: LocationEvidence[],
+  activeLayer: MapLayer,
+) {
+  const values = zone.properties.memberCellIds
+    .map((cellId) => cells.find((cell) => cell.cellId === cellId))
+    .filter((cell): cell is LocationEvidence => Boolean(cell))
+    .map((cell) => scoreForLayer(cell, cells, activeLayer))
+    .filter((value): value is number => value !== null && Number.isFinite(value));
+  if (!values.length) return null;
+  return values.reduce((sum, value) => sum + value, 0) / values.length;
+}
+
+function zoneCenter(zone: CorridorFeature, cells: LocationEvidence[]) {
+  const members = zone.properties.memberCellIds
+    .map((cellId) => cells.find((cell) => cell.cellId === cellId))
+    .filter((cell): cell is LocationEvidence => Boolean(cell));
+  if (!members.length) return DAEGU_CENTER;
+  return [
+    members.reduce((sum, cell) => sum + cell.center.lon, 0) / members.length,
+    members.reduce((sum, cell) => sum + cell.center.lat, 0) / members.length,
+  ] as [number, number];
 }
 
 function closedDegrees(cell: LocationEvidence) {
@@ -128,6 +189,7 @@ export default function VWorldLocalTwinMap({
   const initialSelectionRef = useRef(true);
   const [ready, setReady] = useState(false);
   const [buildingsReady, setBuildingsReady] = useState(false);
+  const [corridors, setCorridors] = useState<CorridorFeature[]>([]);
   const containerId = "localtwin-vworld-map";
 
   const selectedCell = useMemo(
@@ -181,12 +243,15 @@ export default function VWorldLocalTwinMap({
 
         const Cesium = window.Cesium;
 
-        const [adminResponse, transitResponse] = await Promise.all([
+        const [adminResponse, transitResponse, corridorResponse] = await Promise.all([
           fetch("/data/admin_dong_boundaries.geojson"),
           fetch("/data/transit_station_locations.json"),
+          fetch("/data/corridor_zones.geojson"),
         ]);
         const admin = (await adminResponse.json()) as AdminBoundaryCollection;
         const transit = (await transitResponse.json()) as TransitSnapshot;
+        const corridorData = (await corridorResponse.json()) as CorridorCollection;
+        setCorridors(corridorData.features ?? []);
 
         for (const feature of admin.features ?? []) {
           for (const ring of displayRings(feature.geometry)) {
@@ -259,6 +324,11 @@ export default function VWorldLocalTwinMap({
           const entityId = picked?.id?.id;
           if (typeof entityId === "string" && entityId.startsWith("localtwin-cell-")) {
             onSelect(entityId.slice("localtwin-cell-".length));
+          } else if (typeof entityId === "string" && entityId.startsWith("localtwin-zone-")) {
+            const primaryCellId = entityId
+              .slice("localtwin-zone-".length)
+              .split("::")[0];
+            if (primaryCellId) onSelect(primaryCellId);
           } else if (typeof originalClick === "function") {
             originalClick(movement);
           }
@@ -303,66 +373,106 @@ export default function VWorldLocalTwinMap({
 
     clearEntities(cellEntitiesRef.current);
 
+    for (const zone of corridors) {
+      const memberCells = zone.properties.memberCellIds
+        .map((cellId) => cells.find((cell) => cell.cellId === cellId))
+        .filter((cell): cell is LocationEvidence => Boolean(cell));
+      if (!memberCells.length) continue;
+
+      const selected = memberCells.some((cell) => cell.cellId === selectedCellId);
+      const score = zoneScore(zone, cells, activeLayer);
+      const fill = scoreColor(Cesium, score, selected ? 0.30 : 0.17);
+      const border = scoreColor(Cesium, score, selected ? 1 : 0.82);
+      const primaryCellId = memberCells[0].cellId;
+
+      corridorRings(zone.geometry).forEach((ring, ringIndex) => {
+        if (!ring?.length) return;
+        const closed = [...ring];
+        const first = ring[0];
+        const last = ring[ring.length - 1];
+        if (first && last && (first[0] !== last[0] || first[1] !== last[1])) {
+          closed.push(first);
+        }
+
+        const positions = Cesium.Cartesian3.fromDegreesArray(closed.flat());
+        const entity = viewer.entities.add({
+          id: `localtwin-zone-${primaryCellId}::${ringIndex}`,
+          name: `${zone.properties.label} 분석권역`,
+          polygon: {
+            hierarchy: Cesium.Cartesian3.fromDegreesArray(closed.flat()),
+            material: fill,
+            height: 0,
+            heightReference: Cesium.HeightReference?.CLAMP_TO_GROUND,
+          },
+          polyline: {
+            positions,
+            width: selected ? 5 : 3,
+            material: border,
+            clampToGround: true,
+          },
+        });
+        cellEntitiesRef.current.push(entity);
+      });
+
+      const [zoneLon, zoneLat] = zoneCenter(zone, cells);
+      const zoneLabel = viewer.entities.add({
+        position: Cesium.Cartesian3.fromDegrees(zoneLon, zoneLat),
+        label: {
+          text: `${zone.properties.label}\n${score === null ? "데이터 부족" : Math.round(score) + " / 100"}`,
+          font: selected ? "bold 16px sans-serif" : "bold 13px sans-serif",
+          fillColor: Cesium.Color.WHITE,
+          outlineColor: Cesium.Color.fromCssColorString("#071018"),
+          outlineWidth: 3,
+          style: Cesium.LabelStyle.FILL_AND_OUTLINE,
+          showBackground: true,
+          backgroundColor: Cesium.Color.fromCssColorString("#071018").withAlpha(
+            selected ? 0.88 : 0.70,
+          ),
+          backgroundPadding: new Cesium.Cartesian2(8, 6),
+          heightReference: Cesium.HeightReference?.CLAMP_TO_GROUND,
+          disableDepthTestDistance: Number.POSITIVE_INFINITY,
+          distanceDisplayCondition: new Cesium.DistanceDisplayCondition(0, 6500),
+        },
+      });
+      cellEntitiesRef.current.push(zoneLabel);
+    }
+
+    // Exact candidate cells remain selectable but secondary to the corridor layer.
     for (const cell of cells) {
       const selected = cell.cellId === selectedCellId;
-      const score = scoreForLayer(cell, cells, activeLayer);
-      const color = scoreColor(Cesium, score, selected ? 0.18 : 0.045);
-      const accent = scoreColor(Cesium, score, selected ? 0.92 : 0.42);
-      const haloRadius = 95 + clamp(Number(score ?? 0), 0, 100) * 1.25;
-
-      const entity = viewer.entities.add({
+      const point = viewer.entities.add({
         id: `localtwin-cell-${cell.cellId}`,
         name: cell.label,
         position: Cesium.Cartesian3.fromDegrees(cell.center.lon, cell.center.lat),
-        polygon: {
-          hierarchy: Cesium.Cartesian3.fromDegreesArray(closedDegrees(cell)),
-          material: color,
-          outline: false,
-          heightReference: Cesium.HeightReference?.CLAMP_TO_GROUND,
-        },
-        polyline: {
-          positions: Cesium.Cartesian3.fromDegreesArray(closedDegrees(cell)),
-          width: selected ? 2.5 : 1,
-          material: accent,
-          clampToGround: true,
-        },
-        ellipse: {
-          semiMajorAxis: selected ? haloRadius * 1.18 : haloRadius,
-          semiMinorAxis: selected ? haloRadius * 1.18 : haloRadius,
-          material: scoreColor(Cesium, score, selected ? 0.10 : 0.025),
-          heightReference: Cesium.HeightReference?.CLAMP_TO_GROUND,
-        },
         point: {
-          pixelSize: selected ? 13 : 8,
-          color: accent,
+          pixelSize: selected ? 11 : 5,
+          color: selected
+            ? Cesium.Color.WHITE
+            : Cesium.Color.fromCssColorString("#cbd5e1").withAlpha(0.72),
           outlineColor: Cesium.Color.fromCssColorString("#071018"),
           outlineWidth: 2,
           heightReference: Cesium.HeightReference?.CLAMP_TO_GROUND,
           disableDepthTestDistance: Number.POSITIVE_INFINITY,
         },
-        label: {
-          text: selected
-            ? `${cell.label}\n${score === null ? "데이터 부족" : Math.round(score) + " / 100"}`
-            : cell.label,
-          font: selected ? "bold 15px sans-serif" : "11px sans-serif",
-          fillColor: Cesium.Color.WHITE,
-          outlineColor: Cesium.Color.fromCssColorString("#071018"),
-          outlineWidth: selected ? 3 : 2,
-          style: Cesium.LabelStyle.FILL_AND_OUTLINE,
-          showBackground: selected,
-          backgroundColor: Cesium.Color.fromCssColorString("#071018").withAlpha(0.84),
-          backgroundPadding: new Cesium.Cartesian2(7, 5),
-          pixelOffset: new Cesium.Cartesian2(0, selected ? -26 : -20),
-          heightReference: Cesium.HeightReference?.CLAMP_TO_GROUND,
-          disableDepthTestDistance: Number.POSITIVE_INFINITY,
-          distanceDisplayCondition: new Cesium.DistanceDisplayCondition(0, 5200),
-        },
+        label: selected
+          ? {
+              text: cell.label,
+              font: "11px sans-serif",
+              fillColor: Cesium.Color.WHITE,
+              outlineColor: Cesium.Color.fromCssColorString("#071018"),
+              outlineWidth: 3,
+              style: Cesium.LabelStyle.FILL_AND_OUTLINE,
+              pixelOffset: new Cesium.Cartesian2(0, -18),
+              heightReference: Cesium.HeightReference?.CLAMP_TO_GROUND,
+              disableDepthTestDistance: Number.POSITIVE_INFINITY,
+            }
+          : undefined,
       });
-      cellEntitiesRef.current.push(entity);
+      cellEntitiesRef.current.push(point);
     }
 
     viewer.scene?.requestRender?.();
-  }, [activeLayer, cells, clearEntities, ready, selectedCellId]);
+  }, [activeLayer, cells, clearEntities, corridors, ready, selectedCellId]);
 
   useEffect(() => {
     if (!ready) return;
@@ -438,8 +548,21 @@ export default function VWorldLocalTwinMap({
           VWorld 3D 연결 중
         </div>
       ) : null}
-      <div className="pointer-events-none absolute bottom-3 left-3 z-10 max-w-[85%] rounded-lg border border-white/10 bg-slate-950/78 px-2.5 py-1.5 text-[10px] leading-4 text-slate-300 backdrop-blur">
-        행정동 경계 · 분석 셀(모델) · 지하철
+      <div className="absolute bottom-3 left-3 z-10 max-w-[88%] rounded-lg border border-white/10 bg-slate-950/82 px-3 py-2 text-[10px] leading-4 text-slate-300 backdrop-blur">
+        <div className="font-semibold text-white">
+          {LAYER_LABELS[activeLayer]} 시각화 · 진한 색일수록 신호 높음
+        </div>
+        <div>
+          상권권역 = 실제 도로/시장 geometry 기반 모델 corridor · 공식 상권 경계 아님 ·{" "}
+          <a
+            href="https://www.openstreetmap.org/copyright"
+            target="_blank"
+            rel="noreferrer"
+            className="pointer-events-auto text-slate-200 underline underline-offset-2"
+          >
+            © OpenStreetMap contributors
+          </a>
+        </div>
       </div>
     </div>
   );
