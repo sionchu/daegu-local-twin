@@ -5,7 +5,7 @@ import { GeoJsonLayer, ScatterplotLayer } from "@deck.gl/layers";
 import { MapboxOverlay } from "@deck.gl/mapbox";
 import { buffer, point } from "@turf/turf";
 import * as maplibregl from "maplibre-gl";
-import SunCalc from "suncalc";
+import * as SunCalc from "suncalc";
 
 import { computeOpportunityScores } from "@/src/model";
 import type { LocationEvidence, MapLayer } from "@/src/types";
@@ -355,8 +355,8 @@ export default function LocalTwinMap({
     if (!map || !ready) return;
 
     const sun = SunCalc.getPosition(selectedTime, DAEGU_CENTER[1], DAEGU_CENTER[0]);
-    const altitudeDeg = (sun.altitude * 180) / Math.PI;
-    const azimuthFromNorth = ((sun.azimuth * 180) / Math.PI + 180 + 360) % 360;
+    const altitudeDeg = sun.altitude;
+    const azimuthFromNorth = ((sun.azimuth % 360) + 360) % 360;
     const polar = clamp(90 - altitudeDeg, 8, 168);
     const intensity = clamp((altitudeDeg + 8) / 52, 0.16, 0.92);
 
