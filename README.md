@@ -67,7 +67,8 @@ Current product snapshots:
 
 Browser-based source collection is owned by the Codex Aside workflow. See
 [`docs/CRAWL_HANDOFF.md`](./docs/CRAWL_HANDOFF.md). Git-side code consumes only the
-reviewed artifact and normalizes it deterministically.
+reviewed artifact and normalizes it deterministically. Agent roles, branch ownership,
+and PR handoff rules are canonicalized in [`docs/AGENT_WORKFLOW.md`](./docs/AGENT_WORKFLOW.md).
 
 ## Run locally
 
