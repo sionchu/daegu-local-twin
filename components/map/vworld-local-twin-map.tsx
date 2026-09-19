@@ -188,13 +188,18 @@ export default function VWorldLocalTwinMap({
         viewer.shadows = false;
 
         const Cesium = window.Cesium;
+        const nativeBuildingLayer = map.getLayerElement?.("facility_build");
+        nativeBuildingLayer?.show?.();
+        const hasNativeBuildingLayer = Boolean(nativeBuildingLayer);
 
         const [adminResponse, transitResponse, buildingsResponse] = await Promise.all([
           fetch("/data/admin_dong_boundaries.geojson"),
           fetch("/data/transit_station_locations.json"),
-          fetch(
-            `/api/buildings?lon=${DAEGU_CENTER[0]}&lat=${DAEGU_CENTER[1]}&radius=650`,
-          ).catch(() => null),
+          hasNativeBuildingLayer
+            ? Promise.resolve(null)
+            : fetch(
+                `/api/buildings?lon=${DAEGU_CENTER[0]}&lat=${DAEGU_CENTER[1]}&radius=650`,
+              ).catch(() => null),
         ]);
         const admin = (await adminResponse.json()) as AdminBoundaryCollection;
         const transit = (await transitResponse.json()) as TransitSnapshot;
@@ -320,9 +325,11 @@ export default function VWorldLocalTwinMap({
 
         setReady(true);
         setStatus(
-          buildingCount > 0
-            ? `VWorld 3D · 주변건물 ${buildingCount.toLocaleString()}동`
-            : "VWorld 3D · Cesium",
+          hasNativeBuildingLayer
+            ? "VWorld 3D · VWorld 건물"
+            : buildingCount > 0
+              ? `VWorld 3D · 주변건물 ${buildingCount.toLocaleString()}동`
+              : "VWorld 3D · Cesium",
         );
         viewer.scene?.requestRender?.();
       } catch (error) {
