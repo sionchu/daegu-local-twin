@@ -154,7 +154,6 @@ wholesale:
 - shadcn/ui
 - Recharts
 - Turf.js
-- SunCalc
 - recent Next.js + MapLibre starter/toolkit patterns
 
 See [`THIRD_PARTY.md`](./THIRD_PARTY.md) for license and attribution notes.
