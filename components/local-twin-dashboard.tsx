@@ -596,10 +596,6 @@ export default function LocalTwinDashboard() {
             ))}
           </nav>
 
-          <div className="hidden items-center gap-2 text-[10px] text-slate-500 xl:flex">
-            <Database className="h-3.5 w-3.5" />
-            <span>Snapshot + deterministic model</span>
-          </div>
         </div>
       </header>
 
@@ -614,32 +610,27 @@ export default function LocalTwinDashboard() {
           <div className={view === "map" ? "contents" : "hidden"}>
             <section className="grid min-w-0 gap-5 xl:grid-cols-[minmax(0,1fr)_370px]">
               <Card className="min-w-0 overflow-hidden">
-                <CardHeader className="gap-4 border-b border-white/8 pb-4">
-                  <div className="flex flex-wrap items-start justify-between gap-4">
-                    <div>
-                      <div className="mb-2 flex items-center gap-2 text-[10px] font-semibold uppercase tracking-[0.2em] text-emerald-300">
-                        <MapPin className="h-3.5 w-3.5" />
-                        Opportunity map / Central Daegu
-                      </div>
-                      <h1 className="text-2xl font-semibold tracking-[-0.03em] text-white md:text-3xl">
-                        사람이 많은 곳보다,
-                        <span className="text-emerald-200"> 내가 버틸 수 있는 곳.</span>
-                      </h1>
-                      <p className="mt-2 max-w-3xl text-xs leading-5 text-slate-500">
-                        수요·임대부담·도시재생 신호를 3D 공간지표로 겹치고 실제 점포
-                        조건을 금융 시뮬레이션으로 연결합니다.
-                      </p>
+                <CardHeader className="gap-3 border-b border-white/8 pb-3">
+                  <div>
+                    <div className="mb-1.5 flex items-center gap-2 text-[10px] font-semibold tracking-[0.08em] text-emerald-300">
+                      <MapPin className="h-3.5 w-3.5" />
+                      대구 중구 · 3D 상권지도
                     </div>
-                    <Badge variant="blue">공식 Snapshot + 결정론적 파생</Badge>
+                    <h1 className="text-2xl font-semibold tracking-[-0.035em] text-white">
+                      창업 기회지도
+                    </h1>
+                    <p className="mt-1 text-xs leading-5 text-slate-500">
+                      수요·임대부담·재생맥락을 실제 도시 공간에서 비교합니다.
+                    </p>
                   </div>
 
-                  <div className="flex gap-2 overflow-x-auto pb-1">
+                  <div className="flex gap-1.5 overflow-x-auto pb-1">
                     {(Object.keys(layerLabels) as MapLayer[]).map((layer) => (
                       <Button
                         key={layer}
                         size="sm"
                         variant={state.activeLayer === layer ? "default" : "outline"}
-                        className="shrink-0"
+                        className="shrink-0 rounded-full px-3 text-[11px]"
                         onClick={() => actions.setLayer(layer)}
                       >
                         {layerLabels[layer]}
@@ -648,8 +639,8 @@ export default function LocalTwinDashboard() {
                   </div>
                 </CardHeader>
 
-                <CardContent className="p-3 md:p-4">
-                  <div className="h-[58vh] min-h-[520px] max-h-[760px]">
+                <CardContent className="p-2.5 md:p-3">
+                  <div className="h-[62vh] min-h-[560px] max-h-[780px]">
                     <LocalTwinMap
                       cells={state.cells}
                       selectedCellId={selectedCellId}
@@ -694,17 +685,17 @@ export default function LocalTwinDashboard() {
 
                     <div className="grid grid-cols-2 gap-2">
                       <MetricTile
-                        label="이동수요 proxy"
+                        label="이동수요"
                         value={formatNumber(selectedCell.transitDemand)}
                         note="공식 역 승하차 × 거리감쇠 · 점포 앞 보행량 아님"
                       />
                       <MetricTile
-                        label="임대료 Benchmark"
+                        label="임대 benchmark"
                         value={formatRentPerSqm(selectedCell.rentBenchmarkKrwPerSqm)}
                         note="R-ONE 2026 Q2 기반 · 정확매칭/공간보간 benchmark · 점포 호가 아님"
                       />
                       <MetricTile
-                        label="Buzz momentum"
+                        label="관심도 변화"
                         value={
                           selectedCell.buzzMomentum === null
                             ? "데이터 부족"
@@ -734,10 +725,6 @@ export default function LocalTwinDashboard() {
                       </Button>
                     </div>
 
-                    <div className="rounded-xl border border-white/8 bg-white/[0.025] p-3 text-[10px] leading-4 text-slate-500">
-                      반투명 영역은 실제 상권 경계가 아니라 공간 모델링을 위한 분석 셀입니다.
-                      공식 행정동 경계·지하철 anchor와 분리해 표시합니다.
-                    </div>
                   </CardContent>
                 </Card>
 
@@ -746,7 +733,7 @@ export default function LocalTwinDashboard() {
                     <CardHeader>
                       <div className="flex items-center gap-2 text-emerald-200">
                         <WalletCards className="h-4 w-4" />
-                        <CardTitle>후보 A Financial Twin</CardTitle>
+                        <CardTitle>후보 A 손익</CardTitle>
                       </div>
                       <CardDescription>{activeCell.label}</CardDescription>
                     </CardHeader>
@@ -765,31 +752,13 @@ export default function LocalTwinDashboard() {
                         accent
                       />
                       <MetricTile
-                        label="Funding Gap"
+                        label="자금부족"
                         value={formatMan(activeAnalysis.fundingGapKrw)}
                       />
                     </CardContent>
                   </Card>
                 ) : null}
 
-                <Card>
-                  <CardHeader>
-                    <div className="flex items-center gap-2">
-                      <Database className="h-4 w-4 text-slate-400" />
-                      <CardTitle>Evidence boundary</CardTitle>
-                    </div>
-                  </CardHeader>
-                  <CardContent className="space-y-2 text-[10px] leading-4 text-slate-500">
-                    <p>
-                      이동수요는 공식 역 승하차를 거리감쇠한 모델값, 임대는 공식 R-ONE
-                      상권 benchmark, Buzz는 NAVER 공개 상대 관심도 snapshot을 사용합니다.
-                    </p>
-                    <p>
-                      출처 레지스터 {provenance?.sources.length ?? 0}개 · 관측된 점포 앞
-                      보행량은 없으며 공간 결합·거리감쇠·spillover는 modelled로 분리합니다.
-                    </p>
-                  </CardContent>
-                </Card>
               </aside>
             </section>
 
