@@ -5,7 +5,7 @@ LocalTwin Daegu is a standard Next.js App Router application.
 ## Recommended deployment
 
 1. Import `sionchu/daegu-local-twin` into Vercel.
-2. Use Node.js 22.
+2. Use Node.js 22. The repository pins npm 11.6 because npm 10.9.x has a known Arborist peer-resolution crash with Vitest's optional peer graph.
 3. Keep the framework preset as Next.js.
 4. No secret is required for the default public basemap/DEM setup.
 5. Optional public environment values:
