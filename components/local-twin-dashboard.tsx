@@ -229,7 +229,7 @@ function ScenarioEditor({
   const scores = computeOpportunityScores(cell, allCells);
 
   return (
-    <Card className="overflow-hidden">
+    <Card className="overflow-hidden" data-testid={`scenario-${label.toLowerCase()}`}>
       <CardHeader className="border-b border-white/8">
         <div className="flex items-start justify-between gap-3">
           <div className="flex min-w-0 items-center gap-3">
@@ -1002,7 +1002,7 @@ export default function LocalTwinDashboard() {
             </div>
 
             <div className="grid gap-5 xl:grid-cols-[minmax(0,1fr)_420px]">
-              <Card>
+              <Card data-testid="funding-structure">
                 <CardHeader>
                   <CardTitle>{activeCell.label} · Funding structure</CardTitle>
                   <CardDescription>
