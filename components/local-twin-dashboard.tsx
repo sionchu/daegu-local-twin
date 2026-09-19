@@ -79,7 +79,7 @@ type ProvenanceSource = {
   freshness: string;
   fieldsUsed: string[];
   limitations: string;
-  mode: "live" | "snapshot" | "demo";
+  mode: "live" | "snapshot" | "official-snapshot" | "modelled" | "demo";
 };
 
 type Provenance = {
@@ -93,7 +93,7 @@ const layerLabels: Record<MapLayer, string> = {
   transit: "교통 접근",
   buzz: "Buzz",
   spillover: "파생수요",
-  regeneration: "도시재생",
+  regeneration: "쇠퇴·재생 맥락",
   rent: "임대여력",
 };
 
@@ -701,7 +701,7 @@ export default function LocalTwinDashboard() {
                         <br />
                         Rent relief 25%
                         <br />
-                        Regeneration 20%
+                        재생맥락 20%
                       </div>
                     </div>
 

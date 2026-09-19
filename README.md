@@ -46,9 +46,11 @@ official support / guarantee / finance review candidates
 Every source-backed value must remain distinguishable as `observed`, `official`,
 `modelled`, or `demo`.
 
-The current central-Daegu corridor still contains an explicitly labelled demo snapshot
-for several mobility, rent, and Buzz fields. The UI must not present those as measured
-store-level facts or business-success probabilities.
+The current central-Daegu corridor still contains explicitly labelled demo values for
+mobility, rent, Buzz, and spillover fields. SEMAS business points and official Jung-gu
+decline/boundary snapshots are now integrated through a deterministic, modelled
+cell-level join. The UI must not present any of these derived cell values as official
+store-level statistics or business-success probabilities.
 
 Canonical source metadata lives in:
 
@@ -57,6 +59,8 @@ Canonical source metadata lives in:
 Current product snapshots:
 
 - `public/data/opportunity_cells.json`
+- `public/data/cell_spatial_evidence.json`
+- `public/data/admin_dong_boundaries.geojson`
 - `public/data/transit.json`
 - `public/data/businesses.json`
 - `public/data/rent_benchmark.json`

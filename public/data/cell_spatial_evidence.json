@@ -1,0 +1,255 @@
+{
+  "mode": "modelled",
+  "modelVersion": "cell-spatial-evidence-v1",
+  "inputs": {
+    "businesses": {
+      "datasetId": "15083033",
+      "version": "20260630",
+      "recordCount": 2165
+    },
+    "regeneration": {
+      "datasetId": "city.go.kr:nttId=9611",
+      "sourceVersion": "2025-12-31",
+      "recordCount": 12
+    },
+    "adminDongBoundaries": {
+      "datasetId": "15129688",
+      "datasetVersion": "2025-06-30",
+      "featureCount": 12
+    }
+  },
+  "businessAssignment": {
+    "method": "point-in-polygon; boundary included; exactly one current cell required",
+    "sourceRecordCount": 2165,
+    "assignedRecordCount": 2165
+  },
+  "adminDongAssignment": {
+    "method": "cell-center point-in-polygon; exactly one official administrative dong required",
+    "cellCount": 8
+  },
+  "regenerationScore": {
+    "mode": "modelled",
+    "formula": "qualifyingSectorCount / 3 * 100",
+    "meaning": "share of the three official decline-diagnosis sectors that qualify"
+  },
+  "sameCategoryCountCompatibility": {
+    "value": "sameCategoryCounts.cafe",
+    "note": "legacy compatibility only; do not interpret broad LocalTwin service grouping as exact competition"
+  },
+  "records": [
+    {
+      "cellId": "hex-dongseongro-01",
+      "label": "동성로 중앙",
+      "poi": {
+        "total": 494,
+        "categories": {
+          "cafe": 28,
+          "restaurant": 212,
+          "retail": 119,
+          "beauty": 24,
+          "service": 111
+        },
+        "assignmentMethod": "business point-in-polygon against LocalTwin cell boundary"
+      },
+      "adminDong": {
+        "officialCode": "22010560",
+        "officialName": "성내1동",
+        "assignmentMethod": "cell-center point-in-polygon against official SGIS boundary"
+      },
+      "regenerationContext": {
+        "officialQualifyingSectorCount": 2,
+        "officialMeetsTwoOrMoreSectors": "O",
+        "modelledScore": 66.67,
+        "formula": "qualifyingSectorCount / 3 * 100"
+      }
+    },
+    {
+      "cellId": "hex-dongseongro-02",
+      "label": "동성로 남측",
+      "poi": {
+        "total": 210,
+        "categories": {
+          "cafe": 16,
+          "restaurant": 53,
+          "retail": 28,
+          "beauty": 11,
+          "service": 102
+        },
+        "assignmentMethod": "business point-in-polygon against LocalTwin cell boundary"
+      },
+      "adminDong": {
+        "officialCode": "22010700",
+        "officialName": "동인동",
+        "assignmentMethod": "cell-center point-in-polygon against official SGIS boundary"
+      },
+      "regenerationContext": {
+        "officialQualifyingSectorCount": 2,
+        "officialMeetsTwoOrMoreSectors": "O",
+        "modelledScore": 66.67,
+        "formula": "qualifyingSectorCount / 3 * 100"
+      }
+    },
+    {
+      "cellId": "hex-gyodong-01",
+      "label": "교동 골목",
+      "poi": {
+        "total": 554,
+        "categories": {
+          "cafe": 14,
+          "restaurant": 61,
+          "retail": 358,
+          "beauty": 13,
+          "service": 108
+        },
+        "assignmentMethod": "business point-in-polygon against LocalTwin cell boundary"
+      },
+      "adminDong": {
+        "officialCode": "22010560",
+        "officialName": "성내1동",
+        "assignmentMethod": "cell-center point-in-polygon against official SGIS boundary"
+      },
+      "regenerationContext": {
+        "officialQualifyingSectorCount": 2,
+        "officialMeetsTwoOrMoreSectors": "O",
+        "modelledScore": 66.67,
+        "formula": "qualifyingSectorCount / 3 * 100"
+      }
+    },
+    {
+      "cellId": "hex-gyodong-02",
+      "label": "교동 서측",
+      "poi": {
+        "total": 356,
+        "categories": {
+          "cafe": 22,
+          "restaurant": 117,
+          "retail": 55,
+          "beauty": 16,
+          "service": 146
+        },
+        "assignmentMethod": "business point-in-polygon against LocalTwin cell boundary"
+      },
+      "adminDong": {
+        "officialCode": "22010590",
+        "officialName": "성내2동",
+        "assignmentMethod": "cell-center point-in-polygon against official SGIS boundary"
+      },
+      "regenerationContext": {
+        "officialQualifyingSectorCount": 1,
+        "officialMeetsTwoOrMoreSectors": "X",
+        "modelledScore": 33.33,
+        "formula": "qualifyingSectorCount / 3 * 100"
+      }
+    },
+    {
+      "cellId": "hex-buksungro-01",
+      "label": "북성로 창업거리",
+      "poi": {
+        "total": 83,
+        "categories": {
+          "cafe": 5,
+          "restaurant": 9,
+          "retail": 18,
+          "beauty": 6,
+          "service": 45
+        },
+        "assignmentMethod": "business point-in-polygon against LocalTwin cell boundary"
+      },
+      "adminDong": {
+        "officialCode": "22010590",
+        "officialName": "성내2동",
+        "assignmentMethod": "cell-center point-in-polygon against official SGIS boundary"
+      },
+      "regenerationContext": {
+        "officialQualifyingSectorCount": 1,
+        "officialMeetsTwoOrMoreSectors": "X",
+        "modelledScore": 33.33,
+        "formula": "qualifyingSectorCount / 3 * 100"
+      }
+    },
+    {
+      "cellId": "hex-buksungro-02",
+      "label": "북성로 서측",
+      "poi": {
+        "total": 29,
+        "categories": {
+          "cafe": 3,
+          "restaurant": 6,
+          "retail": 6,
+          "beauty": 3,
+          "service": 11
+        },
+        "assignmentMethod": "business point-in-polygon against LocalTwin cell boundary"
+      },
+      "adminDong": {
+        "officialCode": "22010610",
+        "officialName": "성내3동",
+        "assignmentMethod": "cell-center point-in-polygon against official SGIS boundary"
+      },
+      "regenerationContext": {
+        "officialQualifyingSectorCount": 1,
+        "officialMeetsTwoOrMoreSectors": "X",
+        "modelledScore": 33.33,
+        "formula": "qualifyingSectorCount / 3 * 100"
+      }
+    },
+    {
+      "cellId": "hex-jungang-01",
+      "label": "중앙로 남측",
+      "poi": {
+        "total": 346,
+        "categories": {
+          "cafe": 23,
+          "restaurant": 162,
+          "retail": 65,
+          "beauty": 27,
+          "service": 69
+        },
+        "assignmentMethod": "business point-in-polygon against LocalTwin cell boundary"
+      },
+      "adminDong": {
+        "officialCode": "22010540",
+        "officialName": "삼덕동",
+        "assignmentMethod": "cell-center point-in-polygon against official SGIS boundary"
+      },
+      "regenerationContext": {
+        "officialQualifyingSectorCount": 2,
+        "officialMeetsTwoOrMoreSectors": "O",
+        "modelledScore": 66.67,
+        "formula": "qualifyingSectorCount / 3 * 100"
+      }
+    },
+    {
+      "cellId": "hex-seomun-01",
+      "label": "서문시장 연계",
+      "poi": {
+        "total": 93,
+        "categories": {
+          "cafe": 4,
+          "restaurant": 13,
+          "retail": 23,
+          "beauty": 7,
+          "service": 46
+        },
+        "assignmentMethod": "business point-in-polygon against LocalTwin cell boundary"
+      },
+      "adminDong": {
+        "officialCode": "22010610",
+        "officialName": "성내3동",
+        "assignmentMethod": "cell-center point-in-polygon against official SGIS boundary"
+      },
+      "regenerationContext": {
+        "officialQualifyingSectorCount": 1,
+        "officialMeetsTwoOrMoreSectors": "X",
+        "modelledScore": 33.33,
+        "formula": "qualifyingSectorCount / 3 * 100"
+      }
+    }
+  ],
+  "limitations": [
+    "Cell-level assignments are deterministic modelled joins, not official cell-level statistics.",
+    "The SGIS boundary snapshot is 2025-06-30 while the decline snapshot is 2025-12-31.",
+    "The regeneration score is context only and is not a business-success, revenue, or causal uplift probability.",
+    "Transit, rent, buzz, spillover, and mobility values remain unchanged by this derivation."
+  ]
+}
