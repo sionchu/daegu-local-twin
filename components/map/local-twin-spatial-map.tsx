@@ -11,9 +11,10 @@ type Props = {
   cells: LocationEvidence[];
   selectedCellId?: string;
   activeLayer: MapLayer;
-  selectedTime: Date;
   onSelect: (cellId: string) => void;
 };
+
+const FALLBACK_TIME = new Date("2026-09-19T12:00:00+09:00");
 
 export default function LocalTwinSpatialMap(props: Props) {
   const [fallbackReason, setFallbackReason] = useState<string>();
@@ -36,7 +37,7 @@ export default function LocalTwinSpatialMap(props: Props) {
             cells={props.cells}
             selectedCellId={props.selectedCellId}
             activeLayer={props.activeLayer}
-            selectedTime={props.selectedTime}
+            selectedTime={FALLBACK_TIME}
             showTerrain
             showBuildings
             showExtrusion
