@@ -1,16 +1,67 @@
 {
-  "mode": "demo",
+  "mode": "official-snapshot",
   "provider": "대구교통공사",
   "datasetId": "15002503",
-  "latestVerifiedDatasetVersion": "20260731",
-  "latestVerifiedModifiedAt": "2026-09-03",
-  "sourceUrl": "https://www.data.go.kr/data/15002503/fileData.do",
-  "formula": "TransitDemand(x)=sum station_passengers(s)*exp(-distance(x,s)/lambda_transit)",
-  "lambdaTransitMeters": 450,
+  "datasetVersion": "20260731",
+  "sourceUrl": "https://www.data.go.kr/data/15002503/fileData.do?recommendDataYn=Y",
+  "sourceSha256": "9EC09C14683FC01BD61356B0CD1FB7F8A6BD328AADC5BEC39699EE106156A577",
+  "month": 7,
+  "businessHours": "10:00-22:00",
+  "retrievedAt": "2026-09-19T08:25:16Z",
   "records": [
-    {"station":"중앙로역","dailyPassengersProxy":92000,"sourceMode":"demo-proxy"},
-    {"station":"반월당역","dailyPassengersProxy":116000,"sourceMode":"demo-proxy"},
-    {"station":"서문시장역","dailyPassengersProxy":51000,"sourceMode":"demo-proxy"}
+    {
+      "station": "중앙로역",
+      "stationNumbers": [
+        "1310"
+      ],
+      "daysObserved": 31,
+      "averageDailyTotal": 29886.4,
+      "averageDailyBusinessHours": 25121.3,
+      "averageDailyBoardings": 14473.4,
+      "averageDailyAlightings": 15413.0,
+      "sourceMode": "official-file-snapshot"
+    },
+    {
+      "station": "반월당역",
+      "stationNumbers": [
+        "1300",
+        "2300"
+      ],
+      "daysObserved": 31,
+      "averageDailyTotal": 66929.2,
+      "averageDailyBusinessHours": 56463.6,
+      "averageDailyBoardings": 33153.0,
+      "averageDailyAlightings": 33776.1,
+      "sourceMode": "official-file-snapshot"
+    },
+    {
+      "station": "서문시장역",
+      "stationNumbers": [
+        "3280"
+      ],
+      "daysObserved": 31,
+      "averageDailyTotal": 13095.8,
+      "averageDailyBusinessHours": 11270.1,
+      "averageDailyBoardings": 6552.0,
+      "averageDailyAlightings": 6543.8,
+      "sourceMode": "official-file-snapshot"
+    },
+    {
+      "station": "대구역",
+      "stationNumbers": [
+        "1320"
+      ],
+      "daysObserved": 31,
+      "averageDailyTotal": 15338.2,
+      "averageDailyBusinessHours": 11646.4,
+      "averageDailyBoardings": 7894.3,
+      "averageDailyAlightings": 7443.9,
+      "sourceMode": "official-file-snapshot"
+    }
   ],
-  "note": "These committed passenger proxy values are demo-only. Run scripts/ingest/refresh_daegu_transit.py to replace this file with an official station snapshot."
+  "missingStations": [],
+  "limitations": [
+    "역 단위 승하차 실측 통계이며 개별 점포 앞 보행량이 아님",
+    "LocalTwin의 점포/셀 수요로 사용하려면 역-셀 거리감쇠 등 별도 모델 변환이 필요"
+  ]
 }
