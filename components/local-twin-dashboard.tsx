@@ -211,6 +211,7 @@ function ScenarioEditor({
   scenario,
   cell,
   analysis,
+  allCells,
   label,
   onPatch,
   onCategory,
@@ -219,12 +220,13 @@ function ScenarioEditor({
   scenario: BusinessScenario;
   cell: LocationEvidence;
   analysis: FinancialAnalysis;
+  allCells: LocationEvidence[];
   label: "A" | "B";
   onPatch: (patch: Partial<StartupAssumptions>) => void;
   onCategory: (category: BusinessCategory) => void;
   onStress: (preset: StressPreset) => void;
 }) {
-  const scores = computeOpportunityScores(cell, [cell]);
+  const scores = computeOpportunityScores(cell, allCells);
 
   return (
     <Card className="overflow-hidden">
@@ -919,6 +921,7 @@ export default function LocalTwinDashboard() {
                 scenario={activeScenario}
                 cell={activeCell}
                 analysis={activeAnalysis}
+                allCells={state.cells}
                 label="A"
                 onPatch={(patch) => actions.setAssumptions(activeScenario.id, patch)}
                 onCategory={(category) => actions.setCategory(activeScenario.id, category)}
@@ -928,6 +931,7 @@ export default function LocalTwinDashboard() {
                 scenario={compareScenario}
                 cell={compareCell}
                 analysis={compareAnalysis}
+                allCells={state.cells}
                 label="B"
                 onPatch={(patch) => actions.setAssumptions(compareScenario.id, patch)}
                 onCategory={(category) => actions.setCategory(compareScenario.id, category)}
