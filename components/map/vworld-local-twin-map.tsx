@@ -101,6 +101,16 @@ function ringCenter(ring: number[][]) {
   return [sum[0] / ring.length, sum[1] / ring.length] as [number, number];
 }
 
+async function waitForVWorldLayer(map: any, name: string, timeoutMs = 10_000) {
+  const deadline = Date.now() + timeoutMs;
+  while (Date.now() < deadline) {
+    const layer = map?.getLayerElement?.(name);
+    if (layer) return layer;
+    await new Promise((resolve) => window.setTimeout(resolve, 250));
+  }
+  return null;
+}
+
 export default function VWorldLocalTwinMap({
   cells,
   selectedCellId,
@@ -158,9 +168,6 @@ export default function VWorldLocalTwinMap({
 
         viewerRef.current = viewer;
         mapRef.current = map;
-
-        const buildingLayer = map.getLayerElement?.("facility_build");
-        buildingLayer?.show?.();
 
         if (viewer.scene) {
           viewer.scene.requestRenderMode = true;
@@ -263,8 +270,15 @@ export default function VWorldLocalTwinMap({
         };
 
         setReady(true);
-        setStatus(buildingLayer ? "VWorld 3D · 건물 레이어" : "VWorld 3D");
+        setStatus("VWorld 3D");
         viewer.scene?.requestRender?.();
+
+        void waitForVWorldLayer(map, "facility_build").then((buildingLayer) => {
+          if (cancelled || !buildingLayer) return;
+          buildingLayer.show?.();
+          setStatus("VWorld 3D · 건물 레이어");
+          viewer.scene?.requestRender?.();
+        });
       } catch (error) {
         const reason = error instanceof Error ? error.message : String(error);
         setStatus("VWorld 연결 불가 · 경량 지도 전환");
