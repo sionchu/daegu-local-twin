@@ -263,7 +263,7 @@ export function OpportunityCompositionChart({
   const data = [
     { metric: "수요", value: Math.round(scores.demandScore ?? 0) },
     { metric: "임대여력", value: Math.round(scores.rentRelief ?? 0) },
-    { metric: "도시재생", value: Math.round(scores.regeneration ?? 0) },
+    { metric: "쇠퇴·재생", value: Math.round(scores.regeneration ?? 0) },
     { metric: "Buzz", value: Math.round(scores.buzz ?? 0) },
     { metric: "파생수요", value: Math.round(scores.spillover ?? 0) },
   ];
