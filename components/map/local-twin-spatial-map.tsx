@@ -6,7 +6,6 @@ import type { LocationEvidence, MapLayer } from "@/src/types";
 import VWorldLocalTwinMap from "@/components/map/vworld-local-twin-map";
 
 const MapLibreFallback = lazy(() => import("@/components/map/local-twin-map"));
-const FALLBACK_LIGHT_TIME = new Date("2026-09-19T18:00:00+09:00");
 
 type Props = {
   cells: LocationEvidence[];
@@ -36,7 +35,6 @@ export default function LocalTwinSpatialMap(props: Props) {
             cells={props.cells}
             selectedCellId={props.selectedCellId}
             activeLayer={props.activeLayer}
-            selectedTime={FALLBACK_LIGHT_TIME}
             showTerrain
             showBuildings
             showExtrusion
