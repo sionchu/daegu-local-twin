@@ -779,7 +779,7 @@ export default function LocalTwinDashboard() {
                         value={Math.ceil(activeAnalysis.breakEvenCustomersPerDay) + "명/일"}
                       />
                       <MetricTile
-                        label="필요 전환"
+                        label="필요 포착률"
                         value={formatPercent(activeAnalysis.requiredCaptureRate)}
                         accent
                       />
@@ -947,17 +947,17 @@ export default function LocalTwinDashboard() {
                 <CardHeader>
                   <CardTitle>비교 핵심</CardTitle>
                   <CardDescription>
-                    낮은 전환 부담과 낮은 Funding Gap이 같은 입지에서 동시에 나타나는지 확인합니다.
+                    낮은 포착 부담과 낮은 Funding Gap이 같은 입지에서 동시에 나타나는지 확인합니다.
                   </CardDescription>
                 </CardHeader>
                 <CardContent className="grid grid-cols-2 gap-2 md:grid-cols-4">
                   <MetricTile
-                    label="A 필요 전환"
+                    label="A 필요 포착률"
                     value={formatPercent(activeAnalysis.requiredCaptureRate)}
                     accent
                   />
                   <MetricTile
-                    label="B 필요 전환"
+                    label="B 필요 포착률"
                     value={formatPercent(compareAnalysis.requiredCaptureRate)}
                   />
                   <MetricTile
