@@ -176,7 +176,7 @@ def main() -> int:
         "features": features,
     }
     OUT.parent.mkdir(parents=True, exist_ok=True)
-    OUT.write_text(json.dumps(payload, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
+    OUT.write_text(json.dumps(payload, ensure_ascii=False, separators=(",", ":")) + "\n", encoding="utf-8")
     print(json.dumps({"features": len(features), "output": str(OUT)}, ensure_ascii=False))
     return 0
 
