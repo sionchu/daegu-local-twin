@@ -170,19 +170,6 @@ export default function VWorldLocalTwinMap({
         viewer.shadows = false;
 
         const Cesium = window.Cesium;
-        viewer.camera?.setView?.({
-          destination: Cesium.Cartesian3.fromDegrees(
-            DAEGU_CENTER[0],
-            DAEGU_CENTER[1],
-            2600,
-          ),
-          orientation: {
-            heading: 0,
-            pitch: Cesium.Math.toRadians(-52),
-            roll: 0,
-          },
-        });
-        viewer.scene?.requestRender?.();
 
         const [adminResponse, transitResponse] = await Promise.all([
           fetch("/data/admin_dong_boundaries.geojson"),
@@ -370,6 +357,30 @@ export default function VWorldLocalTwinMap({
     if (viewer.clock) viewer.clock.currentTime = Cesium.JulianDate.fromDate(selectedTime);
     viewer.scene?.requestRender?.();
   }, [ready, selectedTime]);
+
+  useEffect(() => {
+    if (!ready) return;
+    const timer = window.setTimeout(() => {
+      const viewer = viewerRef.current;
+      const Cesium = window.Cesium;
+      if (!viewer?.camera || !Cesium) return;
+      viewer.camera.flyTo({
+        destination: Cesium.Cartesian3.fromDegrees(
+          DAEGU_CENTER[0],
+          DAEGU_CENTER[1],
+          2600,
+        ),
+        orientation: {
+          heading: 0,
+          pitch: Cesium.Math.toRadians(-52),
+          roll: 0,
+        },
+        duration: 0.6,
+      });
+      viewer.scene?.requestRender?.();
+    }, 650);
+    return () => window.clearTimeout(timer);
+  }, [ready]);
 
   useEffect(() => {
     if (!ready || !containerRef.current) return;
