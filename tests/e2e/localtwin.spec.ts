@@ -7,7 +7,7 @@ test.describe("LocalTwin critical evidence path", () => {
 
     await page.goto("/");
     await expect(
-      page.getByRole("heading", { name: /사람이 많은 곳보다/ }),
+      page.getByRole("heading", { name: "창업 기회지도" }),
     ).toBeVisible();
 
     await expect(page.getByRole("button", { name: "종합", exact: true })).toBeVisible();

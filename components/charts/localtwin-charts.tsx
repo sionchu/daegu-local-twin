@@ -70,17 +70,13 @@ function formatMan(value: number) {
 
 export function DemandTimelineChart({
   dailyDemand,
-  currentHour,
 }: {
   dailyDemand: number | null;
-  currentHour: number;
 }) {
   const data = demandWeights.map(([hour, weight]) => ({
     hour: String(hour).padStart(2, "0") + ":00",
     demand: dailyDemand ? Math.round(dailyDemand * (weight / weightSum)) : 0,
   }));
-  const marker = String(Math.max(6, Math.min(23, currentHour))).padStart(2, "0") + ":00";
-
   return (
     <ChartContainer>
       <AreaChart data={data} margin={{ top: 10, right: 12, left: -18, bottom: 0 }}>
@@ -107,12 +103,6 @@ export function DemandTimelineChart({
         <Tooltip
           contentStyle={tooltipStyle}
           formatter={(value) => [formatCompact(Number(value)) + " 수요 proxy", "시간대 수요"]}
-        />
-        <ReferenceLine
-          x={marker}
-          stroke="var(--chart-3)"
-          strokeDasharray="4 4"
-          label={{ value: "현재", fill: "#f4b860", fontSize: 10 }}
         />
         <Area
           type="monotone"

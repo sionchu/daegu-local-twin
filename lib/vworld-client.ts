@@ -11,13 +11,20 @@ declare global {
 
 let scriptPromise: Promise<void> | null = null;
 
+function secureVWorldUrl(src: string) {
+  const url = new URL(src, "https://map.vworld.kr/");
+  if (url.hostname === "map.vworld.kr") url.protocol = "https:";
+  return url.href;
+}
+
 function loadExternalScript(src: string) {
-  const existing = document.querySelector<HTMLScriptElement>(`script[src="${src}"]`);
+  const secureSrc = secureVWorldUrl(src);
+  const existing = Array.from(document.scripts).find((script) => script.src === secureSrc);
   if (existing?.dataset.loaded === "true") return Promise.resolve();
 
   return new Promise<void>((resolve, reject) => {
     const script = existing ?? document.createElement("script");
-    script.src = src;
+    script.src = secureSrc;
     script.async = false;
     const onLoad = () => {
       script.dataset.loaded = "true";
@@ -26,7 +33,7 @@ function loadExternalScript(src: string) {
     script.addEventListener("load", onLoad, { once: true });
     script.addEventListener(
       "error",
-      () => reject(new Error(`VWorld dependency load failed: ${new URL(src, window.location.href).pathname}`)),
+      () => reject(new Error(`VWorld dependency load failed: ${new URL(secureSrc).pathname}`)),
       { once: true },
     );
     if (!existing) document.head.appendChild(script);
@@ -48,9 +55,19 @@ export function loadVWorld(apiKey: string) {
     const captureMarkup = (markup: string) => {
       const template = document.createElement("template");
       template.innerHTML = markup;
+      template.content.querySelectorAll("link[rel=\"stylesheet\"][href]").forEach((child) => {
+        const href = child.getAttribute("href");
+        if (!href) return;
+        const secureHref = secureVWorldUrl(href);
+        if (Array.from(document.styleSheets).some((sheet) => sheet.href === secureHref)) return;
+        const link = document.createElement("link");
+        link.rel = "stylesheet";
+        link.href = secureHref;
+        document.head.appendChild(link);
+      });
       template.content.querySelectorAll("script[src]").forEach((child) => {
         const src = child.getAttribute("src");
-        if (src) childScripts.push(new URL(src, "https://map.vworld.kr/").href);
+        if (src) childScripts.push(secureVWorldUrl(src));
       });
     };
 
@@ -63,7 +80,13 @@ export function loadVWorld(apiKey: string) {
     bootstrap.async = false;
     bootstrap.onload = () => {
       void (async () => {
-        for (const childScript of [...new Set(childScripts)]) {
+        const loadedScripts = new Set<string>();
+        let scriptIndex = 0;
+        while (scriptIndex < childScripts.length) {
+          const childScript = secureVWorldUrl(childScripts[scriptIndex]);
+          scriptIndex += 1;
+          if (loadedScripts.has(childScript)) continue;
+          loadedScripts.add(childScript);
           await loadExternalScript(childScript);
         }
         restoreDocumentWrite();

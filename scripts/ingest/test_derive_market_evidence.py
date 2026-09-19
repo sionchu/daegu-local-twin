@@ -59,6 +59,16 @@ class DeriveMarketEvidenceTest(unittest.TestCase):
             by_id["hex-seomun-01"]["rentBenchmarkKrwPerSqm"],
             17_300,
         )
+        self.assertEqual(by_id["hex-dongseongro-01"]["rentBenchmarkMode"], "exact")
+        self.assertEqual(
+            by_id["hex-dongseongro-01"]["rentBenchmarkSourceAreas"],
+            ["동성로중심"],
+        )
+        self.assertEqual(by_id["hex-gyodong-01"]["rentBenchmarkMode"], "proxy")
+        self.assertEqual(
+            set(by_id["hex-gyodong-01"]["rentBenchmarkSourceAreas"]),
+            {"동성로중심", "서문시장/청라언덕"},
+        )
         self.assertTrue(
             all(cell["rentBenchmarkKrwPerSqm"] is not None for cell in updated)
         )

@@ -164,6 +164,17 @@ function formatRentPerSqm(value: number | null) {
     : (value / 1_000).toFixed(1) + "천원/㎡";
 }
 
+function rentBenchmarkNote(cell: LocationEvidence) {
+  const areas = cell.rentBenchmarkSourceAreas ?? [];
+  if (cell.rentBenchmarkMode === "exact") {
+    return `R-ONE 2026 Q2 · ${areas[0] ?? "공식 상권"} 직접 매칭 · 점포 호가 아님`;
+  }
+  if (cell.rentBenchmarkMode === "proxy") {
+    return `R-ONE 2026 Q2 · 인접 공식상권 공간 proxy · 점포 호가 아님`;
+  }
+  return "R-ONE 2026 Q2 benchmark · 점포 호가 아님";
+}
+
 function qualityLabel(quality: EvidenceQuality) {
   if (quality === "official") return "공식";
   if (quality === "observed") return "관측";
@@ -544,8 +555,6 @@ export default function LocalTwinDashboard() {
         )
       : null;
 
-  const currentHour = 18;
-
   if (!state.cells.length && !dataError) {
     return (
       <div className="grid min-h-screen place-items-center bg-[color:var(--background)] text-sm text-slate-400">
@@ -576,22 +585,19 @@ export default function LocalTwinDashboard() {
             </div>
           </button>
 
-          <nav className="ml-auto flex min-w-0 items-center gap-1 rounded-xl border border-white/8 bg-white/[0.025] p-1">
+          <nav className="ml-auto flex min-w-0 items-center gap-4 sm:gap-6">
             {(Object.keys(viewMeta) as View[]).map((item) => (
               <button
                 key={item}
                 onClick={() => setView(item)}
                 className={
-                  "rounded-lg px-3 py-2 text-xs font-medium transition " +
+                  "border-b px-0.5 py-2 text-xs font-medium transition " +
                   (view === item
-                    ? "bg-white/10 text-white"
-                    : "text-slate-500 hover:text-slate-200")
+                    ? "border-emerald-300 text-white"
+                    : "border-transparent text-slate-500 hover:text-slate-200")
                 }
               >
-                <span className="mr-1.5 text-[9px] text-slate-600">
-                  {viewMeta[item].index}
-                </span>
-                <span className="hidden sm:inline">{viewMeta[item].label}</span>
+                {viewMeta[item].label}
               </button>
             ))}
           </nav>
@@ -692,7 +698,7 @@ export default function LocalTwinDashboard() {
                       <MetricTile
                         label="임대 benchmark"
                         value={formatRentPerSqm(selectedCell.rentBenchmarkKrwPerSqm)}
-                        note="R-ONE 2026 Q2 기반 · 정확매칭/공간보간 benchmark · 점포 호가 아님"
+                        note={rentBenchmarkNote(selectedCell)}
                       />
                       <MetricTile
                         label="관심도 변화"
@@ -779,7 +785,6 @@ export default function LocalTwinDashboard() {
                     <CardContent>
                       <DemandTimelineChart
                         dailyDemand={selectedCell.transitDemand}
-                        currentHour={currentHour}
                       />
                     </CardContent>
                   </Card>

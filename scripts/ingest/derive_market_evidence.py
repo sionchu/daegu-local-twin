@@ -290,9 +290,16 @@ def derive_market_evidence(
                 rent_record["localTwin"]["rentPerSquareMeter"]["value"]
             )
             cell["vacancyBenchmark"] = float(rent_record["localTwin"]["vacancy"]["value"])
+            cell["rentBenchmarkMode"] = "exact"
+            cell["rentBenchmarkSourceAreas"] = [str(rent_mapping["officialArea"])]
         elif rent_interpolation is not None:
             cell["rentBenchmarkKrwPerSqm"] = int(rent_interpolation["rentKrwPerSqm"])
             cell["vacancyBenchmark"] = float(rent_interpolation["vacancyPct"])
+            cell["rentBenchmarkMode"] = "proxy"
+            cell["rentBenchmarkSourceAreas"] = [
+                str(item["officialArea"])
+                for item in rent_interpolation["contributions"]
+            ]
         else:
             raise ValueError(f"no rent evidence path for {cell['cellId']}")
         cell.pop("rentBenchmark", None)
