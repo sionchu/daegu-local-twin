@@ -7,9 +7,6 @@ on:
       - codex/**
   pull_request:
 
-concurrency:
-  group: verify-${{ github.ref }}
-  cancel-in-progress: true
 
 jobs:
   verify:
