@@ -308,10 +308,12 @@ def main() -> int:
         load_json(args.regeneration),
         load_json(args.admin_boundaries),
     )
-    args.output_cells.write_text(
-        json.dumps(updated_cells, ensure_ascii=False, indent=2) + "\n",
-        encoding="utf-8",
-    )
+    compact_cells = "[\n" + "\n".join(
+        "  " + json.dumps(cell, ensure_ascii=False, separators=(",", ":"))
+        + ("," if index < len(updated_cells) - 1 else "")
+        for index, cell in enumerate(updated_cells)
+    ) + "\n]\n"
+    args.output_cells.write_text(compact_cells, encoding="utf-8")
     args.output_evidence.write_text(
         json.dumps(sidecar, ensure_ascii=False, indent=2) + "\n",
         encoding="utf-8",
