@@ -12,7 +12,6 @@ data governed by their own licenses and terms.
 - **MapLibre GL JS** — BSD-3-Clause; used only as the failure fallback.
 - **deck.gl** — MIT; used only by the MapLibre fallback.
 - **Turf.js** — MIT.
-- **SunCalc** — BSD-2-Clause.
 - **Recharts** — MIT.
 - **shadcn/ui patterns** — MIT. Local UI primitives are repository-owned copies/patterns,
   not a bundled hosted component service.
