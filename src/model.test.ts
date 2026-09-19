@@ -30,7 +30,7 @@ const assumptions: StartupAssumptions = {
   averageTicketKrw: 10_000,
   variableCostRatio: 0.25,
   operatingDaysPerMonth: 25,
-  assumedConversionRate: 0.04,
+  assumedCaptureRate: 0.04,
   ownerCashKrw: 24_000_000,
   grantKrw: 1_000_000,
   assumedFinancingKrw: 0,
@@ -55,7 +55,7 @@ const cell = (cellId: string, footfall: number, rent: number): LocationEvidence 
   buzzMomentum: 0.1,
   spilloverScore: footfall / 10,
   regenerationScore: 50,
-  rentBenchmark: rent,
+  rentBenchmarkKrwPerSqm: rent,
   vacancyBenchmark: 10,
   evidenceQuality: "demo",
   provenanceIds: ["test"],
@@ -88,7 +88,7 @@ describe("deterministic financial engine", () => {
     expect(result.monthlyBreakEvenRevenueKrw).toBe(3_200_000);
     expect(result.monthlyBreakEvenCustomers).toBeCloseTo(320, 2);
     expect(result.breakEvenCustomersPerDay).toBeCloseTo(12.8, 2);
-    expect(result.requiredConversionRate).toBeCloseTo(0.0064, 5);
+    expect(result.requiredCaptureRate).toBeCloseTo(0.0064, 5);
     expect(result.fundingGapKrw).toBe(0);
   });
 
@@ -100,15 +100,15 @@ describe("deterministic financial engine", () => {
     expect(result.paybackMonth).not.toBeNull();
   });
 
-  it("separates footfall stress from conversion stress", () => {
+  it("separates footfall stress from capture-rate stress", () => {
     const base = analyzeFinancials(assumptions, 2_000, "base");
     const footfallDown = analyzeFinancials(assumptions, 2_000, "footfallDown");
     const conversionDown = analyzeFinancials(assumptions, 2_000, "conversionDown");
 
-    expect(footfallDown.effectiveDailyFootfall).toBe(1_600);
-    expect(conversionDown.effectiveDailyFootfall).toBe(2_000);
-    expect(footfallDown.requiredConversionRate!).toBeGreaterThan(base.requiredConversionRate!);
-    expect(conversionDown.requiredConversionRate).toBeCloseTo(base.requiredConversionRate!, 8);
+    expect(footfallDown.effectiveDailyDemandProxy).toBe(1_600);
+    expect(conversionDown.effectiveDailyDemandProxy).toBe(2_000);
+    expect(footfallDown.requiredCaptureRate!).toBeGreaterThan(base.requiredCaptureRate!);
+    expect(conversionDown.requiredCaptureRate).toBeCloseTo(base.requiredCaptureRate!, 8);
     expect(footfallDown.steadyStateRevenueKrw).toBeLessThan(base.steadyStateRevenueKrw);
     expect(conversionDown.steadyStateRevenueKrw).toBeLessThan(base.steadyStateRevenueKrw);
   });
