@@ -111,6 +111,8 @@ export default function VWorldLocalTwinMap({
   onUnavailable,
 }: Props) {
   const viewerRef = useRef<any>(null);
+  const mapRef = useRef<any>(null);
+  const containerRef = useRef<HTMLDivElement>(null);
   const contextEntitiesRef = useRef<any[]>([]);
   const cellEntitiesRef = useRef<any[]>([]);
   const clickCleanupRef = useRef<(() => void) | null>(null);
@@ -145,7 +147,7 @@ export default function VWorldLocalTwinMap({
           throw new Error("VWorld client key is not configured for this host");
         }
 
-        const { viewer } = await startVWorld(
+        const { viewer, map } = await startVWorld(
           containerId,
           config.apiKey,
           DAEGU_CENTER[0],
@@ -157,6 +159,7 @@ export default function VWorldLocalTwinMap({
         }
 
         viewerRef.current = viewer;
+        mapRef.current = map;
         if (viewer.scene) {
           viewer.scene.requestRenderMode = true;
           viewer.scene.maximumRenderTimeChange = Number.POSITIVE_INFINITY;
@@ -272,7 +275,8 @@ export default function VWorldLocalTwinMap({
       clearEntities(cellEntitiesRef.current);
       clearEntities(contextEntitiesRef.current);
       disposeVWorld(viewerRef.current);
-      viewerRef.current = undefined;
+      viewerRef.current = null;
+      mapRef.current = null;
     };
   }, [clearEntities, onSelect, onUnavailable]);
 
@@ -354,6 +358,17 @@ export default function VWorldLocalTwinMap({
   }, [ready, selectedTime]);
 
   useEffect(() => {
+    if (!ready || !containerRef.current) return;
+    const observer = new ResizeObserver(() => {
+      mapRef.current?.updateSize?.();
+      viewerRef.current?.resize?.();
+      viewerRef.current?.scene?.requestRender?.();
+    });
+    observer.observe(containerRef.current);
+    return () => observer.disconnect();
+  }, [ready]);
+
+  useEffect(() => {
     const viewer = viewerRef.current;
     const Cesium = window.Cesium;
     if (!ready || !viewer?.camera || !Cesium || !selectedCell) return;
@@ -384,7 +399,7 @@ export default function VWorldLocalTwinMap({
       data-testid="spatial-map"
       data-map-engine="vworld"
     >
-      <div id={containerId} className="absolute inset-0 h-full w-full" />
+      <div ref={containerRef} id={containerId} className="absolute inset-0 h-full w-full" />
       <div className="pointer-events-none absolute left-4 top-4 z-10 flex items-center gap-2 rounded-full border border-white/10 bg-slate-950/82 px-3 py-1.5 text-[11px] text-slate-100 backdrop-blur">
         <span
           className={
