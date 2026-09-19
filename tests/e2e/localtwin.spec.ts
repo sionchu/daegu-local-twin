@@ -11,14 +11,18 @@ test.describe("LocalTwin critical evidence path", () => {
     ).toBeVisible();
 
     await expect(page.getByText("종합 Opportunity", { exact: true }).first()).toBeVisible();
+
+    // The primary VWorld renderer and the MapLibre fallback share one spatial-map contract.
+    const map = page.getByTestId("spatial-map").first();
+    await expect(map).toBeVisible({ timeout: 20_000 });
+    await expect.poll(async () => (await map.boundingBox())?.height ?? 0).toBeGreaterThan(400);
+
+    // Below-fold Recharts are intentionally deferred until the chart region approaches view.
+    const deferredCharts = page.getByTestId("deferred-map-charts");
+    await deferredCharts.scrollIntoViewIfNeeded();
     await expect(page.getByText("시간대별 이동수요", { exact: true })).toBeVisible();
     await expect(page.getByText("임대료 vs 수요", { exact: true })).toBeVisible();
     await expect(page.getByText("12개월 Cash Runway", { exact: true })).toBeVisible();
-
-    // MapLibre must have real layout dimensions, not just exist in the DOM.
-    const map = page.locator(".maplibregl-map");
-    await expect(map).toBeVisible({ timeout: 20_000 });
-    await expect.poll(async () => (await map.boundingBox())?.height ?? 0).toBeGreaterThan(400);
 
     const timeSlider = page.getByLabel("시간 선택");
     await expect(timeSlider).toHaveValue(String(18 * 60));

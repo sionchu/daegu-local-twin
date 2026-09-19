@@ -13,11 +13,11 @@ The public UI is being migrated to a spatial-finance dashboard built with:
 
 - Next.js 16 / React 19 / TypeScript
 - Tailwind CSS 4 + local shadcn/ui-style primitives
-- MapLibre GL JS 6
-- deck.gl MapLibre-native overlay for extruded opportunity cells
-- Turf.js for a selected-site catchment
+- VWorld WebGL 3.0 as the primary Korean 3D city context
+- VWorld's Cesium viewer for LocalTwin polygons, labels, transit anchors, and camera focus
+- MapLibre GL JS 6 + deck.gl retained as a lazy fallback only
 - SunCalc for time-slider solar azimuth/altitude
-- Recharts for demand, rent-vs-demand, cash-runway, and funding visualizations
+- Recharts loaded on demand for demand, rent-vs-demand, cash-runway, and funding visualizations
 - Vercel as the target hosting platform
 
 The deterministic domain engine under `src/model.ts` remains the authority for all
@@ -26,9 +26,11 @@ financial numbers.
 ## Main interaction
 
 ```text
-3D opportunity map
+VWorld 3D opportunity scene
     ↓
-time slider / sun lighting / DEM / buildings
+official admin boundaries / analysis-cell halos / transit anchors
+    ↓
+time slider / city lighting
     ↓
 candidate A/B selection
     ↓
@@ -90,10 +92,20 @@ npm run dev
 
 Open http://localhost:3000.
 
-The predev/prebuild hook copies MapLibre's ESM worker pair into `public/` so
-Next/Turbopack resolves the Web Worker through a real HTTP URL.
+Configure VWorld locally with:
 
-Optional public map configuration:
+```text
+VWORLD_API_KEY=...
+VWORLD_DOMAIN=localhost
+```
+
+The VWorld key is delivered to the browser at runtime because WebGL 3.0 is a client SDK.
+Do not commit the key, and restrict it to the deployed service domain in VWorld.
+
+MapLibre remains a failure fallback. The predev/prebuild hook copies its ESM worker pair
+into `public/` so Next/Turbopack resolves the Web Worker through a real HTTP URL.
+
+Optional fallback-map configuration:
 
 ```text
 NEXT_PUBLIC_MAP_STYLE_URL=https://tiles.openfreemap.org/styles/bright
@@ -115,7 +127,7 @@ python -m unittest discover -s scripts/ingest -p 'test_*.py'
 python -m compileall -q scripts/ingest vision
 ```
 
-GitHub Actions also starts the production Next.js build in Chromium and verifies the critical evidence path: dashboard load, MapLibre initialization, time slider, candidate finance recalculation, and funding inputs. Failed browser runs retain screenshots, trace, video, and the HTML report as a short-lived Actions artifact.
+GitHub Actions also starts the production Next.js build in Chromium and verifies the critical evidence path: dashboard load, spatial-map contract, deferred chart loading, time slider, candidate finance recalculation, and funding inputs. CI has no VWorld key, so this path deliberately exercises the MapLibre fallback; production VWorld is checked separately in deployment QA. Failed browser runs retain screenshots, trace, video, and the HTML report as a short-lived Actions artifact.
 
 ## Optional vision pipeline
 
@@ -135,8 +147,9 @@ Target deployment is Vercel. See [`VERCEL_DEPLOY.md`](./VERCEL_DEPLOY.md).
 The UI/geometry direction was informed by current upstream projects rather than copied
 wholesale:
 
-- MapLibre GL JS
-- vis.gl deck.gl
+- VWorld WebGL 3.0 / Cesium
+- MapLibre GL JS fallback
+- vis.gl deck.gl fallback
 - shadcn/ui
 - Recharts
 - Turf.js

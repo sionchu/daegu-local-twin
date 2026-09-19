@@ -7,8 +7,10 @@ data governed by their own licenses and terms.
 
 - **Next.js** — MIT.
 - **React** — MIT.
-- **MapLibre GL JS** — BSD-3-Clause.
-- **deck.gl** — MIT.
+- **VWorld WebGL 3.0 / Cesium runtime** — hosted spatial runtime and provider data remain
+  subject to VWorld/Cesium terms and attribution requirements.
+- **MapLibre GL JS** — BSD-3-Clause; used only as the failure fallback.
+- **deck.gl** — MIT; used only by the MapLibre fallback.
 - **Turf.js** — MIT.
 - **SunCalc** — BSD-2-Clause.
 - **Recharts** — MIT.
@@ -18,7 +20,9 @@ data governed by their own licenses and terms.
 
 ## Map providers
 
-- **OpenFreeMap** provides the default hosted style/vector source used by the demo.
+- **VWorld** provides the primary Korean 3D city/terrain context. The client key must be
+  service-domain restricted; LocalTwin overlays remain project-authored/modelled data.
+- **OpenFreeMap** provides the hosted style/vector source used by the fallback renderer.
   Map data is OpenStreetMap-derived; preserve the provider/OpenStreetMap attribution
   shown by the map and review provider terms before production-scale use.
 - **AWS Open Data Terrain Tiles** (`elevation-tiles-prod`) provide the default
