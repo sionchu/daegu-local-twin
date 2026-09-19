@@ -7,7 +7,10 @@
     "npm": ">=11.6.0"
   },
   "scripts": {
+    "copy:map-worker": "node -e \"const fs=require('fs'); for (const f of ['maplibre-gl-worker.mjs','maplibre-gl-shared.mjs']) fs.copyFileSync('node_modules/maplibre-gl/dist/'+f,'public/'+f)\"",
+    "predev": "npm run copy:map-worker",
     "dev": "next dev",
+    "prebuild": "npm run copy:map-worker",
     "build": "next build",
     "start": "next start",
     "typecheck": "tsc --noEmit --pretty false",
