@@ -10,7 +10,7 @@ test.describe("LocalTwin critical evidence path", () => {
       page.getByRole("heading", { name: /사람이 많은 곳보다/ }),
     ).toBeVisible();
 
-    await expect(page.getByText("종합 Opportunity", { exact: true }).first()).toBeVisible();
+    await expect(page.getByRole("button", { name: "종합", exact: true })).toBeVisible();
 
     // The primary VWorld renderer and the MapLibre fallback share one spatial-map contract.
     const map = page.getByTestId("spatial-map").first();
