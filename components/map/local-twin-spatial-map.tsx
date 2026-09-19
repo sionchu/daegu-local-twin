@@ -18,7 +18,7 @@ export default function LocalTwinSpatialMap(props: Props) {
   const [fallbackReason, setFallbackReason] = useState<string>();
 
   const handleUnavailable = useCallback((reason: string) => {
-    setFallbackReason(reason || "VWorld unavailable");
+    setFallbackReason(reason || "3D 지도 연결 실패");
   }, []);
 
   if (fallbackReason) {
@@ -42,7 +42,7 @@ export default function LocalTwinSpatialMap(props: Props) {
           />
         </Suspense>
         <div className="pointer-events-none absolute right-3 top-3 z-20 rounded-full border border-amber-300/15 bg-slate-950/80 px-2.5 py-1 text-[9px] text-amber-100/80 backdrop-blur">
-          VWorld fallback
+          기본 지도 모드
         </div>
       </div>
     );

@@ -43,6 +43,13 @@ The derivation is network-free and updates only:
 It does not alter transit, rent, Buzz, spillover, or mobility/footfall values.
 
 
+## Daegu map boundary
+
+`refresh_daegu_boundary.py` stores the public OpenStreetMap/Nominatim administrative
+polygon for 대구광역시 as `public/data/daegu_boundary.geojson`. The application uses
+this geometry only to limit 3D map rendering and to dim the outside area; it is not a
+commercial-area or business-evidence input.
+
 ## Map-derived corridor zones
 
 `refresh_corridor_zones.py` queries public OpenStreetMap/Nominatim geometry for the

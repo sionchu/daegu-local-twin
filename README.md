@@ -71,6 +71,7 @@ Current product snapshots:
 - `public/data/cell_spatial_evidence.json`
 - `public/data/cell_market_evidence.json`
 - `public/data/admin_dong_boundaries.geojson`
+- `public/data/daegu_boundary.geojson`
 - `public/data/corridor_zones.geojson`
 - `public/data/transit.json`
 - `public/data/transit_station_locations.json`

@@ -3,8 +3,6 @@
 import dynamic from "next/dynamic";
 import {
   ArrowLeftRight,
-  Clock3,
-  Database,
   DollarSign,
   MapPin,
   TrendingUp,
@@ -71,13 +69,6 @@ const chartLoading = () => (
   </div>
 );
 
-const DemandTimelineChart = dynamic(
-  () =>
-    import("@/components/charts/localtwin-charts").then(
-      (module) => module.DemandTimelineChart,
-    ),
-  { ssr: false, loading: chartLoading },
-);
 const RentDemandScatterChart = dynamic(
   () =>
     import("@/components/charts/localtwin-charts").then(
@@ -109,35 +100,18 @@ const FinanceBridgeChart = dynamic(
 
 type View = "map" | "compare" | "funding";
 
-type ProvenanceSource = {
-  id: string;
-  title: string;
-  provider: string;
-  url: string;
-  geographicLevel: string;
-  freshness: string;
-  fieldsUsed: string[];
-  limitations: string | string[];
-  mode: "live" | "snapshot" | "official-snapshot" | "public-snapshot" | "modelled" | "demo";
-};
-
-type Provenance = {
-  generatedAt: string;
-  sources: ProvenanceSource[];
-};
-
 const layerLabels: Record<MapLayer, string> = {
-  opportunity: "종합",
-  demand: "수요",
-  transit: "교통",
-  buzz: "관심도",
-  spillover: "파생수요",
-  regeneration: "재생맥락",
-  rent: "임대여력",
+  opportunity: "입지종합",
+  demand: "수요여건",
+  transit: "교통접근",
+  buzz: "검색관심",
+  spillover: "주변집객",
+  regeneration: "도시재생",
+  rent: "임대여건",
 };
 
 const viewMeta: Record<View, { index: string; label: string }> = {
-  map: { index: "01", label: "3D 기회지도" },
+  map: { index: "01", label: "상권지도" },
   compare: { index: "02", label: "후보비교" },
   funding: { index: "03", label: "자금계획" },
 };
@@ -170,16 +144,16 @@ function rentBenchmarkNote(cell: LocationEvidence) {
     return `R-ONE 2026 Q2 · ${areas[0] ?? "공식 상권"} 직접 매칭 · 점포 호가 아님`;
   }
   if (cell.rentBenchmarkMode === "proxy") {
-    return `R-ONE 2026 Q2 · 인접 공식상권 공간 proxy · 점포 호가 아님`;
+    return "R-ONE 2026 Q2 · 인접 공식상권 기반 추정치 · 점포 호가 아님";
   }
-  return "R-ONE 2026 Q2 benchmark · 점포 호가 아님";
+  return "R-ONE 2026 Q2 참고 임대료 · 점포 호가 아님";
 }
 
 function qualityLabel(quality: EvidenceQuality) {
   if (quality === "official") return "공식";
   if (quality === "observed") return "관측";
-  if (quality === "modelled") return "모델";
-  return "데모";
+  if (quality === "modelled") return "추정";
+  return "시연";
 }
 
 function qualityVariant(quality: EvidenceQuality) {
@@ -236,7 +210,7 @@ function MetricTile({
 }) {
   return (
     <div className="rounded-xl border border-white/8 bg-white/[0.035] p-3.5">
-      <div className="text-[11px] font-medium uppercase tracking-[0.14em] text-slate-500">
+      <div className="text-[11px] font-medium text-slate-500">
         {label}
       </div>
       <div
@@ -248,6 +222,125 @@ function MetricTile({
         {value}
       </div>
       {note ? <div className="mt-1 text-[10px] leading-4 text-slate-500">{note}</div> : null}
+    </div>
+  );
+}
+
+function SummaryRow({
+  label,
+  value,
+  note,
+  emphasis = false,
+}: {
+  label: string;
+  value: string;
+  note?: string;
+  emphasis?: boolean;
+}) {
+  return (
+    <div className="flex items-start justify-between gap-4 py-3">
+      <div className="min-w-0">
+        <div className="text-[11px] font-medium text-slate-400">{label}</div>
+        {note ? <div className="mt-1 text-[10px] leading-4 text-slate-600">{note}</div> : null}
+      </div>
+      <div
+        className={
+          "shrink-0 text-right text-sm font-semibold " +
+          (emphasis ? "text-emerald-200" : "text-slate-100")
+        }
+      >
+        {value}
+      </div>
+    </div>
+  );
+}
+
+function MarketRelationGraph({
+  cell,
+  scores,
+}: {
+  cell: LocationEvidence;
+  scores: ReturnType<typeof computeOpportunityScores>;
+}) {
+  const nodes = [
+    { label: "교통 수요", value: formatNumber(cell.transitDemand), score: scores.transit, x: 58, y: 50 },
+    { label: "검색 관심", value: Math.round(scores.buzz ?? 0) + " / 100", score: scores.buzz, x: 242, y: 50 },
+    { label: "임대 여건", value: formatRentPerSqm(cell.rentBenchmarkKrwPerSqm), score: scores.rentRelief, x: 42, y: 166 },
+    { label: "도시재생", value: Math.round(scores.regeneration ?? 0) + " / 100", score: scores.regeneration, x: 258, y: 166 },
+    { label: "주변 집객", value: Math.round(scores.spillover ?? 0) + " / 100", score: scores.spillover, x: 150, y: 212 },
+  ];
+
+  return (
+    <div
+      key={cell.cellId}
+      className="relation-panel rounded-2xl border border-white/8 bg-[#08131c]/92 p-4"
+      data-testid="market-relation-graph"
+    >
+      <div className="flex items-start justify-between gap-3">
+        <div>
+          <div className="text-[11px] font-semibold text-slate-200">입지 관계도</div>
+          <div className="mt-1 text-[10px] leading-4 text-slate-600">
+            선택한 후보지와 주요 입지여건의 연결 구조
+          </div>
+        </div>
+        <Badge variant="outline">관계형 보기</Badge>
+      </div>
+      <svg
+        className="mt-2 h-[226px] w-full overflow-visible"
+        viewBox="0 0 300 240"
+        role="img"
+        aria-label={cell.label + " 입지 관계도"}
+      >
+        {nodes.map((node, index) => (
+          <line
+            key={"edge-" + node.label}
+            className="relation-edge"
+            x1={150}
+            y1={120}
+            x2={node.x}
+            y2={node.y}
+            pathLength={1}
+            stroke="rgba(103,183,220,0.72)"
+            strokeOpacity={0.28 + Math.max(0, Math.min(100, node.score ?? 0)) / 150}
+            strokeWidth={1.4 + Math.max(0, Math.min(100, node.score ?? 0)) / 80}
+            style={{ animationDelay: index * 70 + "ms" }}
+          />
+        ))}
+        <g className="relation-node relation-node-center" style={{ animationDelay: "120ms" }}>
+          <circle cx="150" cy="120" r="34" fill="#102630" stroke="#5eead4" strokeWidth="2" />
+          <text x="150" y="116" textAnchor="middle" fill="#dffcf6" fontSize="11" fontWeight="700">
+            선택 입지
+          </text>
+          <text x="150" y="133" textAnchor="middle" fill="#5eead4" fontSize="13" fontWeight="700">
+            {Math.round(scores.opportunityScore ?? 0)} / 100
+          </text>
+        </g>
+        {nodes.map((node, index) => (
+          <g
+            key={node.label}
+            className="relation-node"
+            style={{ animationDelay: 220 + index * 80 + "ms" }}
+          >
+            <circle
+              cx={node.x}
+              cy={node.y}
+              r="25"
+              fill="rgba(10,27,38,0.96)"
+              stroke="rgba(167,190,201,0.42)"
+              strokeWidth="1.2"
+            />
+            <text x={node.x} y={node.y - 2} textAnchor="middle" fill="#dbe7ea" fontSize="9.5" fontWeight="600">
+              {node.label}
+            </text>
+            <text x={node.x} y={node.y + 13} textAnchor="middle" fill="#8fa7b4" fontSize="8.5">
+              {node.value}
+            </text>
+          </g>
+        ))}
+      </svg>
+      <div className="border-t border-white/6 pt-3 text-[10px] leading-4 text-slate-600">
+        관계선은 인과관계를 뜻하지 않으며, LocalTwin이 사용하는 입지 검토 항목의 연결 구조를 보여줍니다.
+      </div>
     </div>
   );
 }
@@ -332,7 +425,7 @@ function ScenarioEditor({
       <CardContent className="space-y-5 pt-5">
         <div className="grid grid-cols-3 gap-2">
           <MetricTile
-            label="월 BEP"
+            label="월 손익분기 매출"
             value={formatMan(analysis.monthlyBreakEvenRevenueKrw)}
           />
           <MetricTile
@@ -340,7 +433,7 @@ function ScenarioEditor({
             value={Math.ceil(analysis.breakEvenCustomersPerDay) + "명/일"}
           />
           <MetricTile
-            label="필요 포착률"
+            label="필요 수요전환율"
             value={formatPercent(analysis.requiredCaptureRate)}
             accent
           />
@@ -367,7 +460,7 @@ function ScenarioEditor({
           </label>
           <label>
             <span className="mb-1.5 block text-[11px] font-medium text-slate-400">
-              Stress
+              조건변화
             </span>
             <select
               className="h-10 w-full rounded-xl border border-white/10 bg-slate-950/60 px-3 text-sm text-slate-100 outline-none focus:border-amber-300/50"
@@ -403,7 +496,7 @@ function ScenarioEditor({
             step={500}
           />
           <NumberField
-            label="가정 포착률"
+            label="가정 수요전환율"
             value={scenario.assumptions.assumedCaptureRate * 100}
             onChange={(value) => onPatch({ assumedCaptureRate: value / 100 })}
             suffix="%"
@@ -422,7 +515,7 @@ function ScenarioEditor({
 
         <div className="grid grid-cols-3 gap-2 border-t border-white/8 pt-4">
           <div>
-            <div className="text-[10px] uppercase tracking-wider text-slate-500">Runway</div>
+            <div className="text-[10px] text-slate-500">자금 버팀기간</div>
             <div className="mt-1 text-sm font-semibold text-slate-100">
               {analysis.cashRunwayMonths === null
                 ? "12개월+"
@@ -431,7 +524,7 @@ function ScenarioEditor({
           </div>
           <div>
             <div className="text-[10px] uppercase tracking-wider text-slate-500">
-              Funding Gap
+              부족자금
             </div>
             <div className="mt-1 text-sm font-semibold text-amber-200">
               {formatMan(analysis.fundingGapKrw)}
@@ -439,7 +532,7 @@ function ScenarioEditor({
           </div>
           <div>
             <div className="text-[10px] uppercase tracking-wider text-slate-500">
-              Opportunity
+              입지종합
             </div>
             <div className="mt-1 text-sm font-semibold text-emerald-200">
               {Math.round(scores.opportunityScore ?? 0)}
@@ -459,7 +552,6 @@ export default function LocalTwinDashboard() {
   const [view, setView] = useState<View>("map");
   const [selectedCellId, setSelectedCellId] = useState<string>();
   const [programs, setPrograms] = useState<SupportProgram[]>([]);
-  const [provenance, setProvenance] = useState<Provenance>();
   const [dataError, setDataError] = useState<string>();
 
   const actions = useMemo(
@@ -472,18 +564,16 @@ export default function LocalTwinDashboard() {
     Promise.all([
       fetch("/data/opportunity_cells.json").then((response) => response.json()),
       fetch("/data/support_programs.json").then((response) => response.json()),
-      fetch("/data/provenance.json").then((response) => response.json()),
     ])
-      .then(([cells, supportPrograms, sourceRegister]) => {
+      .then(([cells, supportPrograms]) => {
         if (!alive) return;
         dispatch({ type: "SET_CELLS", cells });
         setSelectedCellId(cells[0]?.cellId);
         setPrograms(supportPrograms);
-        setProvenance(sourceRegister);
       })
       .catch(() => {
         if (alive) {
-          setDataError("데이터 snapshot을 불러오지 못했습니다. 새로고침 후 다시 시도하세요.");
+          setDataError("상권 데이터를 불러오지 못했습니다. 새로고침 후 다시 시도하세요.");
         }
       });
     return () => {
@@ -580,8 +670,8 @@ export default function LocalTwinDashboard() {
                 DAEGU
               </div>
             </div>
-            <div className="mt-0.5 text-[9px] font-medium uppercase tracking-[0.19em] text-slate-500">
-              Spatial Finance Twin
+            <div className="mt-0.5 text-[9px] font-medium tracking-[0.08em] text-slate-500">
+              대구 상권·창업 검토
             </div>
           </button>
 
@@ -614,23 +704,23 @@ export default function LocalTwinDashboard() {
 
         {selectedCell && selectedScores ? (
           <div className={view === "map" ? "contents" : "hidden"}>
-            <section className="grid min-w-0 gap-5 xl:grid-cols-[minmax(0,1fr)_370px]">
+            <section className="grid min-w-0 gap-5 lg:grid-cols-[minmax(0,1fr)_350px] xl:grid-cols-[minmax(0,1fr)_370px]">
               <Card className="min-w-0 overflow-hidden">
                 <CardHeader className="gap-3 border-b border-white/8 pb-3">
                   <div>
                     <div className="mb-1.5 flex items-center gap-2 text-[10px] font-semibold tracking-[0.08em] text-emerald-300">
                       <MapPin className="h-3.5 w-3.5" />
-                      대구 중구 · 3D 상권지도
+                      대구 중앙도심 · 상권분석 지도
                     </div>
                     <h1 className="text-2xl font-semibold tracking-[-0.035em] text-white">
-                      창업 기회지도
+                      상권 입지 검토
                     </h1>
                     <p className="mt-1 text-xs leading-5 text-slate-500">
-                      수요·임대부담·재생맥락을 실제 도시 공간에서 비교합니다.
+                      교통·수요·임대·도시재생 여건을 실제 도시 공간에서 함께 비교합니다.
                     </p>
                   </div>
 
-                  <div className="flex gap-1.5 overflow-x-auto pb-1">
+                  <div className="localtwin-no-scrollbar flex gap-1.5 overflow-x-auto pb-1">
                     {(Object.keys(layerLabels) as MapLayer[]).map((layer) => (
                       <Button
                         key={layer}
@@ -646,7 +736,7 @@ export default function LocalTwinDashboard() {
                 </CardHeader>
 
                 <CardContent className="p-2.5 md:p-3">
-                  <div className="h-[62vh] min-h-[560px] max-h-[780px]">
+                  <div className="h-[58vh] min-h-[520px] max-h-[760px] lg:h-[calc(100vh-210px)] lg:min-h-[560px]">
                     <LocalTwinMap
                       cells={state.cells}
                       selectedCellId={selectedCellId}
@@ -658,13 +748,13 @@ export default function LocalTwinDashboard() {
                 </CardContent>
               </Card>
 
-              <aside className="space-y-4">
+              <aside data-testid="candidate-panel" className="localtwin-panel-scroll space-y-4 lg:sticky lg:top-[76px] lg:max-h-[calc(100vh-96px)] lg:overflow-y-auto lg:pr-1">
                 <Card>
                   <CardHeader className="border-b border-white/8">
                     <div className="flex items-start justify-between gap-3">
                       <div>
                         <div className="text-[10px] uppercase tracking-[0.18em] text-slate-500">
-                          분석 후보
+                          선택 입지
                         </div>
                         <CardTitle className="mt-1 text-xl">{selectedCell.label}</CardTitle>
                         <CardDescription>{selectedCell.district}</CardDescription>
@@ -674,34 +764,34 @@ export default function LocalTwinDashboard() {
                       </Badge>
                     </div>
                   </CardHeader>
-                  <CardContent className="space-y-4 pt-5">
-                    <div className="flex items-end justify-between gap-4">
+                  <CardContent className="pt-4">
+                    <div className="flex items-end justify-between gap-4 pb-3">
                       <div>
-                        <div className="text-[11px] text-slate-500">기회지수</div>
+                        <div className="text-[11px] text-slate-500">입지종합</div>
                         <div className="mt-1 text-5xl font-semibold tracking-[-0.06em] text-white">
                           {Math.round(selectedScores.opportunityScore ?? 0)}
                         </div>
                       </div>
                       <div className="text-right text-[10px] leading-4 text-slate-500">
-                        상대지표 / 100
+                        상대평가 / 100
                         <br />
                         수요 55 · 임대 25 · 재생 20
                       </div>
                     </div>
 
-                    <div className="grid grid-cols-2 gap-2">
-                      <MetricTile
-                        label="이동수요"
+                    <div className="divide-y divide-white/6 border-y border-white/6">
+                      <SummaryRow
+                        label="교통기반 수요"
                         value={formatNumber(selectedCell.transitDemand)}
-                        note="공식 역 승하차 × 거리감쇠 · 점포 앞 보행량 아님"
+                        note="공식 역 승하차를 거리감쇠한 대체지표"
                       />
-                      <MetricTile
-                        label="임대 benchmark"
+                      <SummaryRow
+                        label="참고 임대료"
                         value={formatRentPerSqm(selectedCell.rentBenchmarkKrwPerSqm)}
                         note={rentBenchmarkNote(selectedCell)}
                       />
-                      <MetricTile
-                        label="관심도 변화"
+                      <SummaryRow
+                        label="검색관심 변화"
                         value={
                           selectedCell.buzzMomentum === null
                             ? "데이터 부족"
@@ -710,36 +800,37 @@ export default function LocalTwinDashboard() {
                               "%"
                         }
                       />
-                      <MetricTile
-                        label="파생수요"
+                      <SummaryRow
+                        label="주변집객 신호"
                         value={Math.round(selectedScores.spillover ?? 0) + " / 100"}
                       />
                     </div>
 
-                    <div className="grid grid-cols-2 gap-2">
+                    <div className="mt-4 grid grid-cols-2 gap-2">
                       <Button
                         variant="outline"
                         onClick={() => actions.selectCell(selectedCell.cellId, "A")}
                       >
-                        A로 선택
+                        후보 A로 지정
                       </Button>
                       <Button
                         variant="secondary"
                         onClick={() => actions.selectCell(selectedCell.cellId, "B")}
                       >
-                        B로 선택
+                        후보 B로 지정
                       </Button>
                     </div>
-
                   </CardContent>
                 </Card>
+
+                <MarketRelationGraph cell={selectedCell} scores={selectedScores} />
 
                 {activeAnalysis && activeCell ? (
                   <Card>
                     <CardHeader>
                       <div className="flex items-center gap-2 text-emerald-200">
                         <WalletCards className="h-4 w-4" />
-                        <CardTitle>후보 A 손익</CardTitle>
+                        <CardTitle>후보 A 사업성</CardTitle>
                       </div>
                       <CardDescription>{activeCell.label}</CardDescription>
                     </CardHeader>
@@ -753,12 +844,12 @@ export default function LocalTwinDashboard() {
                         value={Math.ceil(activeAnalysis.breakEvenCustomersPerDay) + "명/일"}
                       />
                       <MetricTile
-                        label="필요 포착률"
+                        label="필요 수요전환율"
                         value={formatPercent(activeAnalysis.requiredCaptureRate)}
                         accent
                       />
                       <MetricTile
-                        label="자금부족"
+                        label="부족자금"
                         value={formatMan(activeAnalysis.fundingGapKrw)}
                       />
                     </CardContent>
@@ -774,30 +865,12 @@ export default function LocalTwinDashboard() {
                   <Card>
                     <CardHeader>
                       <div className="flex items-center gap-2">
-                        <Clock3 className="h-4 w-4 text-emerald-200" />
-                        <CardTitle>시간대별 이동수요</CardTitle>
-                      </div>
-                      <CardDescription>
-                        공식 역 승하차에서 파생한 일 이동수요 proxy에 시연용 시간 분포를
-                        적용합니다. 시간대 곡선 자체는 관측치가 아닙니다.
-                      </CardDescription>
-                    </CardHeader>
-                    <CardContent>
-                      <DemandTimelineChart
-                        dailyDemand={selectedCell.transitDemand}
-                      />
-                    </CardContent>
-                  </Card>
-
-                  <Card>
-                    <CardHeader>
-                      <div className="flex items-center gap-2">
                         <DollarSign className="h-4 w-4 text-amber-200" />
-                        <CardTitle>임대료 vs 수요</CardTitle>
+                        <CardTitle>임대여건과 수요</CardTitle>
                       </div>
                       <CardDescription>
-                        공식 상권 임대 benchmark가 연결된 셀만 표시합니다. ㎡당 환산임대료와
-                        모델 수요의 상대적 위치를 비교합니다.
+                        공식 상권 참고 임대료가 연결된 후보만 표시합니다. ㎡당 환산임대료와
+                        추정 수요여건의 상대적 위치를 비교합니다.
                       </CardDescription>
                     </CardHeader>
                     <CardContent>
@@ -812,10 +885,10 @@ export default function LocalTwinDashboard() {
                     <CardHeader>
                       <div className="flex items-center gap-2">
                         <TrendingUp className="h-4 w-4 text-sky-200" />
-                        <CardTitle>Opportunity 분해</CardTitle>
+                        <CardTitle>입지종합 구성</CardTitle>
                       </div>
                       <CardDescription>
-                        하나의 magic score로 숨기지 않고 주요 신호를 분리합니다.
+                        종합점수만 보여주지 않고 주요 입지 신호를 항목별로 나눠 확인합니다.
                       </CardDescription>
                     </CardHeader>
                     <CardContent>
@@ -828,10 +901,10 @@ export default function LocalTwinDashboard() {
                       <CardHeader>
                         <div className="flex items-center gap-2">
                           <WalletCards className="h-4 w-4 text-emerald-200" />
-                          <CardTitle>12개월 Cash Runway</CardTitle>
+                          <CardTitle>12개월 현금흐름</CardTitle>
                         </div>
                         <CardDescription>
-                          기본 가정과 {stressPresetLabels[activeStressPreset]} 시나리오 비교.
+                          기본 조건과 {stressPresetLabels[activeStressPreset]} 조건을 비교합니다.
                         </CardDescription>
                       </CardHeader>
                       <CardContent>
@@ -861,13 +934,13 @@ export default function LocalTwinDashboard() {
               <div>
                 <div className="flex items-center gap-2 text-[10px] font-semibold uppercase tracking-[0.18em] text-emerald-300">
                   <ArrowLeftRight className="h-3.5 w-3.5" />
-                  Candidate compare
+                  후보지 비교
                 </div>
                 <h1 className="mt-2 text-3xl font-semibold tracking-[-0.04em] text-white">
-                  같은 업종, 다른 생존 조건.
+                  같은 업종, 다른 입지 조건.
                 </h1>
                 <p className="mt-2 text-xs text-slate-500">
-                  실제 임대·비용 가정을 바꾸면 손익분기와 현금고갈 조건이 즉시 다시 계산됩니다.
+                  실제 임대·비용 조건을 바꾸면 손익분기와 자금 버팀기간이 즉시 다시 계산됩니다.
                 </p>
               </div>
               <Button
@@ -906,25 +979,25 @@ export default function LocalTwinDashboard() {
                 <CardHeader>
                   <CardTitle>비교 핵심</CardTitle>
                   <CardDescription>
-                    낮은 포착 부담과 낮은 Funding Gap이 같은 입지에서 동시에 나타나는지 확인합니다.
+                    필요한 수요전환율과 부족자금이 후보지별로 어떻게 달라지는지 비교합니다.
                   </CardDescription>
                 </CardHeader>
                 <CardContent className="grid grid-cols-2 gap-2 md:grid-cols-4">
                   <MetricTile
-                    label="A 필요 포착률"
+                    label="A 필요 수요전환율"
                     value={formatPercent(activeAnalysis.requiredCaptureRate)}
                     accent
                   />
                   <MetricTile
-                    label="B 필요 포착률"
+                    label="B 필요 수요전환율"
                     value={formatPercent(compareAnalysis.requiredCaptureRate)}
                   />
                   <MetricTile
-                    label="A Funding Gap"
+                    label="A 부족자금"
                     value={formatMan(activeAnalysis.fundingGapKrw)}
                   />
                   <MetricTile
-                    label="B Funding Gap"
+                    label="B 부족자금"
                     value={formatMan(compareAnalysis.fundingGapKrw)}
                   />
                 </CardContent>
@@ -934,7 +1007,7 @@ export default function LocalTwinDashboard() {
                 <CardHeader>
                   <CardTitle>입지 비용-수요 포지션</CardTitle>
                   <CardDescription>
-                    전체 corridor 안에서 A/B 후보가 어느 위치에 놓이는지 확인합니다.
+                    전체 분석권역 안에서 A/B 후보의 임대여건과 수요 위치를 비교합니다.
                   </CardDescription>
                 </CardHeader>
                 <CardContent>
@@ -953,20 +1026,20 @@ export default function LocalTwinDashboard() {
             <div>
               <div className="flex items-center gap-2 text-[10px] font-semibold uppercase tracking-[0.18em] text-emerald-300">
                 <WalletCards className="h-3.5 w-3.5" />
-                Funding plan
+                자금계획
               </div>
               <h1 className="mt-2 text-3xl font-semibold tracking-[-0.04em] text-white">
                 필요한 돈과 검토 경로를 한 화면에.
               </h1>
               <p className="mt-2 text-xs text-slate-500">
-                조달액은 승인 예측이 아니라 현재 입력한 가정에 대한 funding stack입니다.
+                조달액은 승인 예측이 아니라 현재 입력한 자금조달 조건을 정리한 값입니다.
               </p>
             </div>
 
             <div className="grid gap-5 xl:grid-cols-[minmax(0,1fr)_420px]">
               <Card data-testid="funding-structure">
                 <CardHeader>
-                  <CardTitle>{activeCell.label} · Funding structure</CardTitle>
+                  <CardTitle>{activeCell.label} · 자금구조</CardTitle>
                   <CardDescription>
                     보증금은 초기 현금 필요에 포함하지만 운영비로 이중 차감하지 않습니다.
                   </CardDescription>
@@ -986,7 +1059,7 @@ export default function LocalTwinDashboard() {
                       value={formatMan(activeAnalysis.openingWorkingCapitalKrw)}
                     />
                     <MetricTile
-                      label="Funding Gap"
+                      label="부족자금"
                       value={formatMan(activeAnalysis.fundingGapKrw)}
                       accent
                     />
@@ -1074,7 +1147,7 @@ export default function LocalTwinDashboard() {
       </main>
 
       <footer className="border-t border-white/8 px-4 py-4 text-center text-[10px] text-slate-600">
-        LocalTwin Daegu · 공식/공개 snapshot + 결정론적 파생 + 사용자 시나리오 가정 · 절대 매출/성공확률 예측이 아님
+        LocalTwin Daegu · 공식·공개자료 + 검토용 추정치 + 사용자 입력 조건 · 절대 매출·성공확률 예측이 아님
       </footer>
     </div>
   );

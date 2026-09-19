@@ -64,12 +64,12 @@ export type StressPreset =
 
 export const stressPresetLabels: Record<StressPreset, string> = {
   base: "기본",
-  footfallDown: "이동수요 -20%",
-  conversionDown: "포착률 -20%",
+  footfallDown: "교통기반 수요 -20%",
+  conversionDown: "수요전환율 -20%",
   costUp: "원가율 +10%p",
   rentUp: "임대료 +10%",
   rateUp: "금리 +1%p",
-  combined: "복합 악화",
+  combined: "복합 불리조건",
 };
 
 export type StartupAssumptions = {

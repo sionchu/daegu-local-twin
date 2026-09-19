@@ -311,6 +311,25 @@
         "SEMAS storeZone 공식 polygon을 사용할 수 있는 승인키가 확보되면 이 시각화 경계를 대체한다."
       ],
       "mode": "modelled-map-derived"
+    },
+    {
+      "id": "daegu-boundary",
+      "title": "대구광역시 행정경계",
+      "provider": "OpenStreetMap contributors / Nominatim",
+      "url": "https://www.openstreetmap.org/",
+      "sourceUrl": "https://nominatim.openstreetmap.org/",
+      "geographicLevel": "대구광역시",
+      "sourceVersion": "OSM relation 2395674",
+      "sourceDate": "2026-09-20",
+      "accessMode": "public-web",
+      "fieldsUsed": [
+        "administrative boundary geometry"
+      ],
+      "limitations": [
+        "지도 렌더링 범위 제한과 시각적 경계 표시에만 사용합니다.",
+        "상권 경계나 사업성 판단 데이터가 아닙니다."
+      ],
+      "mode": "public-snapshot"
     }
   ],
   "privacyBoundary": [
