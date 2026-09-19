@@ -36,7 +36,6 @@ type Props = {
   cells: LocationEvidence[];
   selectedCellId?: string;
   activeLayer: MapLayer;
-  selectedTime: Date;
   onSelect: (cellId: string) => void;
   onUnavailable: (reason: string) => void;
 };
@@ -106,7 +105,6 @@ export default function VWorldLocalTwinMap({
   cells,
   selectedCellId,
   activeLayer,
-  selectedTime,
   onSelect,
   onUnavailable,
 }: Props) {
@@ -160,6 +158,10 @@ export default function VWorldLocalTwinMap({
 
         viewerRef.current = viewer;
         mapRef.current = map;
+
+        const buildingLayer = map.getLayerElement?.("facility_build");
+        buildingLayer?.show?.();
+
         if (viewer.scene) {
           viewer.scene.requestRenderMode = true;
           viewer.scene.maximumRenderTimeChange = Number.POSITIVE_INFINITY;
@@ -261,7 +263,7 @@ export default function VWorldLocalTwinMap({
         };
 
         setReady(true);
-        setStatus("VWorld 3D · Cesium");
+        setStatus(buildingLayer ? "VWorld 3D · 건물 레이어" : "VWorld 3D");
         viewer.scene?.requestRender?.();
       } catch (error) {
         const reason = error instanceof Error ? error.message : String(error);
@@ -350,15 +352,6 @@ export default function VWorldLocalTwinMap({
   }, [activeLayer, cells, clearEntities, ready, selectedCellId]);
 
   useEffect(() => {
-    const viewer = viewerRef.current;
-    const Cesium = window.Cesium;
-    if (!ready || !viewer || !Cesium) return;
-
-    if (viewer.clock) viewer.clock.currentTime = Cesium.JulianDate.fromDate(selectedTime);
-    viewer.scene?.requestRender?.();
-  }, [ready, selectedTime]);
-
-  useEffect(() => {
     if (!ready) return;
     const timer = window.setTimeout(() => {
       const viewer = viewerRef.current;
@@ -368,7 +361,7 @@ export default function VWorldLocalTwinMap({
         destination: Cesium.Cartesian3.fromDegrees(
           DAEGU_CENTER[0],
           DAEGU_CENTER[1],
-          2600,
+          1900,
         ),
         orientation: {
           heading: 0,
@@ -435,7 +428,7 @@ export default function VWorldLocalTwinMap({
         {status}
       </div>
       <div className="pointer-events-none absolute bottom-3 left-3 z-10 max-w-[85%] rounded-lg border border-white/10 bg-slate-950/78 px-2.5 py-1.5 text-[10px] leading-4 text-slate-300 backdrop-blur">
-        실선 = 공식 행정동 경계 · 반투명 영역/halo = 모델 분석 셀(실제 상권 경계 아님) · 역 = 공간참조 anchor
+        공식 행정동 경계 · 분석 셀(모델, 실제 상권 경계 아님) · 지하철 위치
       </div>
     </div>
   );
