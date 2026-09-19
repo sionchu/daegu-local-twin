@@ -97,8 +97,11 @@ Optional public map configuration:
 
 ```text
 NEXT_PUBLIC_MAP_STYLE_URL=https://tiles.openfreemap.org/styles/bright
-NEXT_PUBLIC_DEM_TILEJSON_URL=https://demotiles.maplibre.org/terrain-tiles/tiles.json
 ```
+
+The default DEM uses AWS Open Data Terrain Tiles in Terrarium encoding. Set
+`NEXT_PUBLIC_DEM_TILEJSON_URL` only to override that fallback with another raster-dem
+TileJSON endpoint.
 
 ## Verification
 

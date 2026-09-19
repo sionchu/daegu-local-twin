@@ -13,9 +13,9 @@ import type { LocationEvidence, MapLayer } from "@/src/types";
 const DAEGU_CENTER: [number, number] = [128.5967, 35.8714];
 const DEFAULT_STYLE =
   process.env.NEXT_PUBLIC_MAP_STYLE_URL || "https://tiles.openfreemap.org/styles/bright";
-const DEFAULT_DEM =
-  process.env.NEXT_PUBLIC_DEM_TILEJSON_URL ||
-  "https://demotiles.maplibre.org/terrain-tiles/tiles.json";
+const DEM_TILEJSON_URL = process.env.NEXT_PUBLIC_DEM_TILEJSON_URL;
+const DEFAULT_DEM_TILE_URL =
+  "https://s3.amazonaws.com/elevation-tiles-prod/terrarium/{z}/{x}/{y}.png";
 
 function clamp(value: number, min: number, max: number) {
   return Math.max(min, Math.min(max, value));
@@ -150,11 +150,25 @@ export default function LocalTwinMap({
     map.on("load", () => {
       try {
         if (!map.getSource("localtwin-dem")) {
-          map.addSource("localtwin-dem", {
-            type: "raster-dem",
-            url: DEFAULT_DEM,
-            tileSize: 256,
-          });
+          map.addSource(
+            "localtwin-dem",
+            DEM_TILEJSON_URL
+              ? {
+                  type: "raster-dem",
+                  url: DEM_TILEJSON_URL,
+                  tileSize: 256,
+                }
+              : {
+                  type: "raster-dem",
+                  tiles: [DEFAULT_DEM_TILE_URL],
+                  tileSize: 256,
+                  minzoom: 1,
+                  maxzoom: 15,
+                  encoding: "terrarium",
+                  attribution:
+                    '<a href="https://github.com/tilezen/joerd/blob/master/docs/attribution.md">Terrain Tiles · Mapzen/Tilezen</a>',
+                },
+          );
         }
 
         const symbolLayer = map
