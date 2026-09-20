@@ -101,6 +101,11 @@ def parse_args() -> argparse.Namespace:
         type=Path,
         default=Path("public/data/workplace_employment.json"),
     )
+    parser.add_argument(
+        "--resident-population-dong",
+        type=Path,
+        default=Path("public/data/resident_population_dong.json"),
+    )
     parser.add_argument("--generated-at")
     return parser.parse_args()
 
@@ -211,6 +216,35 @@ def main() -> int:
             1,
         )
         for index, row in enumerate(ranked_workplace, start=1)
+    }
+    resident_population_doc = (
+        load_json(args.resident_population_dong)
+        if args.resident_population_dong.exists()
+        else {"records": [], "coverage": {}, "source": {}}
+    )
+    resident_population_by_zone = {
+        row["zoneId"]: row
+        for row in resident_population_doc.get("records") or []
+        if row.get("zoneId")
+    }
+    ranked_resident_population = sorted(
+        resident_population_by_zone.values(),
+        key=lambda row: (-int(row.get("population") or 0), row["zoneId"]),
+    )
+    resident_population_rank_by_zone = {
+        row["zoneId"]: index
+        for index, row in enumerate(ranked_resident_population, start=1)
+    }
+    resident_population_score_by_zone = {
+        row["zoneId"]: round(
+            (
+                (len(ranked_resident_population) - index)
+                / max(len(ranked_resident_population) - 1, 1)
+            )
+            * 100,
+            1,
+        )
+        for index, row in enumerate(ranked_resident_population, start=1)
     }
     school_counts_by_district = (
         (official_context.get("schoolRegistry") or {}).get("countByDistrict") or {}
@@ -383,10 +417,18 @@ def main() -> int:
                         "workplaceEmployeeRank": workplace_rank_by_zone[zone_id],
                         "workplaceEmploymentScore": workplace_score_by_zone[zone_id],
                         "workplaceSourceYear": (workplace_doc.get("source") or {}).get("sourceYear"),
+                        "residentPopulation": resident_population_by_zone[zone_id]["population"],
+                        "residentMale": resident_population_by_zone[zone_id]["male"],
+                        "residentFemale": resident_population_by_zone[zone_id]["female"],
+                        "residentPopulationChange": resident_population_by_zone[zone_id]["populationChange"],
+                        "residentPopulationRank": resident_population_rank_by_zone[zone_id],
+                        "residentPopulationScore": resident_population_score_by_zone[zone_id],
+                        "residentSourceMonth": (resident_population_doc.get("source") or {}).get("sourceMonth"),
                         "quality": "official-snapshot",
                         "sourceId": "kosis-workplace-employment-2024",
+                        "residentSourceId": "mois-dong-resident-population-2026-08",
                     }
-                    if zone_id in workplace_by_zone
+                    if zone_id in workplace_by_zone and zone_id in resident_population_by_zone
                     else None
                 ),
                 "officialDistrictSignals": {
@@ -407,16 +449,24 @@ def main() -> int:
                         )
                     ),
                     "residentialLife": (
-                        "district-population-only-missing-local-living-population"
-                        if population_by_district.get(zone.get("district"))
-                        else "blocked-missing-resident-and-living-population"
+                        "official-dong-resident-population-available-missing-living-population"
+                        if zone_id in resident_population_by_zone
+                        else (
+                            "district-population-only-missing-local-living-population"
+                            if population_by_district.get(zone.get("district"))
+                            else "blocked-missing-resident-and-living-population"
+                        )
                     ),
                     "commuting": (
                         "workplace-employment-available-missing-OD"
                         if zone_id in workplace_by_zone
                         else "blocked-missing-OD-or-commuter-flow"
                     ),
-                    "finalFunctionalProfile": "blocked-until-local-population-and-flow-data",
+                    "finalFunctionalProfile": (
+                        "blocked-until-living-population-and-flow-data"
+                        if zone_id in resident_population_by_zone
+                        else "blocked-until-local-population-and-flow-data"
+                    ),
                 },
             }
         )
@@ -530,7 +580,7 @@ def main() -> int:
             },
             "limitations": [
                 "공식 이용자수/종사자수 capacity가 없는 시설은 subtype별 기본가중치만 사용함",
-                "업무지구/베드타운 최종 분류는 직장인구·거주인구·생활인구·OD 확보 전까지 비활성",
+                "업무지구/베드타운 최종 분류는 생활인구·OD 확보 전까지 비활성",
                 "점수는 접근성/밀도 상대지표이며 매출·방문객·성공확률이 아님",
             ],
         },
@@ -650,12 +700,37 @@ def main() -> int:
             },
             {
                 "key": "resident_population",
-                "status": "available-district-level-only",
-                "source": "대구광역시 주민등록인구및세대현황 2026-05-31",
-                "sourceUrl": "https://www.data.go.kr/data/3077757/fileData.do",
+                "status": (
+                    "available-official-dong-2026-08"
+                    if resident_population_by_zone
+                    else "available-district-level-only"
+                ),
+                "source": (
+                    "MOIS administrative-dong resident population 2026-08-31"
+                    if resident_population_by_zone
+                    else "대구광역시 주민등록인구및세대현황 2026-05-31"
+                ),
+                "sourceUrl": (
+                    (resident_population_doc.get("source") or {}).get("url")
+                    if resident_population_by_zone
+                    else "https://www.data.go.kr/data/3077757/fileData.do"
+                ),
                 "quality": "official",
-                "output": "official_context_summary.json",
-                "limitation": "구·군 단위이므로 동/권역 생활성격 판정에는 단독 사용하지 않음",
+                "officialZoneRecords": len(resident_population_by_zone),
+                "sourceDaeguAgencyRows": (resident_population_doc.get("coverage") or {}).get("sourceDaeguAgencyRows"),
+                "branchOfficeRows": (resident_population_doc.get("coverage") or {}).get("branchOfficeRows"),
+                "population": (resident_population_doc.get("coverage") or {}).get("population"),
+                "populationChange": (resident_population_doc.get("coverage") or {}).get("populationChange"),
+                "output": (
+                    "resident_population_dong.json + zone_context_profiles.json"
+                    if resident_population_by_zone
+                    else "official_context_summary.json"
+                ),
+                "limitation": (
+                    "registered resident population; not telecom living population, visitors, or time-of-day presence"
+                    if resident_population_by_zone
+                    else "구·군 단위이므로 동/권역 생활성격 판정에는 단독 사용하지 않음"
+                ),
             },
             {
                 "key": "healthcare_official",

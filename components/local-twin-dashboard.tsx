@@ -154,8 +154,16 @@ type ZoneContextProfile = {
     workplaceEmployeeRank: number;
     workplaceEmploymentScore: number;
     workplaceSourceYear: number;
+    residentPopulation: number;
+    residentMale: number;
+    residentFemale: number;
+    residentPopulationChange: number;
+    residentPopulationRank: number;
+    residentPopulationScore: number;
+    residentSourceMonth: string;
     quality: "official-snapshot";
     sourceId: string;
+    residentSourceId: string;
   } | null;
   officialDistrictSignals?: {
     schoolCount?: number | null;
@@ -264,6 +272,7 @@ const layerLabels: Record<MapLayer, string> = {
   retailMarket: "시장·대형점포",
   cultureTourism: "문화·관광",
   parkingAccess: "주차·접근",
+  residentPopulation: "거주인구",
   workplaceEmployment: "직장종사자",
   commercialPotential: "상권잠재",
   commercialDensity: "상업밀도",
@@ -302,6 +311,7 @@ const citywideCommercialLayers: MapLayer[] = [
 ];
 
 const citywideContextLayers: MapLayer[] = [
+  "residentPopulation",
   "education",
   "healthcare",
   "industrial",
@@ -628,9 +638,11 @@ function CitywideContextPanel({
 
   const activeKey = contextLayerProfileKey[activeLayer];
   const activeScore =
-    activeLayer === "workplaceEmployment"
-      ? profile.officialZoneSignals?.workplaceEmploymentScore ?? 0
-      : activeLayer === "commercialPotential"
+    activeLayer === "residentPopulation"
+      ? profile.officialZoneSignals?.residentPopulationScore ?? 0
+      : activeLayer === "workplaceEmployment"
+        ? profile.officialZoneSignals?.workplaceEmploymentScore ?? 0
+        : activeLayer === "commercialPotential"
         ? commercialZone?.commercialPotentialScore ?? 0
         : activeLayer === "commercialDensity"
           ? profile.businessSignals?.businessDensityScore ?? 0
@@ -640,9 +652,11 @@ function CitywideContextPanel({
               ? profile.scores[activeKey]
               : 0;
   const activeMetricNote =
-    activeLayer === "workplaceEmployment"
-      ? "KOSIS 2024 종사자수 · 대구 150개 동 순위 기반 / 100"
-      : activeLayer === "commercialPotential"
+    activeLayer === "residentPopulation"
+      ? "행안부 2026-08 주민등록인구 · 대구 150개 권역 순위 기반 / 100"
+      : activeLayer === "workplaceEmployment"
+        ? "KOSIS 2024 종사자수 · 대구 150개 동 순위 기반 / 100"
+        : activeLayer === "commercialPotential"
         ? "SEMAS 점포구조 + 교통·시장·업무·문화 접근성 결합 / 100"
         : activeLayer === "commercialDensity"
           ? "SEMAS 2026Q2 점포밀도 상대지표 / 100"
@@ -692,9 +706,11 @@ function CitywideContextPanel({
             <div className="text-right text-[10px] leading-4 text-slate-500">
               {activeMetricNote}
               <br />
-              {activeLayer === "workplaceEmployment"
-                ? "사업체 소재지 기준 종사자수이며 거주·통근인구가 아님"
-                : citywideCommercialLayers.includes(activeLayer)
+              {activeLayer === "residentPopulation"
+                ? "주민등록지 기준 인구이며 생활인구·방문인구가 아님"
+                : activeLayer === "workplaceEmployment"
+                  ? "사업체 소재지 기준 종사자수이며 거주·통근인구가 아님"
+                  : citywideCommercialLayers.includes(activeLayer)
                   ? "상권 검토용 상대지표이며 매출·성공확률을 뜻하지 않음"
                   : "이용자수·매출을 뜻하지 않음"}
             </div>
@@ -775,6 +791,60 @@ function CitywideContextPanel({
               </div>
               <div className="mt-3 text-[9px] leading-4 text-slate-600">
                 {commercialZone.boundaryMeaning} · 후보점수는 매출·유동인구·성공확률을 의미하지 않습니다.
+              </div>
+            </div>
+          ) : null}
+
+          {profile.officialZoneSignals ? (
+            <div
+              className="mt-4 rounded-xl border border-cyan-300/12 bg-cyan-300/[0.03] p-3"
+              data-testid="resident-population-panel"
+            >
+              <div className="flex items-start justify-between gap-3">
+                <div>
+                  <div className="text-[10px] font-semibold text-cyan-100">
+                    행정동 거주인구
+                  </div>
+                  <div className="mt-1 text-[9px] text-slate-600">
+                    행정안전부 {profile.officialZoneSignals.residentSourceMonth} · 주민등록인구
+                  </div>
+                </div>
+                <Badge variant="outline">공식 snapshot</Badge>
+              </div>
+              <div className="mt-3 grid grid-cols-2 gap-2 sm:grid-cols-4">
+                <MetricTile
+                  label="거주인구"
+                  value={profile.officialZoneSignals.residentPopulation.toLocaleString("ko-KR") + "명"}
+                  note="주민등록지 기준"
+                  accent={activeLayer === "residentPopulation"}
+                />
+                <MetricTile
+                  label="전월 증감"
+                  value={
+                    (profile.officialZoneSignals.residentPopulationChange > 0 ? "+" : "") +
+                    profile.officialZoneSignals.residentPopulationChange.toLocaleString("ko-KR") +
+                    "명"
+                  }
+                  note="2026-07 대비"
+                />
+                <MetricTile
+                  label="대구 순위"
+                  value={"#" + profile.officialZoneSignals.residentPopulationRank}
+                  note="150개 분석권역 중"
+                />
+                <MetricTile
+                  label="거주강도"
+                  value={Math.round(profile.officialZoneSignals.residentPopulationScore) + " / 100"}
+                  note="인구 순위 기반"
+                />
+              </div>
+              <div className="mt-3 grid grid-cols-2 gap-2 text-[9px] text-slate-500">
+                <span>남 {profile.officialZoneSignals.residentMale.toLocaleString("ko-KR")}명</span>
+                <span>여 {profile.officialZoneSignals.residentFemale.toLocaleString("ko-KR")}명</span>
+              </div>
+              <div className="mt-3 text-[9px] leading-4 text-slate-600">
+                주민등록인구는 주거생활권의 공식 기초증거입니다. 통신 기반 생활인구·방문인구·시간대별
+                체류인구와는 다르며, 생활인구·OD가 없어 최종 주거생활권/통근형 분류는 아직 확정하지 않습니다.
               </div>
             </div>
           ) : null}
