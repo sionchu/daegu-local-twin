@@ -96,6 +96,11 @@ def parse_args() -> argparse.Namespace:
         type=Path,
         default=Path("public/data/zone_business_profiles.json"),
     )
+    parser.add_argument(
+        "--workplace-employment",
+        type=Path,
+        default=Path("public/data/workplace_employment.json"),
+    )
     parser.add_argument("--generated-at")
     return parser.parse_args()
 
@@ -177,6 +182,35 @@ def main() -> int:
         row["zoneId"]: row
         for row in business_profile_doc.get("records") or []
         if row.get("zoneId")
+    }
+    workplace_doc = (
+        load_json(args.workplace_employment)
+        if args.workplace_employment.exists()
+        else {"records": [], "coverage": {}, "source": {}}
+    )
+    workplace_by_zone = {
+        row["zoneId"]: row
+        for row in workplace_doc.get("records") or []
+        if row.get("zoneId")
+    }
+    ranked_workplace = sorted(
+        workplace_by_zone.values(),
+        key=lambda row: (-int(row.get("employees") or 0), row["zoneId"]),
+    )
+    workplace_rank_by_zone = {
+        row["zoneId"]: index
+        for index, row in enumerate(ranked_workplace, start=1)
+    }
+    workplace_score_by_zone = {
+        row["zoneId"]: round(
+            (
+                (len(ranked_workplace) - index)
+                / max(len(ranked_workplace) - 1, 1)
+            )
+            * 100,
+            1,
+        )
+        for index, row in enumerate(ranked_workplace, start=1)
     }
     school_counts_by_district = (
         (official_context.get("schoolRegistry") or {}).get("countByDistrict") or {}
@@ -342,6 +376,19 @@ def main() -> int:
                     if zone_id in business_profiles_by_zone
                     else None
                 ),
+                "officialZoneSignals": (
+                    {
+                        "workplaceBusinesses": workplace_by_zone[zone_id]["businesses"],
+                        "workplaceEmployees": workplace_by_zone[zone_id]["employees"],
+                        "workplaceEmployeeRank": workplace_rank_by_zone[zone_id],
+                        "workplaceEmploymentScore": workplace_score_by_zone[zone_id],
+                        "workplaceSourceYear": (workplace_doc.get("source") or {}).get("sourceYear"),
+                        "quality": "official-snapshot",
+                        "sourceId": "kosis-workplace-employment-2024",
+                    }
+                    if zone_id in workplace_by_zone
+                    else None
+                ),
                 "officialDistrictSignals": {
                     "schoolCount": school_counts_by_district.get(zone.get("district")),
                     "healthcareFacilityCount": healthcare_counts_by_district.get(zone.get("district")),
@@ -351,16 +398,24 @@ def main() -> int:
                 },
                 "classificationAvailability": {
                     "businessDistrict": (
-                        "partial-anchor-and-factory-registry"
-                        if factory_counts_by_district.get(zone.get("district")) is not None
-                        else "partial-anchor-only"
+                        "official-dong-workplace-employment-available"
+                        if zone_id in workplace_by_zone
+                        else (
+                            "partial-anchor-and-factory-registry"
+                            if factory_counts_by_district.get(zone.get("district")) is not None
+                            else "partial-anchor-only"
+                        )
                     ),
                     "residentialLife": (
                         "district-population-only-missing-local-living-population"
                         if population_by_district.get(zone.get("district"))
                         else "blocked-missing-resident-and-living-population"
                     ),
-                    "commuting": "blocked-missing-OD-or-commuter-flow",
+                    "commuting": (
+                        "workplace-employment-available-missing-OD"
+                        if zone_id in workplace_by_zone
+                        else "blocked-missing-OD-or-commuter-flow"
+                    ),
                     "finalFunctionalProfile": "blocked-until-local-population-and-flow-data",
                 },
             }
@@ -567,9 +622,31 @@ def main() -> int:
             },
             {
                 "key": "workplace_population",
-                "status": "missing",
-                "source": "SGIS/KOSIS workplace or employee statistics",
-                "quality": "official-needed",
+                "status": (
+                    "available-official-dong-2024"
+                    if workplace_by_zone
+                    else "missing"
+                ),
+                "source": (
+                    "KOSIS National Business Survey 2024 dong totals"
+                    if workplace_by_zone
+                    else "SGIS/KOSIS workplace or employee statistics"
+                ),
+                "sourceUrl": (workplace_doc.get("source") or {}).get("url"),
+                "quality": "official" if workplace_by_zone else "official-needed",
+                "officialZoneRecords": len(workplace_by_zone),
+                "cityBusinesses": (workplace_doc.get("coverage") or {}).get("businesses"),
+                "cityEmployees": (workplace_doc.get("coverage") or {}).get("employees"),
+                "output": (
+                    "workplace_employment.json + zone_context_profiles.json"
+                    if workplace_by_zone
+                    else None
+                ),
+                "limitation": (
+                    "business-location employees; not resident employment, commuting inflow, or time-of-day presence"
+                    if workplace_by_zone
+                    else None
+                ),
             },
             {
                 "key": "resident_population",

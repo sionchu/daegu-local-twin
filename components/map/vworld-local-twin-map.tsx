@@ -121,6 +121,15 @@ type ContextProfile = {
     | "parking_access",
     number
   >;
+  officialZoneSignals?: {
+    workplaceBusinesses: number;
+    workplaceEmployees: number;
+    workplaceEmployeeRank: number;
+    workplaceEmploymentScore: number;
+    workplaceSourceYear: number;
+    quality: "official-snapshot";
+    sourceId: string;
+  } | null;
   anchorEvidence: Record<
     string,
     {
@@ -256,6 +265,7 @@ const LAYER_LABELS: Record<MapLayer, string> = {
   retailMarket: "시장·대형점포",
   cultureTourism: "문화·관광",
   parkingAccess: "주차·접근",
+  workplaceEmployment: "직장종사자",
   commercialPotential: "상권잠재",
   commercialDensity: "상업밀도",
   businessDiversity: "업종다양성",
@@ -1055,9 +1065,11 @@ export default function VWorldLocalTwinMap({
       const profile = contextProfiles[zone.properties.zoneId];
       const commercialProfile = commercialByZone.get(zone.properties.zoneId);
       const score =
-        activeLayer === "commercialPotential"
-          ? commercialProfile?.commercialPotentialScore ?? null
-          : anchorType
+        activeLayer === "workplaceEmployment"
+          ? profile?.officialZoneSignals?.workplaceEmploymentScore ?? null
+          : activeLayer === "commercialPotential"
+            ? commercialProfile?.commercialPotentialScore ?? null
+            : anchorType
             ? profile?.scores?.[anchorType] ?? null
             : activeLayer === "commercialDensity"
               ? profile?.businessSignals?.businessDensityScore ?? null

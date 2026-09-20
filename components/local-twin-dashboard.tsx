@@ -148,6 +148,15 @@ type ZoneContextProfile = {
     sourceDatasetId: string;
     sourceDate: string;
   } | null;
+  officialZoneSignals?: {
+    workplaceBusinesses: number;
+    workplaceEmployees: number;
+    workplaceEmployeeRank: number;
+    workplaceEmploymentScore: number;
+    workplaceSourceYear: number;
+    quality: "official-snapshot";
+    sourceId: string;
+  } | null;
   officialDistrictSignals?: {
     schoolCount?: number | null;
     healthcareFacilityCount?: number | null;
@@ -255,6 +264,7 @@ const layerLabels: Record<MapLayer, string> = {
   retailMarket: "시장·대형점포",
   cultureTourism: "문화·관광",
   parkingAccess: "주차·접근",
+  workplaceEmployment: "직장종사자",
   commercialPotential: "상권잠재",
   commercialDensity: "상업밀도",
   businessDiversity: "업종다양성",
@@ -283,6 +293,7 @@ const contextLayers: MapLayer[] = [
 
 const citywideCommercialLayers: MapLayer[] = [
   "commercialPotential",
+  "workplaceEmployment",
   "commercialDensity",
   "businessDiversity",
   "transitHub",
@@ -617,23 +628,27 @@ function CitywideContextPanel({
 
   const activeKey = contextLayerProfileKey[activeLayer];
   const activeScore =
-    activeLayer === "commercialPotential"
-      ? commercialZone?.commercialPotentialScore ?? 0
-      : activeLayer === "commercialDensity"
-        ? profile.businessSignals?.businessDensityScore ?? 0
-        : activeLayer === "businessDiversity"
-          ? profile.businessSignals?.businessDiversityScore ?? 0
-          : activeKey
-            ? profile.scores[activeKey]
-            : 0;
+    activeLayer === "workplaceEmployment"
+      ? profile.officialZoneSignals?.workplaceEmploymentScore ?? 0
+      : activeLayer === "commercialPotential"
+        ? commercialZone?.commercialPotentialScore ?? 0
+        : activeLayer === "commercialDensity"
+          ? profile.businessSignals?.businessDensityScore ?? 0
+          : activeLayer === "businessDiversity"
+            ? profile.businessSignals?.businessDiversityScore ?? 0
+            : activeKey
+              ? profile.scores[activeKey]
+              : 0;
   const activeMetricNote =
-    activeLayer === "commercialPotential"
-      ? "SEMAS 점포구조 + 교통·시장·업무·문화 접근성 결합 / 100"
-      : activeLayer === "commercialDensity"
-        ? "SEMAS 2026Q2 점포밀도 상대지표 / 100"
-        : activeLayer === "businessDiversity"
-          ? "SEMAS 2026Q2 업종다양성 / 100"
-          : "거리감쇠 상대지표 / 100";
+    activeLayer === "workplaceEmployment"
+      ? "KOSIS 2024 종사자수 · 대구 150개 동 순위 기반 / 100"
+      : activeLayer === "commercialPotential"
+        ? "SEMAS 점포구조 + 교통·시장·업무·문화 접근성 결합 / 100"
+        : activeLayer === "commercialDensity"
+          ? "SEMAS 2026Q2 점포밀도 상대지표 / 100"
+          : activeLayer === "businessDiversity"
+            ? "SEMAS 2026Q2 업종다양성 / 100"
+            : "거리감쇠 상대지표 / 100";
   const rows = contextLayers.map((layer) => {
     const key = contextLayerProfileKey[layer]!;
     const evidence = profile.anchorEvidence[key];
@@ -677,9 +692,11 @@ function CitywideContextPanel({
             <div className="text-right text-[10px] leading-4 text-slate-500">
               {activeMetricNote}
               <br />
-              {citywideCommercialLayers.includes(activeLayer)
-                ? "상권 검토용 상대지표이며 매출·성공확률을 뜻하지 않음"
-                : "이용자수·매출을 뜻하지 않음"}
+              {activeLayer === "workplaceEmployment"
+                ? "사업체 소재지 기준 종사자수이며 거주·통근인구가 아님"
+                : citywideCommercialLayers.includes(activeLayer)
+                  ? "상권 검토용 상대지표이며 매출·성공확률을 뜻하지 않음"
+                  : "이용자수·매출을 뜻하지 않음"}
             </div>
           </div>
 
@@ -758,6 +775,52 @@ function CitywideContextPanel({
               </div>
               <div className="mt-3 text-[9px] leading-4 text-slate-600">
                 {commercialZone.boundaryMeaning} · 후보점수는 매출·유동인구·성공확률을 의미하지 않습니다.
+              </div>
+            </div>
+          ) : null}
+
+          {profile.officialZoneSignals ? (
+            <div
+              className="mt-4 rounded-xl border border-violet-300/12 bg-violet-300/[0.035] p-3"
+              data-testid="workplace-employment-panel"
+            >
+              <div className="flex items-start justify-between gap-3">
+                <div>
+                  <div className="text-[10px] font-semibold text-violet-100">
+                    직장 종사자
+                  </div>
+                  <div className="mt-1 text-[9px] text-slate-600">
+                    KOSIS 전국사업체조사 {profile.officialZoneSignals.workplaceSourceYear} · 행정동 직접값
+                  </div>
+                </div>
+                <Badge variant="outline">공식 snapshot</Badge>
+              </div>
+              <div className="mt-3 grid grid-cols-2 gap-2 sm:grid-cols-4">
+                <MetricTile
+                  label="종사자"
+                  value={profile.officialZoneSignals.workplaceEmployees.toLocaleString("ko-KR") + "명"}
+                  note="사업체 소재지 기준"
+                  accent={activeLayer === "workplaceEmployment"}
+                />
+                <MetricTile
+                  label="사업체"
+                  value={profile.officialZoneSignals.workplaceBusinesses.toLocaleString("ko-KR") + "개"}
+                  note="전산업"
+                />
+                <MetricTile
+                  label="대구 순위"
+                  value={"#" + profile.officialZoneSignals.workplaceEmployeeRank}
+                  note="150개 행정동 중"
+                />
+                <MetricTile
+                  label="직장강도"
+                  value={Math.round(profile.officialZoneSignals.workplaceEmploymentScore) + " / 100"}
+                  note="종사자 순위 기반"
+                />
+              </div>
+              <div className="mt-3 text-[9px] leading-4 text-slate-600">
+                업무지구성의 공식 증거입니다. 거주지 기준 취업자·통근 유입·시간대별 체류인구와는
+                다르며, OD·생활인구가 없어 최종 업무지구/통근형 분류는 아직 확정하지 않습니다.
               </div>
             </div>
           ) : null}

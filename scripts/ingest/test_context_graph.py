@@ -68,10 +68,52 @@ class ContextGraphTest(unittest.TestCase):
         )
         for profile in corridor_profiles:
             self.assertEqual(len(profile["scores"]), 8)
+            self.assertIsNone(profile.get("officialZoneSignals"))
             self.assertEqual(
                 profile["classificationAvailability"]["finalFunctionalProfile"],
                 "blocked-until-local-population-and-flow-data",
             )
+
+        locality_profiles = [
+            row for row in profiles["records"] if row["zoneKind"] == "locality"
+        ]
+        self.assertEqual(len(locality_profiles), 150)
+        workplace_signals = [row["officialZoneSignals"] for row in locality_profiles]
+        self.assertTrue(all(signal is not None for signal in workplace_signals))
+        self.assertEqual(
+            sum(signal["workplaceEmployees"] for signal in workplace_signals),
+            1021246,
+        )
+        self.assertEqual(
+            sum(signal["workplaceBusinesses"] for signal in workplace_signals),
+            286841,
+        )
+        self.assertEqual(
+            {signal["workplaceEmployeeRank"] for signal in workplace_signals},
+            set(range(1, 151)),
+        )
+        self.assertEqual(
+            max(signal["workplaceEmploymentScore"] for signal in workplace_signals),
+            100.0,
+        )
+        self.assertEqual(
+            min(signal["workplaceEmploymentScore"] for signal in workplace_signals),
+            0.0,
+        )
+        self.assertTrue(
+            all(
+                row["classificationAvailability"]["businessDistrict"]
+                == "official-dong-workplace-employment-available"
+                for row in locality_profiles
+            )
+        )
+        self.assertTrue(
+            all(
+                row["classificationAvailability"]["commuting"]
+                == "workplace-employment-available-missing-OD"
+                for row in locality_profiles
+            )
+        )
 
         self.assertEqual(businesses["coverage"]["sourceRows"], 118357)
         self.assertEqual(businesses["coverage"]["validCoordinateRows"], 118357)
