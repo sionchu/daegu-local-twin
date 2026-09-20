@@ -216,6 +216,16 @@ type CommercialPotentialProfileDocument = {
   records: CommercialPotentialProfile[];
 };
 
+type CandidateOverlayPoint = {
+  zoneId: string;
+  label: string;
+  zoneKind: "locality" | "commercial_corridor";
+  score: number;
+  rank: number | null | undefined;
+  x: number;
+  y: number;
+};
+
 type Props = {
   cells: LocationEvidence[];
   selectedCellId?: string;
@@ -526,6 +536,8 @@ export default function VWorldLocalTwinMap({
     useState<CommercialPotentialProfile[]>([]);
   const [contextProfiles, setContextProfiles] = useState<Record<string, ContextProfile>>({});
   const [contextAnchors, setContextAnchors] = useState<ContextAnchor[]>([]);
+  const [candidateOverlayPoints, setCandidateOverlayPoints] =
+    useState<CandidateOverlayPoint[]>([]);
   const contextAnchorCacheRef = useRef<Record<string, ContextAnchor[]>>({});
   const containerId = "localtwin-vworld-map";
 
@@ -1541,6 +1553,81 @@ export default function VWorldLocalTwinMap({
   ]);
 
   useEffect(() => {
+    const viewer = viewerRef.current;
+    const Cesium = window.Cesium;
+    const container = containerRef.current;
+    if (
+      !ready ||
+      scope !== "citywide" ||
+      !viewer?.scene ||
+      !Cesium ||
+      !container ||
+      !commercialZones.length
+    ) {
+      setCandidateOverlayPoints([]);
+      return;
+    }
+
+    let frame: number | null = null;
+    const updateOverlay = () => {
+      if (frame !== null) return;
+      frame = window.requestAnimationFrame(() => {
+        frame = null;
+        const canvas = viewer.scene?.canvas;
+        if (!canvas || !containerRef.current) return;
+
+        const canvasRect = canvas.getBoundingClientRect();
+        const containerRect = containerRef.current.getBoundingClientRect();
+        const next = commercialZones
+          .filter((zone) => zone.properties.isCommercialCandidate)
+          .map((zone) => {
+            const { labelLon, labelLat } = zone.properties;
+            if (typeof labelLon !== "number" || typeof labelLat !== "number") {
+              return null;
+            }
+            const world = Cesium.Cartesian3.fromDegrees(labelLon, labelLat, 40);
+            const screen = Cesium.SceneTransforms.wgs84ToWindowCoordinates(
+              viewer.scene,
+              world,
+            );
+            if (!screen) return null;
+            if (
+              screen.x < -16 ||
+              screen.y < -16 ||
+              screen.x > canvas.clientWidth + 16 ||
+              screen.y > canvas.clientHeight + 16
+            ) {
+              return null;
+            }
+            return {
+              zoneId: zone.properties.zoneId,
+              label: zone.properties.label,
+              zoneKind: zone.properties.zoneKind,
+              score: zone.properties.commercialPotentialScore,
+              rank: zone.properties.candidateRank,
+              x: canvasRect.left - containerRect.left + screen.x,
+              y: canvasRect.top - containerRect.top + screen.y,
+            } satisfies CandidateOverlayPoint;
+          })
+          .filter(
+            (point): point is CandidateOverlayPoint => point !== null,
+          );
+
+        setCandidateOverlayPoints(next);
+      });
+    };
+
+    viewer.scene.postRender.addEventListener(updateOverlay);
+    updateOverlay();
+
+    return () => {
+      if (frame !== null) window.cancelAnimationFrame(frame);
+      viewer.scene?.postRender?.removeEventListener?.(updateOverlay);
+      setCandidateOverlayPoints([]);
+    };
+  }, [commercialZones, ready, scope]);
+
+  useEffect(() => {
     if (!ready || !containerRef.current) return;
     const observer = new ResizeObserver(() => {
       mapRef.current?.updateSize?.();
@@ -1618,6 +1705,88 @@ export default function VWorldLocalTwinMap({
       data-hovered-zone={hoveredZoneCellId ?? ""}
     >
       <div ref={containerRef} id={containerId} className="absolute inset-0 h-full w-full" />
+      {scope === "citywide" && ready ? (
+        <>
+          <div
+            className="pointer-events-none absolute inset-0 z-[9]"
+            data-testid="citywide-candidate-overlay"
+            data-candidate-count={commercialZones.filter(
+              (zone) => zone.properties.isCommercialCandidate,
+            ).length}
+          >
+            {candidateOverlayPoints.map((point) => {
+              const selected = selectedContextZoneId === point.zoneId;
+              const topCandidate =
+                point.zoneKind === "locality" &&
+                (point.rank ?? Number.POSITIVE_INFINITY) <= 5;
+              const showName =
+                point.zoneKind === "locality" || selected;
+
+              return (
+                <button
+                  key={point.zoneId}
+                  type="button"
+                  className={[
+                    "pointer-events-auto absolute flex -translate-x-1/2 -translate-y-1/2 items-center gap-1.5 border-0 bg-transparent p-0 text-inherit transition duration-200 hover:scale-105 focus-visible:scale-105 focus-visible:outline-none",
+                    selected ? "z-[4] scale-105 brightness-110" : "",
+                  ].join(" ")}
+                  data-selected={selected ? "true" : "false"}
+                  style={{ left: point.x, top: point.y }}
+                  aria-label={point.label + " 상권 후보"}
+                  title={
+                    point.label +
+                    " · 상권잠재 " +
+                    Math.round(point.score) +
+                    " / 100"
+                  }
+                  onClick={(event) => {
+                    event.preventDefault();
+                    event.stopPropagation();
+                    onContextSelect?.(point.zoneId);
+                  }}
+                >
+                  <span
+                    className={[
+                      "citywide-candidate-pulse-core relative block shrink-0 rounded-full border-2 border-emerald-50 bg-emerald-400 shadow-[0_0_18px_rgba(52,211,153,0.62)]",
+                      selected
+                        ? "h-[19px] w-[19px] bg-teal-400 shadow-[0_0_32px_rgba(45,212,191,0.95)]"
+                        : topCandidate
+                          ? "h-4 w-4 bg-emerald-300 shadow-[0_0_24px_rgba(52,211,153,0.8)]"
+                          : "h-[13px] w-[13px]",
+                    ].join(" ")}
+                  />
+                  {showName ? (
+                    <span
+                      className={[
+                        "flex max-w-32 items-center gap-1 whitespace-nowrap rounded-full border border-white/10 bg-slate-950/82 px-2 py-1 text-[9px] leading-none text-slate-200 shadow-lg backdrop-blur-md transition",
+                        selected || topCandidate
+                          ? "opacity-100"
+                          : "opacity-75 hover:opacity-100",
+                      ].join(" ")}
+                    >
+                      <span className="truncate">{point.label}</span>
+                      <strong className="text-[9px] text-emerald-200">
+                        {Math.round(point.score)}
+                      </strong>
+                    </span>
+                  ) : null}
+                </button>
+              );
+            })}
+          </div>
+          <div className="pointer-events-none absolute right-3 top-3 z-10 rounded-xl border border-emerald-300/12 bg-slate-950/78 px-3 py-2 text-[10px] leading-4 text-slate-300 backdrop-blur-md">
+            <div className="flex items-center gap-2 font-semibold text-white">
+              <span className="citywide-candidate-legend-dot relative inline-block h-2 w-2 rounded-full bg-emerald-400 shadow-[0_0_12px_rgba(52,211,153,0.72)]" />
+              상권 후보 {commercialZones.filter(
+                (zone) => zone.properties.isCommercialCandidate,
+              ).length}곳
+            </div>
+            <div className="mt-0.5 text-[9px] text-slate-500">
+              pulse marker는 후보 위치 · 클릭하면 분석/카메라 이동
+            </div>
+          </div>
+        </>
+      ) : null}
       {!ready ? (
         <div className="pointer-events-none absolute left-4 top-4 z-10 flex items-center gap-2 rounded-full border border-white/10 bg-slate-950/82 px-3 py-1.5 text-[11px] text-slate-100 backdrop-blur">
           <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-amber-300" />

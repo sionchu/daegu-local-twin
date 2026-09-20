@@ -185,3 +185,47 @@ button {
     animation-iteration-count: 1 !important;
   }
 }
+
+/* Citywide candidate markers stay screen-space so the pulse is visual emphasis,
+   not a claimed geographic trade-area radius. */
+.citywide-candidate-pulse-core::before,
+.citywide-candidate-legend-dot::after {
+  content: "";
+  position: absolute;
+  border: 1px solid rgba(110, 231, 183, 0.68);
+  border-radius: inherit;
+  animation: citywide-candidate-pulse 2.6s ease-out infinite;
+}
+
+.citywide-candidate-pulse-core::before {
+  inset: -7px;
+}
+
+[data-selected="true"] .citywide-candidate-pulse-core::before {
+  inset: -10px;
+  border-width: 2px;
+  animation-duration: 1.8s;
+}
+
+.citywide-candidate-legend-dot::after {
+  inset: -4px;
+}
+
+@keyframes citywide-candidate-pulse {
+  0% {
+    transform: scale(0.58);
+    opacity: 0.9;
+  }
+  65%,
+  100% {
+    transform: scale(1.8);
+    opacity: 0;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .citywide-candidate-pulse-core::before,
+  .citywide-candidate-legend-dot::after {
+    animation: none;
+  }
+}
