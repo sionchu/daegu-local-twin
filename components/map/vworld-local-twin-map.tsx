@@ -1248,51 +1248,6 @@ export default function VWorldLocalTwinMap({
         cellEntitiesRef.current.push(groundEdge);
       });
 
-      if (
-        typeof candidate.properties.labelLon === "number" &&
-        typeof candidate.properties.labelLat === "number"
-      ) {
-        const kindLabel =
-          candidate.properties.zoneKind === "commercial_corridor"
-            ? "정밀상권"
-            : "상권후보";
-        const labelMaxDistance =
-          candidate.properties.zoneKind === "commercial_corridor"
-            ? 22_000
-            : (candidate.properties.candidateRank ?? Number.POSITIVE_INFINITY) <= 5
-              ? 60_000
-              : 32_000;
-        const label = viewer.entities.add({
-          id: `localtwin-commercial-${candidate.properties.zoneId}::label`,
-          position: Cesium.Cartesian3.fromDegrees(
-            candidate.properties.labelLon,
-            candidate.properties.labelLat,
-            elevationM + 18,
-          ),
-          label: {
-            text: `${candidate.properties.label} · ${kindLabel}\n${Math.round(potential)} / 100`,
-            font: selected || hovered ? "bold 14px sans-serif" : "bold 11px sans-serif",
-            fillColor: Cesium.Color.WHITE,
-            outlineColor: Cesium.Color.fromCssColorString("#071018"),
-            outlineWidth: 3,
-            style: Cesium.LabelStyle.FILL_AND_OUTLINE,
-            showBackground: true,
-            backgroundColor: Cesium.Color.fromCssColorString("#071018").withAlpha(
-              selected || hovered ? 0.94 : 0.78,
-            ),
-            backgroundPadding: new Cesium.Cartesian2(8, 6),
-            heightReference:
-              Cesium.HeightReference?.RELATIVE_TO_GROUND ??
-              Cesium.HeightReference?.CLAMP_TO_GROUND,
-            disableDepthTestDistance: Number.POSITIVE_INFINITY,
-            distanceDisplayCondition: new Cesium.DistanceDisplayCondition(
-              0,
-              labelMaxDistance,
-            ),
-          },
-        });
-        cellEntitiesRef.current.push(label);
-      }
     }
 
     viewer.scene?.requestRender?.();
@@ -1728,8 +1683,7 @@ export default function VWorldLocalTwinMap({
               const topCandidate =
                 point.zoneKind === "locality" &&
                 (point.rank ?? Number.POSITIVE_INFINITY) <= 5;
-              const showName =
-                point.zoneKind === "locality" || selected;
+              const showLabel = selected || topCandidate;
 
               return (
                 <button
@@ -1764,16 +1718,17 @@ export default function VWorldLocalTwinMap({
                           : "h-[13px] w-[13px]",
                     ].join(" ")}
                   />
-                  {showName ? (
+                  {showLabel ? (
                     <span
-                      className={[
-                        "flex max-w-32 items-center gap-1 whitespace-nowrap rounded-full border border-white/10 bg-slate-950/82 px-2 py-1 text-[9px] leading-none text-slate-200 shadow-lg backdrop-blur-md transition",
-                        selected || topCandidate
-                          ? "opacity-100"
-                          : "opacity-75 hover:opacity-100",
-                      ].join(" ")}
+                      className="flex max-w-32 items-center gap-1 whitespace-nowrap rounded-full border border-white/10 bg-slate-950/82 px-2 py-1 text-[9px] leading-none text-slate-200 opacity-100 shadow-lg backdrop-blur-md transition"
+                      data-testid="citywide-candidate-label"
+                      data-label-mode={selected ? "selected" : "rank"}
                     >
-                      <span className="truncate">{point.label}</span>
+                      {selected ? (
+                        <span className="truncate">{point.label}</span>
+                      ) : (
+                        <span className="text-slate-400">#{point.rank}</span>
+                      )}
                       <strong className="text-[9px] text-emerald-200">
                         {Math.round(point.score)}
                       </strong>
