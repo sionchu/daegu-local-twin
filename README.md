@@ -56,7 +56,8 @@ map-derived visualization corridors.
 The Daegu-wide context view adds the official 2026Q2 SEMAS store structure, HIRA
 hospital/pharmacy coordinates, Daegu education-office school registry, Daegu registered
 factory registry, district resident-population totals, 1,086 official parking coordinates,
-and the official SGIS 2025Q2 150 administrative-dong polygons. A deterministic citywide commercial-candidate layer
+KOSIS 2024 workplace employment for all 150 dongs, and the official SGIS 2025Q2
+150 administrative-dong polygons. A deterministic citywide commercial-candidate layer
 combines SEMAS density/diversity with transit, market, employment/public, culture and
 healthcare accessibility. It keeps the five central map-derived corridors and selects
 only evidence-qualified administrative-dong review candidates; these are **not** official
