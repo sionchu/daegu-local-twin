@@ -100,6 +100,29 @@ class ContextGraphTest(unittest.TestCase):
             min(signal["workplaceEmploymentScore"] for signal in workplace_signals),
             0.0,
         )
+        self.assertEqual(
+            sum(signal["residentPopulation"] for signal in workplace_signals),
+            2346277,
+        )
+        self.assertEqual(
+            {signal["residentPopulationRank"] for signal in workplace_signals},
+            set(range(1, 151)),
+        )
+        self.assertEqual(
+            max(signal["residentPopulationScore"] for signal in workplace_signals),
+            100.0,
+        )
+        self.assertEqual(
+            min(signal["residentPopulationScore"] for signal in workplace_signals),
+            0.0,
+        )
+        self.assertTrue(
+            all(
+                signal["residentMale"] + signal["residentFemale"]
+                == signal["residentPopulation"]
+                for signal in workplace_signals
+            )
+        )
         self.assertTrue(
             all(
                 row["classificationAvailability"]["businessDistrict"]
@@ -109,8 +132,22 @@ class ContextGraphTest(unittest.TestCase):
         )
         self.assertTrue(
             all(
+                row["classificationAvailability"]["residentialLife"]
+                == "official-dong-resident-population-available-missing-living-population"
+                for row in locality_profiles
+            )
+        )
+        self.assertTrue(
+            all(
                 row["classificationAvailability"]["commuting"]
                 == "workplace-employment-available-missing-OD"
+                for row in locality_profiles
+            )
+        )
+        self.assertTrue(
+            all(
+                row["classificationAvailability"]["finalFunctionalProfile"]
+                == "blocked-until-living-population-and-flow-data"
                 for row in locality_profiles
             )
         )

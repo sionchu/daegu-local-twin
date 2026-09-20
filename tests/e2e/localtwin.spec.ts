@@ -40,6 +40,7 @@ test.describe("LocalTwin critical evidence path", () => {
     ).toBeVisible();
     await expect(page.getByRole("button", { name: "상권잠재", exact: true })).toBeVisible();
     await expect(page.getByRole("button", { name: "직장종사자", exact: true })).toBeVisible();
+    await expect(page.getByRole("button", { name: "거주인구", exact: true })).toBeVisible();
     await expect(page.getByTestId("citywide-context-panel")).toBeVisible({ timeout: 20_000 });
     await expect(page.getByTestId("citywide-commercial-analysis")).toBeVisible();
     await expect(page.getByText("전역 후보 19개", { exact: true })).toBeVisible();
@@ -51,10 +52,18 @@ test.describe("LocalTwin critical evidence path", () => {
     await expect(page.getByText("등록 공장", { exact: true })).toBeVisible();
     await expect(page.getByTestId("housing-capacity-panel")).toBeVisible();
     await expect(page.getByTestId("workplace-employment-panel")).toBeVisible();
+    await expect(page.getByTestId("resident-population-panel")).toBeVisible();
     await expect(page.getByText("공동주택 주거용량", { exact: true })).toBeVisible();
     await expect(page.getByText("공동주택 세대", { exact: true })).toBeVisible();
     await expect(page.getByText(/상권잠재 점수에는/)).toBeVisible();
     await expect(page.getByText("공식 상가업소 구조", { exact: true })).toBeVisible();
+
+    await page.getByRole("button", { name: "거주인구", exact: true }).click();
+    await expect(page.getByText("거주인구", { exact: true }).first()).toBeVisible();
+    await expect(page.getByText(/행안부 2026-08 주민등록인구/)).toBeVisible();
+    await expect(
+      page.getByTestId("resident-population-panel").getByText(/통신 기반 생활인구/),
+    ).toBeVisible();
 
     await page.getByRole("button", { name: "직장종사자", exact: true }).click();
     await expect(page.getByText("직장종사자", { exact: true }).first()).toBeVisible();
@@ -76,20 +85,27 @@ test.describe("LocalTwin critical evidence path", () => {
     await expect(page.getByText(/SEMAS 2026Q2 업종다양성/)).toBeVisible();
 
     const metadata = await page.evaluate(async () => {
-      const [zoneDocument, commercialDocument, housingDocument, workplaceDocument] =
-        await Promise.all([
+      const [
+        zoneDocument,
+        commercialDocument,
+        housingDocument,
+        workplaceDocument,
+        residentDocument,
+      ] = await Promise.all([
         fetch("/data/daegu_analysis_zones.geojson").then((response) => response.json()),
         fetch("/data/citywide_commercial_candidates.geojson").then((response) =>
           response.json(),
         ),
         fetch("/data/housing_capacity.json").then((response) => response.json()),
         fetch("/data/workplace_employment.json").then((response) => response.json()),
+        fetch("/data/resident_population_dong.json").then((response) => response.json()),
       ]);
       return {
         zones: zoneDocument.metadata,
         commercial: commercialDocument.metadata,
         housing: housingDocument.coverage,
         workplace: workplaceDocument.coverage,
+        resident: residentDocument.coverage,
       };
     });
     expect(metadata.zones.quality).toBe("official");
@@ -106,6 +122,10 @@ test.describe("LocalTwin critical evidence path", () => {
     expect(metadata.workplace.sgisCoveragePct).toBe(100);
     expect(metadata.workplace.businesses).toBe(286841);
     expect(metadata.workplace.employees).toBe(1021246);
+    expect(metadata.resident.sgisZoneCount).toBe(150);
+    expect(metadata.resident.sgisCoveragePct).toBe(100);
+    expect(metadata.resident.population).toBe(2346277);
+    expect(metadata.resident.populationChange).toBe(-1112);
   });
 
   test("keeps the map and review panel side by side at tablet-desktop width", async ({ page }) => {

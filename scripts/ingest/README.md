@@ -120,7 +120,8 @@ missing citywide rent/search/living-population/card-spend observations.
    administrative-dong resident-population CSV to `resident_population_dong.json`.
    All 150 SGIS zones are matched by district + dong name; the two DalSeong branch-office
    rows are explicitly aggregated to their documented parent eups rather than treated as
-   separate analysis zones.
+   separate analysis zones. `derive_context_graph.py` then embeds the raw population,
+   monthly change, rank and rank-based relative intensity into the canonical zone profiles.
 
 Raw national/Daegu source downloads are **not committed**. The committed snapshots contain
 only normalized data required to reproduce the product. Living-population, card-spend,
