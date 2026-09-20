@@ -228,6 +228,30 @@ type CandidateOverlayPoint = {
   y: number;
 };
 
+type CandidateLabelBox = {
+  zoneId: string;
+  priority: number;
+  left: number;
+  top: number;
+  right: number;
+  bottom: number;
+};
+
+function resolveCandidateLabelCollisions(boxes: CandidateLabelBox[]) {
+  const accepted: CandidateLabelBox[] = [];
+  for (const box of [...boxes].sort((left, right) => right.priority - left.priority)) {
+    const overlaps = accepted.some(
+      (kept) =>
+        box.left < kept.right &&
+        box.right > kept.left &&
+        box.top < kept.bottom &&
+        box.bottom > kept.top,
+    );
+    if (!overlaps) accepted.push(box);
+  }
+  return new Set(accepted.map((box) => box.zoneId));
+}
+
 type Props = {
   cells: LocationEvidence[];
   selectedCellId?: string;
@@ -960,6 +984,11 @@ export default function VWorldLocalTwinMap({
       if (!memberCells.length) continue;
 
       const selected = memberCells.some((cell) => cell.cellId === selectedCellId);
+      const hasCandidateOverlay = commercialZones.some(
+        (candidate) =>
+          candidate.properties.isCommercialCandidate &&
+          candidate.properties.zoneId === zone.properties.zoneId,
+      );
       const contextAnchorType = CONTEXT_LAYER_TO_ANCHOR_TYPE[activeLayer];
       const score = contextAnchorType
         ? contextProfiles[zone.properties.zoneId]?.scores?.[contextAnchorType] ?? null
@@ -1013,7 +1042,7 @@ export default function VWorldLocalTwinMap({
         id: `localtwin-zone-${primaryCellId}::label`,
         position: Cesium.Cartesian3.fromDegrees(zoneLon, zoneLat),
         label: {
-          show: hovered || selected,
+          show: (hovered || selected) && !hasCandidateOverlay,
           text: `${zone.properties.label}\n${score === null ? "데이터 부족" : Math.round(score) + " / 100"}`,
           font: hovered
             ? "bold 16px sans-serif"
@@ -1437,15 +1466,45 @@ export default function VWorldLocalTwinMap({
       if (!viewer?.camera || !Cesium) return;
 
       if (scope === "citywide") {
-        viewer.camera.flyTo({
-          destination: Cesium.Cartesian3.fromDegrees(128.625, 35.97, 48_000),
-          orientation: {
-            heading: 0,
-            pitch: Cesium.Math.toRadians(-90),
-            roll: 0,
-          },
-          duration: 0.8,
-        });
+        const candidatePositions = commercialZones
+          .filter((zone) => zone.properties.isCommercialCandidate)
+          .map((zone) => {
+            const { labelLon, labelLat } = zone.properties;
+            if (typeof labelLon !== "number" || typeof labelLat !== "number") return null;
+            return Cesium.Cartesian3.fromDegrees(labelLon, labelLat, 0);
+          })
+          .filter((position): position is any => Boolean(position));
+
+        if (
+          candidatePositions.length &&
+          Cesium.BoundingSphere?.fromPoints &&
+          Cesium.HeadingPitchRange &&
+          typeof viewer.camera.flyToBoundingSphere === "function"
+        ) {
+          const sphere = Cesium.BoundingSphere.fromPoints(candidatePositions);
+          viewer.camera.flyToBoundingSphere(sphere, {
+            offset: new Cesium.HeadingPitchRange(
+              0,
+              Cesium.Math.toRadians(-90),
+              Math.max(sphere.radius * 2.7, 13_000),
+            ),
+            duration: 0.8,
+          });
+        } else {
+          viewer.camera.flyTo({
+            destination: Cesium.Cartesian3.fromDegrees(
+              DAEGU_CENTER[0],
+              DAEGU_CENTER[1],
+              18_000,
+            ),
+            orientation: {
+              heading: 0,
+              pitch: Cesium.Math.toRadians(-90),
+              roll: 0,
+            },
+            duration: 0.8,
+          });
+        }
       } else {
         const target = Cesium.Cartesian3.fromDegrees(
           DAEGU_CENTER[0],
@@ -1487,7 +1546,7 @@ export default function VWorldLocalTwinMap({
       viewer.scene?.requestRender?.();
     }, 220);
     return () => window.clearTimeout(timer);
-  }, [ready, scope]);
+  }, [commercialZones, ready, scope]);
 
   useEffect(() => {
     const viewer = viewerRef.current;
@@ -1735,6 +1794,47 @@ export default function VWorldLocalTwinMap({
     });
   }, [cells, corridors, ready, scope, selectedCell]);
 
+  const visibleCandidateLabelIds = useMemo(() => {
+    const boxes = candidateOverlayPoints.flatMap((point) => {
+      const selected =
+        scope === "citywide"
+          ? selectedContextZoneId === point.zoneId
+          : point.memberCellIds?.includes(selectedCellId ?? "") ?? false;
+      const topCandidate =
+        scope === "citywide"
+          ? point.zoneKind === "locality" &&
+            (point.rank ?? Number.POSITIVE_INFINITY) <= 5
+          : point.zoneKind === "commercial_corridor" &&
+            (point.rank ?? Number.POSITIVE_INFINITY) <= 3;
+      if (!selected && !topCandidate) return [];
+
+      const compact = !selected;
+      const labelWidth = compact
+        ? 76
+        : Math.min(150, Math.max(92, point.label.length * 11 + 54));
+      const totalWidth = labelWidth + 30;
+      const totalHeight = 34;
+      const padding = scope === "central" ? 12 : 8;
+
+      return [
+        {
+          zoneId: point.zoneId,
+          priority: selected ? 10_000 : 1_000 - (point.rank ?? 999),
+          left: point.x - totalWidth / 2 - padding,
+          right: point.x + totalWidth / 2 + padding,
+          top: point.y - totalHeight / 2 - padding,
+          bottom: point.y + totalHeight / 2 + padding,
+        },
+      ];
+    });
+    return resolveCandidateLabelCollisions(boxes);
+  }, [
+    candidateOverlayPoints,
+    scope,
+    selectedCellId,
+    selectedContextZoneId,
+  ]);
+
   return (
     <div
       className="relative h-full min-h-[520px] overflow-hidden rounded-2xl bg-[#071018]"
@@ -1743,6 +1843,7 @@ export default function VWorldLocalTwinMap({
       data-buildings={buildingsReady ? "facility_build" : "unavailable"}
       data-spatial-focus={scope === "citywide" ? "daegu-citywide" : "daegu-central"}
       data-camera-controls="free"
+      data-citywide-camera={scope === "citywide" ? "candidate-bounds" : ""}
       data-hovered-zone={hoveredZoneCellId ?? ""}
     >
       <div ref={containerRef} id={containerId} className="absolute inset-0 h-full w-full" />
@@ -1764,7 +1865,9 @@ export default function VWorldLocalTwinMap({
                     (point.rank ?? Number.POSITIVE_INFINITY) <= 5
                   : point.zoneKind === "commercial_corridor" &&
                     (point.rank ?? Number.POSITIVE_INFINITY) <= 3;
-              const showLabel = selected || topCandidate;
+              const showLabel =
+                (selected || topCandidate) &&
+                visibleCandidateLabelIds.has(point.zoneId);
 
               return (
                 <button
@@ -1807,6 +1910,7 @@ export default function VWorldLocalTwinMap({
                     <span
                       className="flex max-w-32 items-center gap-1 whitespace-nowrap rounded-full border border-white/10 bg-slate-950/82 px-2 py-1 text-[9px] leading-none text-slate-200 opacity-100 shadow-lg backdrop-blur-md transition"
                       data-testid="citywide-candidate-label"
+                      data-collision-resolved="true"
                       data-label-mode={selected ? "selected" : "rank"}
                     >
                       {selected ? (
