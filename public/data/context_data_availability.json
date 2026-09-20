@@ -51,9 +51,14 @@
     },
     {
       "key": "parking_official",
-      "status": "public-standard-dataset-identified-pending",
-      "source": "data.go.kr 전국주차장정보표준데이터",
-      "quality": "official"
+      "status": "available-citywide-official",
+      "source": "공공데이터포털 전국주차장정보표준데이터",
+      "quality": "official",
+      "sourceUrl": "https://www.data.go.kr/data/15012896/standard.do",
+      "officialRecords": 1086,
+      "coordinateRecords": 1086,
+      "totalSpaces": 50687,
+      "output": "parking.json"
     },
     {
       "key": "housing_capacity",
