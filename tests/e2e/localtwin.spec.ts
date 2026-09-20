@@ -31,6 +31,120 @@ test.describe("LocalTwin critical evidence path", () => {
     expect(pageErrors).toEqual([]);
   });
 
+  test("exposes the AI business-analysis tool panel", async ({ page }) => {
+    await page.addInitScript(() => {
+      const host = window as typeof window & {
+        __localTwinTools?: Array<{
+          name: string;
+          execute?: (input: unknown) => Promise<unknown>;
+        }>;
+      };
+      host.__localTwinTools = [];
+      Object.defineProperty(document, "modelContext", {
+        configurable: true,
+        value: {
+          registerTool: async (tool: {
+            name: string;
+            execute?: (input: unknown) => Promise<unknown>;
+          }) => {
+            host.__localTwinTools!.push(tool);
+          },
+        },
+      });
+    });
+
+    await page.goto("/");
+
+    await expect
+      .poll(async () =>
+        page.evaluate(() => {
+          const host = window as typeof window & {
+            __localTwinTools?: Array<{ name: string }>;
+          };
+          return host.__localTwinTools?.length ?? 0;
+        }),
+      )
+      .toBe(9);
+
+    const toolNames = await page.evaluate(() => {
+      const host = window as typeof window & {
+        __localTwinTools?: Array<{ name: string }>;
+      };
+      return (host.__localTwinTools ?? []).map((tool) => tool.name);
+    });
+    expect(toolNames).toEqual(
+      expect.arrayContaining([
+        "get_localtwin_state",
+        "select_localtwin_candidate",
+        "set_business_assumptions",
+        "set_business_category",
+        "apply_stress_condition",
+        "compare_candidates",
+        "get_financial_analysis",
+        "get_candidate_context",
+        "clone_localtwin_scenario",
+      ]),
+    );
+
+    const financial = await page.evaluate(async () => {
+      const host = window as typeof window & {
+        __localTwinTools?: Array<{
+          name: string;
+          execute?: (input: unknown) => Promise<unknown>;
+        }>;
+      };
+      const tool = host.__localTwinTools?.find(
+        (item) => item.name === "get_financial_analysis",
+      );
+      return (await tool?.execute?.({})) as {
+        semantics?: { financialNumbers?: string };
+      };
+    });
+    expect(financial.semantics?.financialNumbers).toBe(
+      "deterministic-src/model.ts",
+    );
+
+    const context = await page.evaluate(async () => {
+      const host = window as typeof window & {
+        __localTwinTools?: Array<{
+          name: string;
+          execute?: (input: unknown) => Promise<unknown>;
+        }>;
+      };
+      const tool = host.__localTwinTools?.find(
+        (item) => item.name === "get_candidate_context",
+      );
+      return (await tool?.execute?.({
+        targetId: "dongseongro",
+        category: "cafe",
+      })) as {
+        zoneId?: string;
+        topEvidence?: unknown[];
+        semantics?: { relation?: string };
+      };
+    });
+    expect(context.zoneId).toBe("dongseongro");
+    expect(context.topEvidence?.length ?? 0).toBeGreaterThan(0);
+    expect(context.semantics?.relation).toBe("derived-proximity-context");
+
+    await page.getByRole("button", { name: "AI 창업분석", exact: true }).click();
+    await expect(page.getByTestId("ai-business-consultant")).toBeVisible();
+    await expect(page.getByText("WebMCP AI 연결 가능", { exact: true })).toBeVisible();
+    await expect(page.getByText("도구 9개", { exact: true })).toBeVisible();
+    await expect(page.getByText("결정론적 계산 결과", { exact: true })).toBeVisible();
+    await expect(page.getByTestId("ai-tool-activity")).toContainText("재무분석 읽기");
+    await expect(page.getByTestId("ai-tool-activity")).toContainText("AI");
+
+    await page.getByRole("button", { name: "자연어 → 도구 실행 데모", exact: true }).click();
+    await expect(page.getByTestId("ai-tool-activity")).toContainText("창업조건 변경");
+    await expect(page.getByTestId("ai-tool-activity")).toContainText("후보 비교 설정");
+    await expect(page.getByTestId("ai-tool-activity")).toContainText("데모");
+
+    await page.getByRole("button", { name: "AI 창업분석 닫기", exact: true }).click();
+    await expect(page.getByRole("heading", { name: "같은 업종, 다른 입지 조건." })).toBeVisible();
+    await expect(page.getByTestId("ai-business-consultant")).toHaveCount(0);
+  });
+
   test("loads Daegu-wide context layers and the regional evidence panel", async ({ page }) => {
     test.setTimeout(60_000);
     await page.goto("/");
