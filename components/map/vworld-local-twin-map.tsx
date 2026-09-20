@@ -223,7 +223,7 @@ type CandidateOverlayPoint = {
   zoneKind: "locality" | "commercial_corridor";
   score: number;
   rank: number | null | undefined;
-  memberCellIds?: string[];
+  memberCellIds: string[] | undefined;
   x: number;
   y: number;
 };
