@@ -209,6 +209,36 @@ type CitywideCommercialProfileDocument = {
   records: CitywideCommercialZone[];
 };
 
+type HousingDistrictCapacity = {
+  district: string;
+  complexRecords: number;
+  households: number;
+};
+
+type HousingZonePartial = {
+  zoneId: string;
+  district: string;
+  label: string;
+  partialComplexRecords: number;
+  partialHouseholds: number;
+  linkQuality: "official-name-exact-partial";
+};
+
+type HousingCapacityDocument = {
+  coverage: {
+    daeguComplexRecords: number;
+    daeguHouseholds: number;
+    districtCount: number;
+    exactNameLinkedComplexRecords: number;
+    exactNameLinkedHouseholds: number;
+    exactNameLinkedZoneCount: number;
+    rowCoveragePct: number;
+    householdCoveragePct: number;
+  };
+  byDistrict: HousingDistrictCapacity[];
+  exactNameLinkedZones: HousingZonePartial[];
+};
+
 const layerLabels: Record<MapLayer, string> = {
   opportunity: "입지종합",
   demand: "수요여건",
@@ -559,11 +589,17 @@ function CitywideContextPanel({
   profile,
   commercialZone,
   candidateCount,
+  housingDistrict,
+  housingZonePartial,
+  housingCoveragePct,
   activeLayer,
 }: {
   profile?: ZoneContextProfile;
   commercialZone?: CitywideCommercialZone;
   candidateCount?: number;
+  housingDistrict?: HousingDistrictCapacity;
+  housingZonePartial?: HousingZonePartial;
+  housingCoveragePct?: number;
   activeLayer: MapLayer;
 }) {
   if (!profile) {
@@ -762,6 +798,58 @@ function CitywideContextPanel({
               </div>
               <div className="col-span-2 text-[9px] leading-4 text-slate-600 sm:col-span-4">
                 대구광역시·대구교육청 공식자료의 구·군 단위 참고값이며, 아래 권역별 접근성 점수와 공간 해상도가 다릅니다.
+              </div>
+            </div>
+          ) : null}
+
+          {housingDistrict ? (
+            <div
+              className="mt-4 rounded-xl border border-sky-300/10 bg-sky-300/[0.025] p-3"
+              data-testid="housing-capacity-panel"
+            >
+              <div className="flex items-start justify-between gap-3">
+                <div>
+                  <div className="text-[10px] font-semibold text-slate-300">
+                    공동주택 주거용량
+                  </div>
+                  <div className="mt-1 text-[9px] text-slate-600">
+                    한국부동산원 2026-08-31 · 구·군 전체 공식 집계
+                  </div>
+                </div>
+                <Badge variant="outline">공식 snapshot</Badge>
+              </div>
+              <div className="mt-3 grid grid-cols-2 gap-2">
+                <div>
+                  <div className="text-[9px] text-slate-600">공동주택 세대</div>
+                  <div className="mt-1 text-base font-semibold text-slate-100">
+                    {housingDistrict.households.toLocaleString("ko-KR")}세대
+                  </div>
+                </div>
+                <div>
+                  <div className="text-[9px] text-slate-600">공동주택 단지</div>
+                  <div className="mt-1 text-base font-semibold text-slate-100">
+                    {housingDistrict.complexRecords.toLocaleString("ko-KR")}개
+                  </div>
+                </div>
+              </div>
+              {housingZonePartial ? (
+                <div className="mt-3 rounded-lg border border-white/6 bg-slate-950/35 px-2.5 py-2 text-[9px] leading-4 text-slate-500">
+                  {profile.label} exact-name 부분연결:{" "}
+                  <span className="font-semibold text-slate-300">
+                    {housingZonePartial.partialHouseholds.toLocaleString("ko-KR")}세대
+                  </span>
+                  {" · "}
+                  {housingZonePartial.partialComplexRecords.toLocaleString("ko-KR")}개 단지
+                </div>
+              ) : (
+                <div className="mt-3 text-[9px] leading-4 text-slate-600">
+                  이 권역은 법정동명과 SGIS 행정동명의 exact-name 부분연결이 없습니다.
+                </div>
+              )}
+              <div className="mt-2 text-[9px] leading-4 text-slate-600">
+                동 단위 연결은 원본 세대수의 {housingCoveragePct?.toFixed(2) ?? "32.84"}%만
+                보수적으로 연결된 부분집계입니다. 주민등록·생활인구가 아니며 상권잠재 점수에는
+                사용하지 않습니다.
               </div>
             </div>
           ) : null}
@@ -1087,6 +1175,7 @@ export default function LocalTwinDashboard() {
   const [citywideCommercialProfiles, setCitywideCommercialProfiles] =
     useState<CitywideCommercialZone[]>([]);
   const [citywideCandidateCount, setCitywideCandidateCount] = useState(0);
+  const [housingCapacity, setHousingCapacity] = useState<HousingCapacityDocument>();
   const [dataError, setDataError] = useState<string>();
 
   const actions = useMemo(
@@ -1123,7 +1212,9 @@ export default function LocalTwinDashboard() {
   useEffect(() => {
     if (
       mapScope !== "citywide" ||
-      (citywideContextProfiles.length && citywideCommercialProfiles.length)
+      (citywideContextProfiles.length &&
+        citywideCommercialProfiles.length &&
+        housingCapacity)
     ) {
       return;
     }
@@ -1138,13 +1229,18 @@ export default function LocalTwinDashboard() {
         if (!response.ok) throw new Error("대구 전역 상권후보 데이터를 불러오지 못했습니다.");
         return response.json() as Promise<CitywideCommercialProfileDocument>;
       }),
+      fetch("/data/housing_capacity.json").then((response) => {
+        if (!response.ok) throw new Error("대구 전역 공동주택 데이터를 불러오지 못했습니다.");
+        return response.json() as Promise<HousingCapacityDocument>;
+      }),
     ])
-      .then(([profileDocument, commercialDocument]) => {
+      .then(([profileDocument, commercialDocument, housingDocument]) => {
         if (!alive) return;
         const profiles = profileDocument.records ?? [];
         const commercialProfiles = commercialDocument.records ?? [];
         setCitywideContextProfiles(profiles);
         setCitywideCommercialProfiles(commercialProfiles);
+        setHousingCapacity(housingDocument);
         setCitywideCandidateCount(
           commercialDocument.metadata?.coverage?.candidateCount ??
             commercialProfiles.filter((zone) => zone.isCommercialCandidate).length,
@@ -1175,7 +1271,12 @@ export default function LocalTwinDashboard() {
     return () => {
       alive = false;
     };
-  }, [citywideCommercialProfiles.length, citywideContextProfiles.length, mapScope]);
+  }, [
+    citywideCommercialProfiles.length,
+    citywideContextProfiles.length,
+    housingCapacity,
+    mapScope,
+  ]);
 
   const handleScopeChange = useCallback(
     (nextScope: MapScope) => {
@@ -1221,6 +1322,16 @@ export default function LocalTwinDashboard() {
     : undefined;
   const selectedCitywideCommercialZone = selectedContextZoneId
     ? citywideCommercialProfiles.find((zone) => zone.zoneId === selectedContextZoneId)
+    : undefined;
+  const selectedHousingDistrict = selectedCitywideContextProfile?.district
+    ? housingCapacity?.byDistrict.find(
+        (row) => row.district === selectedCitywideContextProfile.district,
+      )
+    : undefined;
+  const selectedHousingZonePartial = selectedContextZoneId
+    ? housingCapacity?.exactNameLinkedZones.find(
+        (row) => row.zoneId === selectedContextZoneId,
+      )
     : undefined;
 
   const activeScenario = state.activeScenarioId
@@ -1441,6 +1552,9 @@ export default function LocalTwinDashboard() {
                     profile={selectedCitywideContextProfile}
                     commercialZone={selectedCitywideCommercialZone}
                     candidateCount={citywideCandidateCount}
+                    housingDistrict={selectedHousingDistrict}
+                    housingZonePartial={selectedHousingZonePartial}
+                    housingCoveragePct={housingCapacity?.coverage.householdCoveragePct}
                     activeLayer={state.activeLayer}
                   />
                 ) : (

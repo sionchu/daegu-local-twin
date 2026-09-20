@@ -48,6 +48,10 @@ test.describe("LocalTwin critical evidence path", () => {
     await expect(page.getByText("공식 학교", { exact: true })).toBeVisible();
     await expect(page.getByText("공식 의료시설", { exact: true })).toBeVisible();
     await expect(page.getByText("등록 공장", { exact: true })).toBeVisible();
+    await expect(page.getByTestId("housing-capacity-panel")).toBeVisible();
+    await expect(page.getByText("공동주택 주거용량", { exact: true })).toBeVisible();
+    await expect(page.getByText("공동주택 세대", { exact: true })).toBeVisible();
+    await expect(page.getByText(/상권잠재 점수에는/)).toBeVisible();
     await expect(page.getByText("공식 상가업소 구조", { exact: true })).toBeVisible();
 
     await page.getByRole("button", { name: "의료", exact: true }).click();
@@ -63,15 +67,17 @@ test.describe("LocalTwin critical evidence path", () => {
     await expect(page.getByText(/SEMAS 2026Q2 업종다양성/)).toBeVisible();
 
     const metadata = await page.evaluate(async () => {
-      const [zoneDocument, commercialDocument] = await Promise.all([
+      const [zoneDocument, commercialDocument, housingDocument] = await Promise.all([
         fetch("/data/daegu_analysis_zones.geojson").then((response) => response.json()),
         fetch("/data/citywide_commercial_candidates.geojson").then((response) =>
           response.json(),
         ),
+        fetch("/data/housing_capacity.json").then((response) => response.json()),
       ]);
       return {
         zones: zoneDocument.metadata,
         commercial: commercialDocument.metadata,
+        housing: housingDocument.coverage,
       };
     });
     expect(metadata.zones.quality).toBe("official");
@@ -80,6 +86,10 @@ test.describe("LocalTwin critical evidence path", () => {
     expect(metadata.commercial.coverage.localityCandidateCount).toBe(14);
     expect(metadata.commercial.coverage.centralCorridorCount).toBe(5);
     expect(metadata.commercial.coverage.candidateCount).toBe(19);
+    expect(metadata.housing.daeguComplexRecords).toBe(9100);
+    expect(metadata.housing.daeguHouseholds).toBe(749768);
+    expect(metadata.housing.exactNameLinkedZoneCount).toBe(38);
+    expect(metadata.housing.householdCoveragePct).toBe(32.84);
   });
 
   test("keeps the map and review panel side by side at tablet-desktop width", async ({ page }) => {
