@@ -1,6 +1,32 @@
-import { expect, test } from "@playwright/test";
+import { expect, test, type Page } from "@playwright/test";
 import { analyzeFinancials } from "../../src/model";
 import type { LocalTwinState } from "../../src/types";
+
+type RegisteredLocalTwinTool = {
+  name: string;
+  execute?: (input: unknown) => Promise<unknown>;
+};
+
+type LocalTwinToolHost = Window & {
+  __localTwinTools?: RegisteredLocalTwinTool[];
+};
+
+async function executeLocalTwinTool<T>(
+  page: Page,
+  name: string,
+  input: unknown = {},
+) {
+  return page.evaluate(
+    async ({ toolName, toolInput }) => {
+      const tool = (window as LocalTwinToolHost).__localTwinTools?.find(
+        (item) => item.name === toolName,
+      );
+      if (!tool?.execute) throw new Error(`LocalTwin WebMCP tool not registered: ${toolName}`);
+      return tool.execute(toolInput);
+    },
+    { toolName: name, toolInput: input },
+  ) as Promise<T>;
+}
 
 test.describe("LocalTwin critical evidence path", () => {
   test("loads the spatial dashboard with the simplified map surface", async ({ page }) => {
@@ -146,6 +172,56 @@ test.describe("LocalTwin critical evidence path", () => {
     );
     expect(webMcpSnapshot.financial.semantics?.financialNumbers).toBe(
       "deterministic-src/model.ts",
+    );
+
+    const updatedRentKrw = activeScenario.assumptions.monthlyRentKrw + 700_000;
+    await executeLocalTwinTool(page, "set_business_assumptions", {
+      scenarioId: activeScenario.id,
+      monthlyRentKrw: updatedRentKrw,
+    });
+
+    await expect
+      .poll(async () => {
+        const state = await executeLocalTwinTool<LocalTwinState>(
+          page,
+          "get_localtwin_state",
+        );
+        return state.scenarios.find(
+          (scenario) => scenario.id === activeScenario.id,
+        )?.assumptions.monthlyRentKrw;
+      })
+      .toBe(updatedRentKrw);
+
+    const mutatedState = await executeLocalTwinTool<LocalTwinState>(
+      page,
+      "get_localtwin_state",
+    );
+    const mutatedFinancial = await executeLocalTwinTool<{
+      scenario: { id: string };
+      analysis: ReturnType<typeof analyzeFinancials>;
+    }>(page, "get_financial_analysis", { scenarioId: activeScenario.id });
+    const mutatedScenario = mutatedState.scenarios.find(
+      (scenario) => scenario.id === activeScenario.id,
+    );
+    expect(mutatedScenario).toBeDefined();
+    if (!mutatedScenario) throw new Error("Mutated scenario missing from WebMCP state.");
+
+    const mutatedCell = mutatedState.cells.find(
+      (cell) => cell.cellId === mutatedScenario.locationCellId,
+    );
+    expect(mutatedCell).toBeDefined();
+    if (!mutatedCell) throw new Error("Mutated cell missing from WebMCP state.");
+
+    expect(mutatedScenario.assumptions.monthlyRentKrw).toBe(updatedRentKrw);
+    expect(mutatedFinancial.analysis).toEqual(
+      analyzeFinancials(
+        mutatedScenario.assumptions,
+        mutatedCell.transitDemand,
+        mutatedScenario.stressPreset,
+      ),
+    );
+    expect(mutatedFinancial.analysis.monthlyBreakEvenRevenueKrw).not.toBe(
+      webMcpSnapshot.financial.analysis.monthlyBreakEvenRevenueKrw,
     );
 
     const context = await page.evaluate(async () => {
