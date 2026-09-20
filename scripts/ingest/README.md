@@ -107,6 +107,10 @@ missing citywide rent/search/living-population/card-spend observations.
    `public/data/parking.json`, retaining Daegu coordinates, supply spaces, operation/fee
    fields and provider identity while excluding phone numbers and free-text notes. Source
    management-number reuse is preserved and disambiguated with provider-aware canonical IDs.
+9. `integrate_official_parking.py` replaces the 11 public-map parking anchors with all
+   1,086 official Daegu parking coordinates, writes the lazy `parking_access` layer, and
+   preserves spaces as evidence without using capacity as a hidden scoring weight. Re-run
+   `derive_context_graph.py` afterwards to refresh zone/corridor parking-access scores.
 
 Raw national/Daegu source downloads are **not committed**. The committed snapshots contain
 only normalized data required to reproduce the product. Living-population, card-spend,

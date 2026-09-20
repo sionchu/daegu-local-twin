@@ -555,9 +555,15 @@ def main() -> int:
             },
             {
                 "key": "parking_official",
-                "status": "public-standard-dataset-identified-pending",
-                "source": "data.go.kr 전국주차장정보표준데이터",
+                "status": "available-citywide-official",
+                "source": "data.go.kr National Parking Standard Dataset",
+                "sourceUrl": "https://www.data.go.kr/data/15012896/standard.do",
                 "quality": "official",
+                "officialRecords": sum(
+                    1 for anchor in anchors_by_type.get("parking_access", [])
+                    if anchor.get("quality") == "official"
+                ),
+                "output": "parking.json + context_anchors/parking_access.json + zone_context_profiles.json",
             },
             {
                 "key": "workplace_population",
@@ -631,6 +637,13 @@ def main() -> int:
     args.graph_output.parent.mkdir(parents=True, exist_ok=True)
     args.corridor_profiles_output.parent.mkdir(parents=True, exist_ok=True)
     args.availability_output.parent.mkdir(parents=True, exist_ok=True)
+    if args.availability_output.exists():
+        existing_availability = load_json(args.availability_output)
+        generated_keys = {row.get("key") for row in availability_doc.get("datasets") or []}
+        for row in existing_availability.get("datasets") or []:
+            if row.get("key") not in generated_keys:
+                availability_doc["datasets"].append(row)
+
     args.profiles_output.write_text(
         json.dumps(profiles_doc, ensure_ascii=False, separators=(",", ":")) + "\n",
         encoding="utf-8",
