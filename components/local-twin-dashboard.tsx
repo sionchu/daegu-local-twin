@@ -303,20 +303,18 @@ const contextLayers: MapLayer[] = [
 const citywideCommercialLayers: MapLayer[] = [
   "commercialPotential",
   "workplaceEmployment",
+  "residentPopulation",
   "commercialDensity",
-  "businessDiversity",
   "transitHub",
-  "retailMarket",
-  "employmentPublic",
 ];
 
 const citywideContextLayers: MapLayer[] = [
-  "residentPopulation",
+  "retailMarket",
+  "parkingAccess",
   "education",
   "healthcare",
   "industrial",
   "cultureTourism",
-  "parkingAccess",
 ];
 
 const contextLayerProfileKey: Partial<
@@ -675,6 +673,46 @@ function CitywideContextPanel({
     };
   });
   const strongest = [...rows].sort((a, b) => b.score - a.score).slice(0, 4);
+  const candidateReasons = commercialZone
+    ? [
+        {
+          label: "점포밀도",
+          score: commercialZone.businessDensityScore,
+          detail: commercialZone.businessCount.toLocaleString("ko-KR") + "개 점포",
+        },
+        {
+          label: "직장수요",
+          score: profile.officialZoneSignals?.workplaceEmploymentScore ?? 0,
+          detail: profile.officialZoneSignals
+            ? profile.officialZoneSignals.workplaceEmployees.toLocaleString("ko-KR") + "명 종사자"
+            : "공식값 미연결",
+        },
+        {
+          label: "거주수요",
+          score: profile.officialZoneSignals?.residentPopulationScore ?? 0,
+          detail: profile.officialZoneSignals
+            ? profile.officialZoneSignals.residentPopulation.toLocaleString("ko-KR") + "명 거주"
+            : "공식값 미연결",
+        },
+        {
+          label: "교통접근",
+          score: commercialZone.transitScore,
+          detail: "교통거점 접근성",
+        },
+        {
+          label: "시장·집객",
+          score: commercialZone.retailMarketScore,
+          detail: "시장·대형점포 접근성",
+        },
+        {
+          label: "업종다양성",
+          score: commercialZone.businessDiversityScore,
+          detail: "SEMAS 업종구조",
+        },
+      ]
+        .sort((left, right) => right.score - left.score)
+        .slice(0, 3)
+    : [];
 
   return (
     <div className="space-y-4" data-testid="citywide-context-panel">
@@ -737,6 +775,35 @@ function CitywideContextPanel({
                 </Badge>
               </div>
 
+              {commercialZone.isCommercialCandidate ? (
+                <div
+                  className="mt-3 rounded-lg border border-emerald-300/12 bg-black/10 p-2.5"
+                  data-testid="candidate-rationale"
+                >
+                  <div className="text-[9px] font-semibold text-emerald-100">
+                    왜 후보인가
+                  </div>
+                  <div className="mt-2 grid gap-1.5 sm:grid-cols-3">
+                    {candidateReasons.map((reason) => (
+                      <div
+                        key={reason.label}
+                        className="rounded-md border border-white/6 bg-white/[0.025] px-2 py-1.5"
+                      >
+                        <div className="flex items-center justify-between gap-2 text-[9px]">
+                          <span className="font-medium text-slate-300">{reason.label}</span>
+                          <span className="font-semibold text-emerald-100">
+                            {Math.round(reason.score)}
+                          </span>
+                        </div>
+                        <div className="mt-0.5 truncate text-[8px] text-slate-600">
+                          {reason.detail}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              ) : null}
+
               <div className="mt-3 grid grid-cols-3 gap-2">
                 <MetricTile
                   label="상권잠재"
@@ -780,13 +847,7 @@ function CitywideContextPanel({
                   전역 후보 {candidateCount ?? "—"}개
                 </span>
                 <span className="rounded-full border border-white/8 px-2 py-1">
-                  검색관심: 직접관측 미확보
-                </span>
-                <span className="rounded-full border border-white/8 px-2 py-1">
-                  점포 임대료: 전역 직접매칭 미확보
-                </span>
-                <span className="rounded-full border border-white/8 px-2 py-1">
-                  생활인구·카드매출: 반출자료 대기
+                  전역 직접값 미확보: 검색·임대료·생활인구·카드·OD
                 </span>
               </div>
               <div className="mt-3 text-[9px] leading-4 text-slate-600">

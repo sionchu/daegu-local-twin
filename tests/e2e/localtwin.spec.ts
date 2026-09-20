@@ -45,8 +45,9 @@ test.describe("LocalTwin critical evidence path", () => {
     await expect(page.getByTestId("citywide-context-panel")).toBeVisible({ timeout: 20_000 });
     await expect(page.getByTestId("citywide-commercial-analysis")).toBeVisible();
     await expect(page.getByText("전역 후보 19개", { exact: true })).toBeVisible();
-    await expect(page.getByText(/검색관심: 직접관측 미확보/)).toBeVisible();
-    await expect(page.getByText(/생활인구·카드매출: 반출자료 대기/)).toBeVisible();
+    await expect(
+      page.getByText(/전역 직접값 미확보: 검색·임대료·생활인구·카드·OD/),
+    ).toBeVisible();
     await expect(page.getByText("구·군 주민등록인구", { exact: true })).toBeVisible();
     await expect(page.getByText("공식 학교", { exact: true })).toBeVisible();
     await expect(page.getByText("공식 의료시설", { exact: true })).toBeVisible();
@@ -81,9 +82,8 @@ test.describe("LocalTwin critical evidence path", () => {
     await expect(page.getByText("상업밀도", { exact: true }).first()).toBeVisible();
     await expect(page.getByText(/SEMAS 2026Q2 점포밀도 상대지표/)).toBeVisible();
 
-    await page.getByRole("button", { name: "업종다양성", exact: true }).click();
-    await expect(page.getByText("업종다양성", { exact: true }).first()).toBeVisible();
-    await expect(page.getByText(/SEMAS 2026Q2 업종다양성/)).toBeVisible();
+    await expect(page.getByTestId("candidate-rationale")).toBeVisible();
+    await expect(page.getByText("왜 후보인가", { exact: true })).toBeVisible();
 
     const metadata = await page.evaluate(async () => {
       const [
