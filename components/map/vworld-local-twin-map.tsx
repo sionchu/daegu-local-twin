@@ -1287,7 +1287,7 @@ export default function VWorldLocalTwinMap({
         </div>
         <div>
           {scope === "citywide"
-            ? "읍·면·동 권역을 클릭하면 배후시설 프로필을 확인합니다 · 공개지도 경계·앵커 기반 상대지표 · "
+            ? "읍·면·동 권역을 클릭하면 배후시설 프로필을 확인합니다 · 공식 SGIS 행정동 경계·공식/공개 앵커 기반 상대지표 · "
             : "권역에 마우스를 올리면 강조되고 클릭하면 후보가 선택됩니다 · 실제 도로·시장 기반 분석영역 · 공식 상권 경계 아님 · "}
           <a
             href="https://www.openstreetmap.org/copyright"

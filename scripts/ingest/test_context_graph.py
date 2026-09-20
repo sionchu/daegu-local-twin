@@ -137,6 +137,14 @@ class ContextGraphTest(unittest.TestCase):
             self.assertEqual(len(digest), 64)
             self.assertEqual(digest, provenance_by_id[source_id]["sourceSha256"])
         self.assertNotIn("학교급", provenance_by_id["official-school-registry"]["fieldsUsed"])
+        self.assertIn(
+            "공식 SGIS 2025Q2",
+            provenance_by_id["semas-citywide-business-2026q2"]["limitations"][1],
+        )
+        self.assertNotIn(
+            "교체 예정",
+            provenance_by_id["semas-citywide-business-2026q2"]["limitations"][1],
+        )
         self.assertEqual(
             businesses["source"]["sourceSha256"],
             provenance_by_id["semas-citywide-business-2026q2"]["sourceSha256"],

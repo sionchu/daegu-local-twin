@@ -504,7 +504,7 @@ def main() -> int:
             "quality": "public-map",
             "districtCount": len(candidate_counties),
             "zoneCount": len(zones),
-            "limitation": "대구 전역 P1 분석단위용 공개지도 경계이며 SGIS 공식 읍면동 경계로 교체 가능한 임시 canonical zone",
+            "limitation": "Overture division 기반 fallback 분석경계입니다. 현재 canonical 대구 전역 분석권역은 refresh_daegu_analysis_zones.py가 생성하는 공식 SGIS 2025Q2 행정동 경계입니다.",
         },
         "features": zones,
     }
