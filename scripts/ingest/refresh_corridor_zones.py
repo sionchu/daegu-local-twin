@@ -141,9 +141,12 @@ def build_zone(zone: dict) -> dict:
     ).intersection(clip)
 
     geom = geographic(corridor)
+    label_point = geom.representative_point()
     return {
         "type": "Feature",
         "properties": {
+            "labelLon": round(float(label_point.x), 7),
+            "labelLat": round(float(label_point.y), 7),
             "zoneId": zone["zoneId"],
             "label": zone["label"],
             "memberCellIds": zone["memberCellIds"],

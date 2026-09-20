@@ -14,3 +14,14 @@ coverage/
 data/raw/
 playwright-report/
 test-results/
+
+__pycache__/
+*.py[cod]
+public/maplibre-gl-worker.mjs
+public/maplibre-gl-shared.mjs
+
+# Local source downloads used only by ingestion; normalized snapshots live under public/data.
+/official-*.zip
+/official-*-download.csv
+/semas-daegu-*.csv
+/sgis_dong_extract/

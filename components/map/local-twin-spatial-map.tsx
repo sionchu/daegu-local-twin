@@ -11,7 +11,10 @@ type Props = {
   cells: LocationEvidence[];
   selectedCellId?: string;
   activeLayer: MapLayer;
+  scope?: "central" | "citywide";
+  selectedContextZoneId?: string;
   onSelect: (cellId: string) => void;
+  onContextSelect?: (zoneId: string) => void;
 };
 
 export default function LocalTwinSpatialMap(props: Props) {

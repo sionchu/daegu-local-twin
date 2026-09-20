@@ -54,6 +54,10 @@ class CorridorZonesTest(unittest.TestCase):
             self.assertGreater(max(lats) - min(lats), 0)
             self.assertTrue(all(128.55 < lon < 128.62 for lon in lons))
             self.assertTrue(all(35.84 < lat < 35.90 for lat in lats))
+            self.assertIn("labelLon", properties)
+            self.assertIn("labelLat", properties)
+            self.assertTrue(min(lons) <= float(properties["labelLon"]) <= max(lons))
+            self.assertTrue(min(lats) <= float(properties["labelLat"]) <= max(lats))
 
 
 if __name__ == "__main__":

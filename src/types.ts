@@ -26,7 +26,17 @@ export type MapLayer =
   | "buzz"
   | "spillover"
   | "regeneration"
-  | "rent";
+  | "rent"
+  | "education"
+  | "healthcare"
+  | "employmentPublic"
+  | "industrial"
+  | "transitHub"
+  | "retailMarket"
+  | "cultureTourism"
+  | "parkingAccess"
+  | "commercialDensity"
+  | "businessDiversity";
 
 export type LocationEvidence = {
   cellId: string;

@@ -32,7 +32,8 @@ function scoreForLayer(
   if (layer === "buzz") return scores.buzz;
   if (layer === "spillover") return scores.spillover;
   if (layer === "rent") return scores.rentRelief;
-  return cell.regenerationScore;
+  if (layer === "regeneration") return cell.regenerationScore;
+  return null;
 }
 
 function mix(a: number, b: number, t: number) {

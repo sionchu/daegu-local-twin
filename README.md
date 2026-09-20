@@ -3,7 +3,7 @@
 **대구 청년창업을 위한 3D 상권·자금 디지털트윈**
 
 LocalTwin Daegu는 단순히 “사람이 많은 곳”을 추천하는 상권분석기가 아니라,
-대구의 이동수요·Buzz·임대부담·도시재생 신호와 실제 창업비용을 함께 계산해
+대구의 이동수요·검색관심·임대부담·도시재생 신호와 실제 창업비용을 함께 계산해
 **내 조건으로 버틸 수 있는 입지**를 비교하는 2026 AI Blockchain Challenge in
 Daegu 프로토타입입니다.
 
@@ -37,7 +37,7 @@ actual deposit + rent + business assumptions
     ↓
 BEP · customers/day · required capture rate
     ↓
-12-month cash runway · payback · Funding Gap
+12-month cash runway · payback · funding gap
     ↓
 official support / guarantee / finance review candidates
 ```
@@ -47,11 +47,18 @@ official support / guarantee / finance review candidates
 Every source-backed value must remain distinguishable as `observed`, `official`,
 `modelled`, or `demo`.
 
-The current central-Daegu corridor is built from reviewed official/public snapshots:
+The central-Daegu decision view is built from reviewed official/public snapshots:
 SEMAS businesses, Daegu Metro station ridership, REB commercial rent/vacancy, NAVER
 DataLab five-topic relative search interest, official urban-decline indicators, SGIS
 administrative-dong boundaries, and OpenStreetMap road/market geometry used only for the
-map-derived visualization corridors. LocalTwin then derives cell-level mobility, rent
+map-derived visualization corridors.
+
+The Daegu-wide context view adds the official 2026Q2 SEMAS store structure, HIRA
+hospital/pharmacy coordinates, Daegu education-office school registry, Daegu registered
+factory registry, district resident-population totals, and the official SGIS 2025Q2
+150 administrative-dong polygons. Overture Places is used only to fill remaining
+anchor-coordinate gaps where no official spatial source is available. Source quality is
+preserved per record and per derived edge. LocalTwin then derives cell-level mobility, rent
 mapping, regeneration context, rent benchmarks, and spillover deterministically. Cells without
 an exact R-ONE commercial-area name use an explicitly modelled distance-decay blend of
 the exact-mapped official R-ONE benchmarks; this remains a benchmark, not a store quote.
@@ -81,6 +88,15 @@ Current product snapshots:
 - `public/data/buzz.json`
 - `public/data/footfall.json`
 - `public/data/support_programs.json`
+- `public/data/daegu_analysis_zones.geojson`
+- `public/data/context_anchors.json`
+- `public/data/context_anchors/*.json` (lazy client map layers)
+- `public/data/zone_context_profiles.json`
+- `public/data/corridor_context_profiles.json`
+- `public/data/zone_business_profiles.json`
+- `public/data/context_graph.json`
+- `public/data/context_data_availability.json`
+- `public/data/official_context_summary.json`
 
 Browser-based source collection is owned by the Codex Aside workflow. See
 [`docs/CRAWL_HANDOFF.md`](./docs/CRAWL_HANDOFF.md). Git-side code consumes only the
@@ -131,7 +147,7 @@ python -m unittest discover -s scripts/ingest -p 'test_*.py'
 python -m compileall -q scripts/ingest vision
 ```
 
-GitHub Actions also starts the production Next.js build in Chromium and verifies the critical evidence path: dashboard load, spatial-map contract, deferred chart loading, time slider, candidate finance recalculation, and funding inputs. CI has no VWorld key, so this path deliberately exercises the MapLibre fallback; production VWorld is checked separately in deployment QA. Failed browser runs retain screenshots, trace, video, and the HTML report as a short-lived Actions artifact.
+GitHub Actions also starts the production Next.js build in Chromium and verifies the critical evidence path: dashboard load, spatial-map contract, responsive map/review-panel layout, deferred chart loading, candidate finance recalculation, and funding inputs. CI has no VWorld key, so this path deliberately exercises the MapLibre fallback; production VWorld is checked separately in deployment QA. Failed browser runs retain screenshots, trace, video, and the HTML report as a short-lived Actions artifact.
 
 ## Optional vision pipeline
 
@@ -160,6 +176,8 @@ wholesale:
 - recent Next.js + MapLibre starter/toolkit patterns
 
 See [`THIRD_PARTY.md`](./THIRD_PARTY.md) for license and attribution notes.
+
+Commercial-area influence factors, anchor facilities, commuting profiles, ontology, and Graph-RAG boundaries are canonicalized in [`docs/COMMERCIAL_CONTEXT_MODEL.md`](./docs/COMMERCIAL_CONTEXT_MODEL.md).
 
 ## Prototype notice
 
