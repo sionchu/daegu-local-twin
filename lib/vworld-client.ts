@@ -10,11 +10,65 @@ declare global {
 }
 
 let scriptPromise: Promise<void> | null = null;
+let styleObserver: MutationObserver | null = null;
 
 function secureVWorldUrl(src: string) {
   const url = new URL(src, "https://map.vworld.kr/");
   if (url.hostname === "map.vworld.kr") url.protocol = "https:";
   return url.href;
+}
+
+function appendLayeredVWorldStylesheet(src: string) {
+  const secureHref = secureVWorldUrl(src);
+  const alreadyLoaded = Array.from(
+    document.querySelectorAll<HTMLStyleElement>("style[data-vworld-stylesheet]"),
+  ).some((style) => style.dataset.vworldStylesheet === secureHref);
+  if (alreadyLoaded) return;
+
+  const style = document.createElement("style");
+  style.dataset.vworldStylesheet = secureHref;
+  style.textContent = `@import url("${secureHref}") layer(vworld);`;
+  document.head.appendChild(style);
+}
+
+function isVWorldStylesheet(link: HTMLLinkElement) {
+  if (link.rel !== "stylesheet" || !link.href) return false;
+  try {
+    const url = new URL(link.href, window.location.href);
+    return url.hostname === "map.vworld.kr" && url.pathname.startsWith("/css/");
+  } catch {
+    return false;
+  }
+}
+
+function convertVWorldStylesheetLink(link: HTMLLinkElement) {
+  if (!isVWorldStylesheet(link)) return;
+  appendLayeredVWorldStylesheet(link.href);
+  link.remove();
+}
+
+function ensureVWorldStyleIsolation() {
+  document
+    .querySelectorAll<HTMLLinkElement>('link[rel="stylesheet"][href]')
+    .forEach(convertVWorldStylesheetLink);
+
+  if (styleObserver) return;
+
+  styleObserver = new MutationObserver((records) => {
+    for (const record of records) {
+      for (const node of Array.from(record.addedNodes)) {
+        if (node instanceof HTMLLinkElement) {
+          convertVWorldStylesheetLink(node);
+          continue;
+        }
+        if (!(node instanceof Element)) continue;
+        node
+          .querySelectorAll<HTMLLinkElement>('link[rel="stylesheet"][href]')
+          .forEach(convertVWorldStylesheetLink);
+      }
+    }
+  });
+  styleObserver.observe(document.head, { childList: true, subtree: true });
 }
 
 function loadExternalScript(src: string) {
@@ -41,6 +95,7 @@ function loadExternalScript(src: string) {
 }
 
 export function loadVWorld(apiKey: string) {
+  ensureVWorldStyleIsolation();
   if (window.vw && window.Cesium) return Promise.resolve();
   if (scriptPromise) return scriptPromise;
 
@@ -58,16 +113,7 @@ export function loadVWorld(apiKey: string) {
       template.content.querySelectorAll("link[rel=\"stylesheet\"][href]").forEach((child) => {
         const href = child.getAttribute("href");
         if (!href) return;
-        const secureHref = secureVWorldUrl(href);
-        const alreadyLoaded = Array.from(
-          document.querySelectorAll<HTMLStyleElement>("style[data-vworld-stylesheet]"),
-        ).some((style) => style.dataset.vworldStylesheet === secureHref);
-        if (alreadyLoaded) return;
-
-        const style = document.createElement("style");
-        style.dataset.vworldStylesheet = secureHref;
-        style.textContent = `@import url("${secureHref}") layer(vworld);`;
-        document.head.appendChild(style);
+        appendLayeredVWorldStylesheet(href);
       });
       template.content.querySelectorAll("script[src]").forEach((child) => {
         const src = child.getAttribute("src");
