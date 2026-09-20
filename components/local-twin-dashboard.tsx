@@ -435,15 +435,19 @@ function MetricTile({
   accent?: boolean;
 }) {
   return (
-    <div className="rounded-xl border border-white/8 bg-white/[0.035] p-3.5">
+    <div
+      className="min-w-0 rounded-xl border border-white/8 bg-white/[0.035] p-3.5"
+      data-testid="metric-tile"
+    >
       <div className="text-[11px] font-medium text-slate-500">
         {label}
       </div>
       <div
         className={
-          "mt-1 text-xl font-semibold tracking-tight " +
+          "mt-1 max-w-full whitespace-nowrap text-lg font-semibold leading-tight tracking-tight tabular-nums " +
           (accent ? "text-[color:var(--primary)]" : "text-slate-100")
         }
+        data-testid="metric-value"
       >
         {value}
       </div>
@@ -878,7 +882,7 @@ function CitywideContextPanel({
                 </div>
                 <Badge variant="outline">공식 snapshot</Badge>
               </div>
-              <div className="mt-3 grid grid-cols-2 gap-2 sm:grid-cols-4">
+              <div className="mt-3 grid grid-cols-2 gap-2 xl:grid-cols-4" data-testid="resident-metrics">
                 <MetricTile
                   label="거주인구"
                   value={profile.officialZoneSignals.residentPopulation.toLocaleString("ko-KR") + "명"}
@@ -932,7 +936,7 @@ function CitywideContextPanel({
                 </div>
                 <Badge variant="outline">공식 snapshot</Badge>
               </div>
-              <div className="mt-3 grid grid-cols-2 gap-2 sm:grid-cols-4">
+              <div className="mt-3 grid grid-cols-2 gap-2 xl:grid-cols-4" data-testid="workplace-metrics">
                 <MetricTile
                   label="종사자"
                   value={profile.officialZoneSignals.workplaceEmployees.toLocaleString("ko-KR") + "명"}
