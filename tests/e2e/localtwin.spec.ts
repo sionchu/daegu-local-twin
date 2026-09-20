@@ -302,6 +302,22 @@ test.describe("LocalTwin critical evidence path", () => {
     await expect(page.getByTestId("citywide-context-panel")).toBeVisible({ timeout: 20_000 });
     await expect(page.getByTestId("citywide-commercial-analysis")).toBeVisible();
     await expect(page.getByText("전역 후보 19개", { exact: true })).toBeVisible();
+
+    const candidateOverlay = page.getByTestId("citywide-candidate-overlay");
+    await expect(candidateOverlay).toBeVisible({ timeout: 20_000 });
+    await expect
+      .poll(async () =>
+        candidateOverlay.getByTestId("citywide-candidate-label").count(),
+      )
+      .toBeLessThanOrEqual(6);
+
+    const compactCandidateLabels = candidateOverlay.locator(
+      '[data-label-mode="rank"]',
+    );
+    const compactLabelTexts = await compactCandidateLabels.allTextContents();
+    for (const labelText of compactLabelTexts) {
+      expect(labelText.trim()).toMatch(/^#\d+\s*\d+$/);
+    }
     await expect(
       page.getByText(/전역 직접값 미확보: 검색·임대료·생활인구·카드·OD/),
     ).toBeVisible();
@@ -384,6 +400,41 @@ test.describe("LocalTwin critical evidence path", () => {
     expect(metadata.resident.sgisCoveragePct).toBe(100);
     expect(metadata.resident.population).toBe(2346277);
     expect(metadata.resident.populationChange).toBe(-1112);
+  });
+
+  test("keeps official snapshot metrics readable around the 640px breakpoint", async ({ page }) => {
+    await page.setViewportSize({ width: 646, height: 1000 });
+    await page.goto("/");
+    await page.getByRole("button", { name: "대구 전체", exact: true }).click();
+
+    const residentPanel = page.getByTestId("resident-population-panel");
+    const workplacePanel = page.getByTestId("workplace-employment-panel");
+    await residentPanel.scrollIntoViewIfNeeded();
+    await expect(residentPanel).toBeVisible();
+    await expect(workplacePanel).toBeVisible();
+
+    for (const testId of ["resident-metrics", "workplace-metrics"]) {
+      const grid = page.getByTestId(testId);
+      const columnCount = await grid.evaluate((element) =>
+        getComputedStyle(element).gridTemplateColumns
+          .split(" ")
+          .filter(Boolean).length,
+      );
+      expect(columnCount).toBe(2);
+    }
+
+    const overflowCount = await page
+      .locator(
+        '[data-testid="resident-population-panel"] [data-testid="metric-value"], ' +
+          '[data-testid="workplace-employment-panel"] [data-testid="metric-value"]',
+      )
+      .evaluateAll(
+        (values) =>
+          values.filter(
+            (value) => value.scrollWidth > value.clientWidth + 1,
+          ).length,
+      );
+    expect(overflowCount).toBe(0);
   });
 
   test("keeps the map and review panel side by side at tablet-desktop width", async ({ page }) => {
