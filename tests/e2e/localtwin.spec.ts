@@ -1,4 +1,6 @@
 import { expect, test } from "@playwright/test";
+import { analyzeFinancials } from "../../src/model";
+import type { LocalTwinState } from "../../src/types";
 
 test.describe("LocalTwin critical evidence path", () => {
   test("loads the spatial dashboard with the simplified map surface", async ({ page }) => {
@@ -86,21 +88,63 @@ test.describe("LocalTwin critical evidence path", () => {
       ]),
     );
 
-    const financial = await page.evaluate(async () => {
+    const webMcpSnapshot = (await page.evaluate(async () => {
       const host = window as typeof window & {
         __localTwinTools?: Array<{
           name: string;
           execute?: (input: unknown) => Promise<unknown>;
         }>;
       };
-      const tool = host.__localTwinTools?.find(
+      const stateTool = host.__localTwinTools?.find(
+        (item) => item.name === "get_localtwin_state",
+      );
+      const financialTool = host.__localTwinTools?.find(
         (item) => item.name === "get_financial_analysis",
       );
-      return (await tool?.execute?.({})) as {
+      if (!stateTool?.execute || !financialTool?.execute) {
+        throw new Error("Required LocalTwin WebMCP tools were not registered.");
+      }
+      const state = await stateTool.execute({});
+      const financial = await financialTool.execute({});
+      return { state, financial };
+    })) as {
+      state: LocalTwinState;
+      financial: {
+        scenario: { id: string };
+        analysis: ReturnType<typeof analyzeFinancials>;
+        baseAnalysis: ReturnType<typeof analyzeFinancials>;
         semantics?: { financialNumbers?: string };
       };
-    });
-    expect(financial.semantics?.financialNumbers).toBe(
+    };
+
+    const activeScenario = webMcpSnapshot.state.scenarios.find(
+      (scenario) => scenario.id === webMcpSnapshot.state.activeScenarioId,
+    );
+    expect(activeScenario).toBeDefined();
+    if (!activeScenario) throw new Error("Active scenario missing from WebMCP state.");
+
+    const activeCell = webMcpSnapshot.state.cells.find(
+      (cell) => cell.cellId === activeScenario.locationCellId,
+    );
+    expect(activeCell).toBeDefined();
+    if (!activeCell) throw new Error("Active cell missing from WebMCP state.");
+
+    expect(webMcpSnapshot.financial.scenario.id).toBe(activeScenario.id);
+    expect(webMcpSnapshot.financial.analysis).toEqual(
+      analyzeFinancials(
+        activeScenario.assumptions,
+        activeCell.transitDemand,
+        activeScenario.stressPreset,
+      ),
+    );
+    expect(webMcpSnapshot.financial.baseAnalysis).toEqual(
+      analyzeFinancials(
+        activeScenario.assumptions,
+        activeCell.transitDemand,
+        "base",
+      ),
+    );
+    expect(webMcpSnapshot.financial.semantics?.financialNumbers).toBe(
       "deterministic-src/model.ts",
     );
 
