@@ -122,6 +122,10 @@ missing citywide rent/search/living-population/card-spend observations.
    rows are explicitly aggregated to their documented parent eups rather than treated as
    separate analysis zones. `derive_context_graph.py` then embeds the raw population,
    monthly change, rank and rank-based relative intensity into the canonical zone profiles.
+12. `refresh_schoolinfo_capacity.py` normalizes Schoolinfo 2026 public basic-school and
+   gender-student responses for Daegu. It keeps 472 active/publication-target schools with
+   official coordinates and 471 official student-capacity records (228,756 students), while
+   excluding contact fields and leaving the single missing student capacity as null.
 
 Raw national/Daegu source downloads are **not committed**. The committed snapshots contain
 only normalized data required to reproduce the product. Living-population, card-spend,

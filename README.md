@@ -108,6 +108,7 @@ Current product snapshots:
 - `public/data/parking.json`
 - `public/data/workplace_employment.json`
 - `public/data/resident_population_dong.json`
+- `public/data/school_capacity.json`
 
 Browser-based source collection is owned by the Codex Aside workflow. See
 [`docs/CRAWL_HANDOFF.md`](./docs/CRAWL_HANDOFF.md). Git-side code consumes only the

@@ -374,6 +374,40 @@
       "sourceSha256": "C7074EC630A219CB6F0E256C58FC5568FBB13511742BA556944813DC1402D8D7"
     },
     {
+      "id": "schoolinfo-k12-capacity-2026",
+      "title": "학교알리미 2026 대구 초중등 활성학교 기본정보·성별 학생수",
+      "provider": "한국교육학술정보원 / 학교알리미",
+      "url": "https://www.schoolinfo.go.kr/ng/go/pnnggo_a01_l2.do",
+      "geographicLevel": "대구광역시교육청 소속 활성학교 472개",
+      "sourceVersion": "2026",
+      "sourceDate": "2026",
+      "retrievedAt": "2026-09-20T10:30:00Z",
+      "sourceSha256": "341E8FD1DA52201693E44ABF0DA079394782F69A39B93811BD16C7B724DC423D",
+      "fieldsUsed": [
+        "SCHUL_CODE",
+        "SCHUL_NM",
+        "SCHUL_KND_SC_CODE",
+        "SCHUL_CRSE_SC_VALUE_NM",
+        "ADRCD_CD",
+        "ADRCD_NM",
+        "SCHUL_RDNMA",
+        "LGTUD",
+        "LTTUD",
+        "SUM/COL_SUM",
+        "COL_MSUM*",
+        "COL_WSUM*"
+      ],
+      "limitations": [
+        "활성·비폐교·공시대상 학교만 정규화하며 472개 모두 학교알리미 공식 좌표를 사용한다.",
+        "471개 학교는 2026 성별 학생수 공시값이 있으며 총학생수 합계는 228,756명이다.",
+        "대구고등학교부설방송통신고등학교 1개교는 성별 학생수 공개응답이 없어 학생 capacity를 null로 유지한다.",
+        "학생수는 연간 공시값이며 실시간 등교인원·유동인구를 의미하지 않는다.",
+        "대학·전문대학의 재학생·교직원 capacity는 포함하지 않는다.",
+        "전화·팩스·홈페이지 등 분석에 불필요한 연락처는 정규화 결과에서 제외한다."
+      ],
+      "mode": "official-snapshot"
+    },
+    {
       "id": "official-healthcare-registry",
       "title": "전국 병의원 및 약국 현황 — 대구 추출",
       "provider": "건강보험심사평가원",

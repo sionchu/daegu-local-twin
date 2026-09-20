@@ -30,6 +30,20 @@
       "output": "official_context_summary.json + context_anchors.json"
     },
     {
+      "key": "school_capacity_official",
+      "status": "available-official-schoolinfo-2026",
+      "source": "학교알리미 2026 공개용데이터 학교기본정보 + 성별 학생수",
+      "sourceUrl": "https://www.schoolinfo.go.kr/ng/go/pnnggo_a01_l2.do",
+      "quality": "official",
+      "activeSchoolRecords": 472,
+      "officialCoordinateRecords": 472,
+      "studentCapacityRecords": 471,
+      "studentCapacityCoveragePct": 99.79,
+      "totalStudents": 228756,
+      "output": "school_capacity.json",
+      "limitation": "초중등 활성학교 기준이며 학생수는 연간 공시값; 대학 재학생·교직원은 별도 고등교육 데이터가 필요"
+    },
+    {
       "key": "factory_official",
       "status": "available-official-district-summary-partial-spatial-link",
       "source": "대구광역시 제조업체(공장등록업체)현황 2025-07-07",
