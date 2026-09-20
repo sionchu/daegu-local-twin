@@ -330,6 +330,173 @@
         "상권 경계나 사업성 판단 데이터가 아닙니다."
       ],
       "mode": "public-snapshot"
+    },
+    {
+      "id": "context-overture-places",
+      "title": "대구 전역 배후시설 공개지도 snapshot",
+      "provider": "Overture Maps Foundation",
+      "url": "https://overturemaps.org/",
+      "geographicLevel": "대구광역시",
+      "sourceVersion": "2026-08 Overture Places snapshot",
+      "sourceDate": "2026-08",
+      "fieldsUsed": [
+        "시설명",
+        "시설유형",
+        "경도",
+        "위도",
+        "confidence"
+      ],
+      "limitations": [
+        "공식 시설대장이 아닌 공개지도 POI이므로 공식 원천이 있는 학교·의료·공장은 별도 공식자료로 보강한다.",
+        "capacity가 없는 시설은 위치·밀도·접근성 신호에만 사용한다."
+      ],
+      "mode": "public-snapshot"
+    },
+    {
+      "id": "official-school-registry",
+      "title": "대구광역시교육청 학교현황",
+      "provider": "대구광역시교육청 / 공공데이터포털",
+      "url": "https://www.data.go.kr/data/15015254/fileData.do",
+      "geographicLevel": "대구광역시 학교",
+      "sourceVersion": "2026-04-01",
+      "sourceDate": "2026-04-01",
+      "fieldsUsed": [
+        "학교명",
+        "관할구군청",
+        "주소",
+        "우편번호"
+      ],
+      "limitations": [
+        "공식 파일에 좌표가 없어 정확명칭으로 공개지도 좌표와 연결된 학교만 공간 앵커로 승격한다.",
+        "연결 실패 학교를 임의 지오코딩하지 않는다."
+      ],
+      "mode": "official-snapshot",
+      "sourceSha256": "C7074EC630A219CB6F0E256C58FC5568FBB13511742BA556944813DC1402D8D7"
+    },
+    {
+      "id": "official-healthcare-registry",
+      "title": "전국 병의원 및 약국 현황 — 대구 추출",
+      "provider": "건강보험심사평가원",
+      "url": "https://opendata.hira.or.kr/op/opc/selectOpenData.do?sno=11925",
+      "geographicLevel": "대구광역시 의료기관·약국",
+      "sourceVersion": "2026-06",
+      "sourceDate": "2026-06-30",
+      "fieldsUsed": [
+        "요양기관명",
+        "종별",
+        "좌표",
+        "시군구",
+        "의사수/기관규모 가용필드"
+      ],
+      "limitations": [
+        "의료 접근성/배후시설 신호에 사용하며 환자수·매출·진료수요를 직접 의미하지 않는다."
+      ],
+      "mode": "official-snapshot",
+      "sourceSha256": "EED609C3EE13018D70367C83E84CDC456E91D7036CF68E6C72574DF1520C2907"
+    },
+    {
+      "id": "official-factory-registry",
+      "title": "대구광역시 제조업체(공장등록업체)현황",
+      "provider": "대구광역시 / 공공데이터포털",
+      "url": "https://www.data.go.kr/data/15069132/fileData.do",
+      "geographicLevel": "대구광역시 등록공장",
+      "sourceVersion": "2025-07-07",
+      "sourceDate": "2025-07-07",
+      "fieldsUsed": [
+        "회사명",
+        "공장대표주소(도로명)",
+        "단지명",
+        "업종명"
+      ],
+      "limitations": [
+        "공식 파일의 좌표가 제한되어 exact-name 공개지도 좌표 연결분만 산업 앵커에 사용한다.",
+        "구·군 공장수는 공식 요약값으로 별도 유지한다."
+      ],
+      "mode": "official-snapshot",
+      "sourceSha256": "C698CC5DDCB4E5DC92791CF09E5201E71CC410B3095151A23103939347D95D3A"
+    },
+    {
+      "id": "official-resident-population",
+      "title": "대구광역시 주민등록인구및세대현황",
+      "provider": "대구광역시 / 공공데이터포털",
+      "url": "https://www.data.go.kr/data/3077757/fileData.do",
+      "geographicLevel": "구·군",
+      "sourceVersion": "2026-05-31",
+      "sourceDate": "2026-05-31",
+      "fieldsUsed": [
+        "인구",
+        "세대",
+        "남녀 인구"
+      ],
+      "limitations": [
+        "구·군 수준이므로 개별 동/상권의 생활인구 또는 베드타운 판정에 단독 사용하지 않는다."
+      ],
+      "mode": "official-snapshot",
+      "sourceSha256": "A92569BB169A325324C3A8F49AE602795CD1A37FCB49A982ED49C46C17849C03"
+    },
+    {
+      "id": "semas-citywide-business-2026q2",
+      "title": "소상공인시장진흥공단 상가(상권)정보 — 대구 전역",
+      "provider": "소상공인시장진흥공단 / 공공데이터포털",
+      "url": "https://www.data.go.kr/data/15083033/fileData.do",
+      "geographicLevel": "대구광역시 점포",
+      "sourceVersion": "20260630",
+      "sourceDate": "2026-06-30",
+      "fieldsUsed": [
+        "상가업소번호",
+        "업종 대·중·소분류",
+        "행정동",
+        "도로명주소",
+        "경도",
+        "위도"
+      ],
+      "limitations": [
+        "영업 중 업소 구조를 나타내며 매출·폐업위험·성공확률을 의미하지 않는다.",
+        "전역 locality는 현재 공개지도 polygon에 공간집계되며 공식 SGIS 경계로 교체 예정이다."
+      ],
+      "mode": "official-snapshot",
+      "sourceSha256": "57AA361544108FF4FC73334F87D2CED61E41FE8638DD70BCD842930F865D2386"
+    },
+    {
+      "id": "context-evidence-graph",
+      "title": "대구 상권 배후시설·상업구조 증거 그래프",
+      "provider": "LocalTwin deterministic model",
+      "url": "https://github.com/sionchu/daegu-local-twin",
+      "geographicLevel": "155 analysis zones",
+      "sourceVersion": "context-graph-v1",
+      "sourceDate": "2026-09-20",
+      "fieldsUsed": [
+        "NEAR distance-decay edges",
+        "HAS_BUSINESS_PROFILE edges",
+        "anchor evidence quality"
+      ],
+      "limitations": [
+        "NEAR는 인과관계가 아니다.",
+        "생활인구·카드·OD가 확보되기 전에는 ATTRACTS/SUITABLE_FOR 및 업무지구/베드타운 최종판정을 생성하지 않는다."
+      ],
+      "mode": "modelled"
+    },
+    {
+      "id": "context-sgis-zones",
+      "title": "SGIS 2025년 2분기 대구광역시 행정동 경계",
+      "provider": "국가데이터처 / SGIS / 공공데이터포털",
+      "url": "https://www.data.go.kr/data/15129688/fileData.do",
+      "sourceUrl": "https://www.data.go.kr/data/15129688/fileData.do",
+      "geographicLevel": "대구광역시 행정동 150개",
+      "sourceVersion": "2025-06-30",
+      "sourceDate": "2025-06-30",
+      "accessMode": "official-file-snapshot",
+      "fieldsUsed": [
+        "ADM_CD",
+        "ADM_NM",
+        "geometry"
+      ],
+      "limitations": [
+        "2025-06-30 기준 행정동 경계 snapshot이며 실시간 경계가 아님",
+        "행정동은 분석단위이며 공식 상권 경계와 동일하지 않음"
+      ],
+      "mode": "official-snapshot",
+      "sourceSha256": "F1CF0F9DE453AC7EAACB273F39CEE52851183372B9DDFDA428A967C3A670B2C6"
     }
   ],
   "privacyBoundary": [

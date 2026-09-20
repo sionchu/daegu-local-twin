@@ -1,0 +1,112 @@
+{
+  "schemaVersion": 1,
+  "generatedAt": "2026-09-20T03:35:00Z",
+  "geography": "대구광역시",
+  "datasets": [
+    {
+      "key": "anchor_places",
+      "status": "available-citywide",
+      "source": "Overture Places",
+      "quality": "public-map",
+      "output": "context_anchors.json"
+    },
+    {
+      "key": "analysis_zones",
+      "status": "available-citywide-official",
+      "source": "SGIS 2025Q2 행정동 경계",
+      "sourceUrl": "https://www.data.go.kr/data/15129688/fileData.do",
+      "quality": "official",
+      "officialRecords": 150,
+      "output": "daegu_analysis_zones.geojson"
+    },
+    {
+      "key": "school_official",
+      "status": "available-official-registry-partial-spatial-link",
+      "source": "대구광역시교육청 학교현황 2026-04-01",
+      "sourceUrl": "https://www.data.go.kr/data/15015254/fileData.do",
+      "quality": "official + public-map-coordinate-link",
+      "officialRecords": 482,
+      "spatiallyLinked": 330,
+      "output": "official_context_summary.json + context_anchors.json"
+    },
+    {
+      "key": "factory_official",
+      "status": "available-official-district-summary-partial-spatial-link",
+      "source": "대구광역시 제조업체(공장등록업체)현황 2025-07-07",
+      "sourceUrl": "https://www.data.go.kr/data/15069132/fileData.do",
+      "quality": "official + public-map-coordinate-link",
+      "officialRecords": 11744,
+      "spatiallyLinked": 75,
+      "output": "official_context_summary.json + context_anchors.json"
+    },
+    {
+      "key": "businesses_official",
+      "status": "available-citywide-official-snapshot",
+      "source": "SEMAS 상가(상권)정보 2026-06-30",
+      "sourceUrl": "https://www.data.go.kr/data/15083033/fileData.do",
+      "quality": "official-snapshot",
+      "officialRecords": 118357,
+      "mappedLocalityRecords": 118357,
+      "output": "zone_business_profiles.json + context_graph.json"
+    },
+    {
+      "key": "parking_official",
+      "status": "public-standard-dataset-identified-pending",
+      "source": "data.go.kr 전국주차장정보표준데이터",
+      "quality": "official"
+    },
+    {
+      "key": "workplace_population",
+      "status": "missing",
+      "source": "SGIS/KOSIS workplace or employee statistics",
+      "quality": "official-needed"
+    },
+    {
+      "key": "resident_population",
+      "status": "available-district-level-only",
+      "source": "대구광역시 주민등록인구및세대현황 2026-05-31",
+      "sourceUrl": "https://www.data.go.kr/data/3077757/fileData.do",
+      "quality": "official",
+      "output": "official_context_summary.json",
+      "limitation": "구·군 단위이므로 동/권역 생활성격 판정에는 단독 사용하지 않음"
+    },
+    {
+      "key": "healthcare_official",
+      "status": "available-official-citywide",
+      "source": "건강보험심사평가원 전국 병의원 및 약국 현황 2026-06",
+      "sourceUrl": "https://opendata.hira.or.kr/op/opc/selectOpenData.do?sno=11925",
+      "quality": "official",
+      "officialRecords": 5649,
+      "coordinateQuality": "official",
+      "output": "context_anchors.json + official_context_summary.json"
+    },
+    {
+      "key": "living_population",
+      "status": "controlled-data-slot",
+      "source": "D-데이터허브 / DIP telecom living population 2020.01~2025.09",
+      "quality": "controlled",
+      "commitPolicy": "approved aggregate export only"
+    },
+    {
+      "key": "card_spend",
+      "status": "controlled-data-slot",
+      "source": "D-데이터허브 / DIP card transactions",
+      "quality": "controlled",
+      "commitPolicy": "approved aggregate export only"
+    },
+    {
+      "key": "commute_od",
+      "status": "controlled-or-historical-slot",
+      "source": "D-데이터허브 / DIP OD datasets",
+      "quality": "controlled/historical",
+      "commitPolicy": "approved aggregate export only; do not present old OD as current"
+    },
+    {
+      "key": "visitor_population",
+      "status": "controlled-data-slot",
+      "source": "D-데이터허브 / DIP telecom visitor population through 2025-09",
+      "quality": "controlled",
+      "commitPolicy": "approved aggregate export only"
+    }
+  ]
+}

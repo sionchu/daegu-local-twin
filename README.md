@@ -47,11 +47,18 @@ official support / guarantee / finance review candidates
 Every source-backed value must remain distinguishable as `observed`, `official`,
 `modelled`, or `demo`.
 
-The current central-Daegu corridor is built from reviewed official/public snapshots:
+The central-Daegu decision view is built from reviewed official/public snapshots:
 SEMAS businesses, Daegu Metro station ridership, REB commercial rent/vacancy, NAVER
 DataLab five-topic relative search interest, official urban-decline indicators, SGIS
 administrative-dong boundaries, and OpenStreetMap road/market geometry used only for the
-map-derived visualization corridors. LocalTwin then derives cell-level mobility, rent
+map-derived visualization corridors.
+
+The Daegu-wide context view adds the official 2026Q2 SEMAS store structure, HIRA
+hospital/pharmacy coordinates, Daegu education-office school registry, Daegu registered
+factory registry, district resident-population totals, and the official SGIS 2025Q2
+150 administrative-dong polygons. Overture Places is used only to fill remaining
+anchor-coordinate gaps where no official spatial source is available. Source quality is
+preserved per record and per derived edge. LocalTwin then derives cell-level mobility, rent
 mapping, regeneration context, rent benchmarks, and spillover deterministically. Cells without
 an exact R-ONE commercial-area name use an explicitly modelled distance-decay blend of
 the exact-mapped official R-ONE benchmarks; this remains a benchmark, not a store quote.
@@ -81,6 +88,15 @@ Current product snapshots:
 - `public/data/buzz.json`
 - `public/data/footfall.json`
 - `public/data/support_programs.json`
+- `public/data/daegu_analysis_zones.geojson`
+- `public/data/context_anchors.json`
+- `public/data/context_anchors/*.json` (lazy client map layers)
+- `public/data/zone_context_profiles.json`
+- `public/data/corridor_context_profiles.json`
+- `public/data/zone_business_profiles.json`
+- `public/data/context_graph.json`
+- `public/data/context_data_availability.json`
+- `public/data/official_context_summary.json`
 
 Browser-based source collection is owned by the Codex Aside workflow. See
 [`docs/CRAWL_HANDOFF.md`](./docs/CRAWL_HANDOFF.md). Git-side code consumes only the

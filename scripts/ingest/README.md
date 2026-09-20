@@ -64,6 +64,32 @@ The committed NAVER DataLab snapshot compares five topics in one public result:
 cells therefore have a mapped relative-interest level and momentum; these are relative
 search-interest indices, not visit counts or sales.
 
+## Daegu-wide commercial context
+
+The citywide context pipeline deliberately separates official registries, public-map
+coordinates, and controlled data.
+
+1. `normalize_overture_context.py` normalizes Overture Places to
+   `context_anchors.json`. Its locality output is only a fallback/debug artifact
+   (`overture_context_zones.geojson`), not the canonical analysis-zone geometry.
+2. `refresh_daegu_analysis_zones.py` converts the official SGIS 2025Q2
+   `bnd_dong` Shapefile (EPSG:5179) into the canonical WGS84
+   `daegu_analysis_zones.geojson`: exactly 150 official Daegu administrative dongs.
+3. `enrich_official_context.py` enriches/replaces anchors with downloaded public
+   registries: Daegu schools, registered factories, district resident population, and
+   HIRA hospitals/pharmacies. It also writes compact per-layer client JSON under
+   `public/data/context_anchors/`.
+4. `derive_citywide_business_profiles.py` aggregates the official SEMAS 2026Q2 Daegu
+   business CSV (118,357 rows) into the 150 official SGIS zones and five model corridors.
+   All 118,357 valid Daegu business points currently map to an official SGIS locality.
+5. `derive_context_graph.py` derives distance-decay anchor signals, official business
+   structure, `NEAR` edges and `HAS_BUSINESS_PROFILE` edges.
+
+Raw national/Daegu source downloads are **not committed**. The committed snapshots contain
+only normalized data required to reproduce the product. Living-population, card-spend,
+visitor-population and commuting-OD remain controlled-data slots until an approved DIP
+aggregate export is available; the pipeline never fabricates those fields.
+
 ## Cell market evidence derivation
 
 After transit, REB, and NAVER snapshots are refreshed, regenerate the remaining market

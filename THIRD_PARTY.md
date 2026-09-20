@@ -25,6 +25,10 @@ data governed by their own licenses and terms.
   render-range limiting and real road/market geometry used to derive the LocalTwin
   visualization corridors. The buffered corridors are modelled overlays, not official
   commercial-area boundaries. Preserve OpenStreetMap attribution and ODbL terms.
+- **Overture Maps Foundation** provides the temporary Daegu-wide locality polygons and
+  public-map POIs used only where a more authoritative coordinate registry is not yet
+  available. Places/division source quality is preserved and official HIRA/education/
+  factory data takes precedence when it can be linked.
 - **OpenFreeMap** provides the hosted style/vector source used by the fallback renderer.
   Map data is OpenStreetMap-derived; preserve the provider/OpenStreetMap attribution
   shown by the map and review provider terms before production-scale use.
