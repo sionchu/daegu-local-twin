@@ -1,0 +1,1446 @@
+{
+  "schemaVersion": 1,
+  "generatedAt": "2026-09-20T09:47:29Z",
+  "source": {
+    "provider": "국가데이터처 / KOSIS",
+    "publication": "전국사업체조사",
+    "table": "읍면동 산업대분류별 총괄",
+    "sourceYear": 2024,
+    "url": "https://kosis.kr/upsHtml/online.do?isOnline=Y&PART=G&isNew=Y&dev=Y",
+    "downloadUrl": "https://kosis.kr/upsHtml/online/downSrvcFile.do?PUBCODE=ZY&SEQ=539&FILE_NAME=0224.xlsx",
+    "pubcode": "ZY",
+    "chapterId": "0224",
+    "seq": 539,
+    "retrievedAt": "2026-09-20T09:47:29Z",
+    "sourceSha256": "C4E9D5EC7084477F7E2597C1242DA41A34B518D09841484C5889EDA0B7DBA3B5"
+  },
+  "coverage": {
+    "city": "대구광역시",
+    "districtCount": 9,
+    "zoneCount": 150,
+    "sgisCodeMatchedZones": 150,
+    "sgisCoveragePct": 100.0,
+    "businesses": 286841,
+    "employees": 1021246,
+    "nameMismatchCount": 0
+  },
+  "cityTotal": {
+    "businesses": 286841,
+    "employees": 1021246
+  },
+  "byDistrict": [
+    {
+      "administrativeCode": "220100",
+      "district": "중구",
+      "businesses": 26054,
+      "employees": 91314
+    },
+    {
+      "administrativeCode": "220200",
+      "district": "동구",
+      "businesses": 37478,
+      "employees": 123427
+    },
+    {
+      "administrativeCode": "220300",
+      "district": "서구",
+      "businesses": 22295,
+      "employees": 80032
+    },
+    {
+      "administrativeCode": "220400",
+      "district": "남구",
+      "businesses": 17943,
+      "employees": 61255
+    },
+    {
+      "administrativeCode": "220500",
+      "district": "북구",
+      "businesses": 53273,
+      "employees": 174688
+    },
+    {
+      "administrativeCode": "220600",
+      "district": "수성구",
+      "businesses": 38766,
+      "employees": 145852
+    },
+    {
+      "administrativeCode": "220700",
+      "district": "달서구",
+      "businesses": 60319,
+      "employees": 217488
+    },
+    {
+      "administrativeCode": "225100",
+      "district": "달성군",
+      "businesses": 27180,
+      "employees": 117136
+    },
+    {
+      "administrativeCode": "225200",
+      "district": "군위군",
+      "businesses": 3533,
+      "employees": 10054
+    }
+  ],
+  "records": [
+    {
+      "zoneId": "sgis-dong:22010540",
+      "administrativeCode": "22010540",
+      "district": "중구",
+      "label": "삼덕동",
+      "sourceLabel": "삼덕동",
+      "businesses": 2142,
+      "employees": 11839
+    },
+    {
+      "zoneId": "sgis-dong:22010560",
+      "administrativeCode": "22010560",
+      "district": "중구",
+      "label": "성내1동",
+      "sourceLabel": "성내1동",
+      "businesses": 5136,
+      "employees": 16473
+    },
+    {
+      "zoneId": "sgis-dong:22010590",
+      "administrativeCode": "22010590",
+      "district": "중구",
+      "label": "성내2동",
+      "sourceLabel": "성내2동",
+      "businesses": 4494,
+      "employees": 19378
+    },
+    {
+      "zoneId": "sgis-dong:22010610",
+      "administrativeCode": "22010610",
+      "district": "중구",
+      "label": "성내3동",
+      "sourceLabel": "성내3동",
+      "businesses": 1617,
+      "employees": 4054
+    },
+    {
+      "zoneId": "sgis-dong:22010620",
+      "administrativeCode": "22010620",
+      "district": "중구",
+      "label": "대신동",
+      "sourceLabel": "대신동",
+      "businesses": 4217,
+      "employees": 5886
+    },
+    {
+      "zoneId": "sgis-dong:22010640",
+      "administrativeCode": "22010640",
+      "district": "중구",
+      "label": "남산1동",
+      "sourceLabel": "남산1동",
+      "businesses": 1249,
+      "employees": 3734
+    },
+    {
+      "zoneId": "sgis-dong:22010650",
+      "administrativeCode": "22010650",
+      "district": "중구",
+      "label": "남산2동",
+      "sourceLabel": "남산2동",
+      "businesses": 1176,
+      "employees": 5200
+    },
+    {
+      "zoneId": "sgis-dong:22010660",
+      "administrativeCode": "22010660",
+      "district": "중구",
+      "label": "남산3동",
+      "sourceLabel": "남산3동",
+      "businesses": 617,
+      "employees": 1643
+    },
+    {
+      "zoneId": "sgis-dong:22010670",
+      "administrativeCode": "22010670",
+      "district": "중구",
+      "label": "남산4동",
+      "sourceLabel": "남산4동",
+      "businesses": 987,
+      "employees": 3998
+    },
+    {
+      "zoneId": "sgis-dong:22010680",
+      "administrativeCode": "22010680",
+      "district": "중구",
+      "label": "대봉1동",
+      "sourceLabel": "대봉1동",
+      "businesses": 1658,
+      "employees": 6195
+    },
+    {
+      "zoneId": "sgis-dong:22010690",
+      "administrativeCode": "22010690",
+      "district": "중구",
+      "label": "대봉2동",
+      "sourceLabel": "대봉2동",
+      "businesses": 544,
+      "employees": 1844
+    },
+    {
+      "zoneId": "sgis-dong:22010700",
+      "administrativeCode": "22010700",
+      "district": "중구",
+      "label": "동인동",
+      "sourceLabel": "동인동",
+      "businesses": 2217,
+      "employees": 11070
+    },
+    {
+      "zoneId": "sgis-dong:22020510",
+      "administrativeCode": "22020510",
+      "district": "동구",
+      "label": "신암1동",
+      "sourceLabel": "신암1동",
+      "businesses": 991,
+      "employees": 2213
+    },
+    {
+      "zoneId": "sgis-dong:22020520",
+      "administrativeCode": "22020520",
+      "district": "동구",
+      "label": "신암2동",
+      "sourceLabel": "신암2동",
+      "businesses": 829,
+      "employees": 2474
+    },
+    {
+      "zoneId": "sgis-dong:22020530",
+      "administrativeCode": "22020530",
+      "district": "동구",
+      "label": "신암3동",
+      "sourceLabel": "신암3동",
+      "businesses": 889,
+      "employees": 2103
+    },
+    {
+      "zoneId": "sgis-dong:22020540",
+      "administrativeCode": "22020540",
+      "district": "동구",
+      "label": "신암4동",
+      "sourceLabel": "신암4동",
+      "businesses": 1355,
+      "employees": 5656
+    },
+    {
+      "zoneId": "sgis-dong:22020550",
+      "administrativeCode": "22020550",
+      "district": "동구",
+      "label": "신암5동",
+      "sourceLabel": "신암5동",
+      "businesses": 713,
+      "employees": 3443
+    },
+    {
+      "zoneId": "sgis-dong:22020560",
+      "administrativeCode": "22020560",
+      "district": "동구",
+      "label": "신천1·2동",
+      "sourceLabel": "신천1.2동",
+      "businesses": 1000,
+      "employees": 2727
+    },
+    {
+      "zoneId": "sgis-dong:22020580",
+      "administrativeCode": "22020580",
+      "district": "동구",
+      "label": "신천3동",
+      "sourceLabel": "신천3동",
+      "businesses": 2190,
+      "employees": 10005
+    },
+    {
+      "zoneId": "sgis-dong:22020590",
+      "administrativeCode": "22020590",
+      "district": "동구",
+      "label": "신천4동",
+      "sourceLabel": "신천4동",
+      "businesses": 2890,
+      "employees": 11860
+    },
+    {
+      "zoneId": "sgis-dong:22020600",
+      "administrativeCode": "22020600",
+      "district": "동구",
+      "label": "효목1동",
+      "sourceLabel": "효목1동",
+      "businesses": 1864,
+      "employees": 4145
+    },
+    {
+      "zoneId": "sgis-dong:22020610",
+      "administrativeCode": "22020610",
+      "district": "동구",
+      "label": "효목2동",
+      "sourceLabel": "효목2동",
+      "businesses": 1862,
+      "employees": 4897
+    },
+    {
+      "zoneId": "sgis-dong:22020620",
+      "administrativeCode": "22020620",
+      "district": "동구",
+      "label": "도평동",
+      "sourceLabel": "도평동",
+      "businesses": 499,
+      "employees": 1188
+    },
+    {
+      "zoneId": "sgis-dong:22020630",
+      "administrativeCode": "22020630",
+      "district": "동구",
+      "label": "불로·봉무동",
+      "sourceLabel": "불로.봉무동",
+      "businesses": 2499,
+      "employees": 7568
+    },
+    {
+      "zoneId": "sgis-dong:22020650",
+      "administrativeCode": "22020650",
+      "district": "동구",
+      "label": "지저동",
+      "sourceLabel": "지저동",
+      "businesses": 1361,
+      "employees": 3468
+    },
+    {
+      "zoneId": "sgis-dong:22020660",
+      "administrativeCode": "22020660",
+      "district": "동구",
+      "label": "동촌동",
+      "sourceLabel": "동촌동",
+      "businesses": 1420,
+      "employees": 4535
+    },
+    {
+      "zoneId": "sgis-dong:22020680",
+      "administrativeCode": "22020680",
+      "district": "동구",
+      "label": "방촌동",
+      "sourceLabel": "방촌동",
+      "businesses": 1687,
+      "employees": 3662
+    },
+    {
+      "zoneId": "sgis-dong:22020690",
+      "administrativeCode": "22020690",
+      "district": "동구",
+      "label": "해안동",
+      "sourceLabel": "해안동",
+      "businesses": 1802,
+      "employees": 5277
+    },
+    {
+      "zoneId": "sgis-dong:22020710",
+      "administrativeCode": "22020710",
+      "district": "동구",
+      "label": "공산동",
+      "sourceLabel": "공산동",
+      "businesses": 1705,
+      "employees": 5190
+    },
+    {
+      "zoneId": "sgis-dong:22020730",
+      "administrativeCode": "22020730",
+      "district": "동구",
+      "label": "안심1동",
+      "sourceLabel": "안심1동",
+      "businesses": 3566,
+      "employees": 8579
+    },
+    {
+      "zoneId": "sgis-dong:22020740",
+      "administrativeCode": "22020740",
+      "district": "동구",
+      "label": "안심2동",
+      "sourceLabel": "안심2동",
+      "businesses": 2031,
+      "employees": 8452
+    },
+    {
+      "zoneId": "sgis-dong:22020760",
+      "administrativeCode": "22020760",
+      "district": "동구",
+      "label": "안심3동",
+      "sourceLabel": "안심3동",
+      "businesses": 1614,
+      "employees": 4950
+    },
+    {
+      "zoneId": "sgis-dong:22020770",
+      "administrativeCode": "22020770",
+      "district": "동구",
+      "label": "안심4동",
+      "sourceLabel": "안심4동",
+      "businesses": 2621,
+      "employees": 8470
+    },
+    {
+      "zoneId": "sgis-dong:22020780",
+      "administrativeCode": "22020780",
+      "district": "동구",
+      "label": "혁신동",
+      "sourceLabel": "혁신동",
+      "businesses": 2090,
+      "employees": 12565
+    },
+    {
+      "zoneId": "sgis-dong:22030510",
+      "administrativeCode": "22030510",
+      "district": "서구",
+      "label": "내당1동",
+      "sourceLabel": "내당1동",
+      "businesses": 1055,
+      "employees": 4804
+    },
+    {
+      "zoneId": "sgis-dong:22030520",
+      "administrativeCode": "22030520",
+      "district": "서구",
+      "label": "내당2·3동",
+      "sourceLabel": "내당2.3동",
+      "businesses": 1013,
+      "employees": 2496
+    },
+    {
+      "zoneId": "sgis-dong:22030530",
+      "administrativeCode": "22030530",
+      "district": "서구",
+      "label": "내당4동",
+      "sourceLabel": "내당4동",
+      "businesses": 1658,
+      "employees": 4830
+    },
+    {
+      "zoneId": "sgis-dong:22030540",
+      "administrativeCode": "22030540",
+      "district": "서구",
+      "label": "비산1동",
+      "sourceLabel": "비산1동",
+      "businesses": 556,
+      "employees": 946
+    },
+    {
+      "zoneId": "sgis-dong:22030550",
+      "administrativeCode": "22030550",
+      "district": "서구",
+      "label": "비산2·3동",
+      "sourceLabel": "비산2.3동",
+      "businesses": 980,
+      "employees": 2712
+    },
+    {
+      "zoneId": "sgis-dong:22030560",
+      "administrativeCode": "22030560",
+      "district": "서구",
+      "label": "비산4동",
+      "sourceLabel": "비산4동",
+      "businesses": 774,
+      "employees": 2199
+    },
+    {
+      "zoneId": "sgis-dong:22030570",
+      "administrativeCode": "22030570",
+      "district": "서구",
+      "label": "비산5동",
+      "sourceLabel": "비산5동",
+      "businesses": 575,
+      "employees": 1339
+    },
+    {
+      "zoneId": "sgis-dong:22030580",
+      "administrativeCode": "22030580",
+      "district": "서구",
+      "label": "비산6동",
+      "sourceLabel": "비산6동",
+      "businesses": 521,
+      "employees": 1147
+    },
+    {
+      "zoneId": "sgis-dong:22030590",
+      "administrativeCode": "22030590",
+      "district": "서구",
+      "label": "비산7동",
+      "sourceLabel": "비산7동",
+      "businesses": 2208,
+      "employees": 10617
+    },
+    {
+      "zoneId": "sgis-dong:22030600",
+      "administrativeCode": "22030600",
+      "district": "서구",
+      "label": "평리1동",
+      "sourceLabel": "평리1동",
+      "businesses": 771,
+      "employees": 1946
+    },
+    {
+      "zoneId": "sgis-dong:22030610",
+      "administrativeCode": "22030610",
+      "district": "서구",
+      "label": "평리2동",
+      "sourceLabel": "평리2동",
+      "businesses": 548,
+      "employees": 1453
+    },
+    {
+      "zoneId": "sgis-dong:22030620",
+      "administrativeCode": "22030620",
+      "district": "서구",
+      "label": "평리3동",
+      "sourceLabel": "평리3동",
+      "businesses": 1382,
+      "employees": 5323
+    },
+    {
+      "zoneId": "sgis-dong:22030630",
+      "administrativeCode": "22030630",
+      "district": "서구",
+      "label": "평리4동",
+      "sourceLabel": "평리4동",
+      "businesses": 2181,
+      "employees": 6389
+    },
+    {
+      "zoneId": "sgis-dong:22030640",
+      "administrativeCode": "22030640",
+      "district": "서구",
+      "label": "평리5동",
+      "sourceLabel": "평리5동",
+      "businesses": 678,
+      "employees": 4501
+    },
+    {
+      "zoneId": "sgis-dong:22030650",
+      "administrativeCode": "22030650",
+      "district": "서구",
+      "label": "평리6동",
+      "sourceLabel": "평리6동",
+      "businesses": 615,
+      "employees": 2321
+    },
+    {
+      "zoneId": "sgis-dong:22030660",
+      "administrativeCode": "22030660",
+      "district": "서구",
+      "label": "상중이동",
+      "sourceLabel": "상중이동",
+      "businesses": 5624,
+      "employees": 24018
+    },
+    {
+      "zoneId": "sgis-dong:22030680",
+      "administrativeCode": "22030680",
+      "district": "서구",
+      "label": "원대동",
+      "sourceLabel": "원대동",
+      "businesses": 1156,
+      "employees": 2991
+    },
+    {
+      "zoneId": "sgis-dong:22040510",
+      "administrativeCode": "22040510",
+      "district": "남구",
+      "label": "이천동",
+      "sourceLabel": "이천동",
+      "businesses": 1236,
+      "employees": 4130
+    },
+    {
+      "zoneId": "sgis-dong:22040530",
+      "administrativeCode": "22040530",
+      "district": "남구",
+      "label": "봉덕1동",
+      "sourceLabel": "봉덕1동",
+      "businesses": 1334,
+      "employees": 4625
+    },
+    {
+      "zoneId": "sgis-dong:22040540",
+      "administrativeCode": "22040540",
+      "district": "남구",
+      "label": "봉덕2동",
+      "sourceLabel": "봉덕2동",
+      "businesses": 1184,
+      "employees": 2585
+    },
+    {
+      "zoneId": "sgis-dong:22040550",
+      "administrativeCode": "22040550",
+      "district": "남구",
+      "label": "봉덕3동",
+      "sourceLabel": "봉덕3동",
+      "businesses": 1712,
+      "employees": 4661
+    },
+    {
+      "zoneId": "sgis-dong:22040560",
+      "administrativeCode": "22040560",
+      "district": "남구",
+      "label": "대명1동",
+      "sourceLabel": "대명1동",
+      "businesses": 885,
+      "employees": 1965
+    },
+    {
+      "zoneId": "sgis-dong:22040570",
+      "administrativeCode": "22040570",
+      "district": "남구",
+      "label": "대명2동",
+      "sourceLabel": "대명2동",
+      "businesses": 1417,
+      "employees": 4422
+    },
+    {
+      "zoneId": "sgis-dong:22040580",
+      "administrativeCode": "22040580",
+      "district": "남구",
+      "label": "대명3동",
+      "sourceLabel": "대명3동",
+      "businesses": 1804,
+      "employees": 6792
+    },
+    {
+      "zoneId": "sgis-dong:22040590",
+      "administrativeCode": "22040590",
+      "district": "남구",
+      "label": "대명4동",
+      "sourceLabel": "대명4동",
+      "businesses": 1364,
+      "employees": 5689
+    },
+    {
+      "zoneId": "sgis-dong:22040600",
+      "administrativeCode": "22040600",
+      "district": "남구",
+      "label": "대명5동",
+      "sourceLabel": "대명5동",
+      "businesses": 991,
+      "employees": 6791
+    },
+    {
+      "zoneId": "sgis-dong:22040610",
+      "administrativeCode": "22040610",
+      "district": "남구",
+      "label": "대명6동",
+      "sourceLabel": "대명6동",
+      "businesses": 1243,
+      "employees": 3684
+    },
+    {
+      "zoneId": "sgis-dong:22040640",
+      "administrativeCode": "22040640",
+      "district": "남구",
+      "label": "대명9동",
+      "sourceLabel": "대명9동",
+      "businesses": 1858,
+      "employees": 5690
+    },
+    {
+      "zoneId": "sgis-dong:22040650",
+      "administrativeCode": "22040650",
+      "district": "남구",
+      "label": "대명10동",
+      "sourceLabel": "대명10동",
+      "businesses": 1191,
+      "employees": 6789
+    },
+    {
+      "zoneId": "sgis-dong:22040660",
+      "administrativeCode": "22040660",
+      "district": "남구",
+      "label": "대명11동",
+      "sourceLabel": "대명11동",
+      "businesses": 1724,
+      "employees": 3432
+    },
+    {
+      "zoneId": "sgis-dong:22050510",
+      "administrativeCode": "22050510",
+      "district": "북구",
+      "label": "고성동",
+      "sourceLabel": "고성동",
+      "businesses": 1175,
+      "employees": 3506
+    },
+    {
+      "zoneId": "sgis-dong:22050520",
+      "administrativeCode": "22050520",
+      "district": "북구",
+      "label": "칠성동",
+      "sourceLabel": "칠성동",
+      "businesses": 3473,
+      "employees": 8886
+    },
+    {
+      "zoneId": "sgis-dong:22050550",
+      "administrativeCode": "22050550",
+      "district": "북구",
+      "label": "침산1동",
+      "sourceLabel": "침산1동",
+      "businesses": 1776,
+      "employees": 5627
+    },
+    {
+      "zoneId": "sgis-dong:22050560",
+      "administrativeCode": "22050560",
+      "district": "북구",
+      "label": "침산2동",
+      "sourceLabel": "침산2동",
+      "businesses": 1632,
+      "employees": 4843
+    },
+    {
+      "zoneId": "sgis-dong:22050570",
+      "administrativeCode": "22050570",
+      "district": "북구",
+      "label": "침산3동",
+      "sourceLabel": "침산3동",
+      "businesses": 1589,
+      "employees": 8181
+    },
+    {
+      "zoneId": "sgis-dong:22050610",
+      "administrativeCode": "22050610",
+      "district": "북구",
+      "label": "산격1동",
+      "sourceLabel": "산격1동",
+      "businesses": 728,
+      "employees": 2186
+    },
+    {
+      "zoneId": "sgis-dong:22050620",
+      "administrativeCode": "22050620",
+      "district": "북구",
+      "label": "산격2동",
+      "sourceLabel": "산격2동",
+      "businesses": 4646,
+      "employees": 15329
+    },
+    {
+      "zoneId": "sgis-dong:22050630",
+      "administrativeCode": "22050630",
+      "district": "북구",
+      "label": "산격3동",
+      "sourceLabel": "산격3동",
+      "businesses": 1582,
+      "employees": 9901
+    },
+    {
+      "zoneId": "sgis-dong:22050640",
+      "administrativeCode": "22050640",
+      "district": "북구",
+      "label": "산격4동",
+      "sourceLabel": "산격4동",
+      "businesses": 777,
+      "employees": 3941
+    },
+    {
+      "zoneId": "sgis-dong:22050650",
+      "administrativeCode": "22050650",
+      "district": "북구",
+      "label": "복현1동",
+      "sourceLabel": "복현1동",
+      "businesses": 819,
+      "employees": 2397
+    },
+    {
+      "zoneId": "sgis-dong:22050660",
+      "administrativeCode": "22050660",
+      "district": "북구",
+      "label": "복현2동",
+      "sourceLabel": "복현2동",
+      "businesses": 1891,
+      "employees": 6218
+    },
+    {
+      "zoneId": "sgis-dong:22050700",
+      "administrativeCode": "22050700",
+      "district": "북구",
+      "label": "검단동",
+      "sourceLabel": "검단동",
+      "businesses": 1546,
+      "employees": 8587
+    },
+    {
+      "zoneId": "sgis-dong:22050710",
+      "administrativeCode": "22050710",
+      "district": "북구",
+      "label": "무태조야동",
+      "sourceLabel": "무태조야동",
+      "businesses": 3217,
+      "employees": 9207
+    },
+    {
+      "zoneId": "sgis-dong:22050740",
+      "administrativeCode": "22050740",
+      "district": "북구",
+      "label": "태전2동",
+      "sourceLabel": "태전2동",
+      "businesses": 2027,
+      "employees": 5832
+    },
+    {
+      "zoneId": "sgis-dong:22050750",
+      "administrativeCode": "22050750",
+      "district": "북구",
+      "label": "관문동",
+      "sourceLabel": "관문동",
+      "businesses": 3770,
+      "employees": 9612
+    },
+    {
+      "zoneId": "sgis-dong:22050760",
+      "administrativeCode": "22050760",
+      "district": "북구",
+      "label": "읍내동",
+      "sourceLabel": "읍내동",
+      "businesses": 2269,
+      "employees": 5910
+    },
+    {
+      "zoneId": "sgis-dong:22050770",
+      "administrativeCode": "22050770",
+      "district": "북구",
+      "label": "관음동",
+      "sourceLabel": "관음동",
+      "businesses": 1636,
+      "employees": 3886
+    },
+    {
+      "zoneId": "sgis-dong:22050780",
+      "administrativeCode": "22050780",
+      "district": "북구",
+      "label": "태전1동",
+      "sourceLabel": "태전1동",
+      "businesses": 1969,
+      "employees": 6122
+    },
+    {
+      "zoneId": "sgis-dong:22050790",
+      "administrativeCode": "22050790",
+      "district": "북구",
+      "label": "구암동",
+      "sourceLabel": "구암동",
+      "businesses": 2617,
+      "employees": 7378
+    },
+    {
+      "zoneId": "sgis-dong:22050810",
+      "administrativeCode": "22050810",
+      "district": "북구",
+      "label": "노원동",
+      "sourceLabel": "노원동",
+      "businesses": 7442,
+      "employees": 22624
+    },
+    {
+      "zoneId": "sgis-dong:22050820",
+      "administrativeCode": "22050820",
+      "district": "북구",
+      "label": "동천동",
+      "sourceLabel": "동천동",
+      "businesses": 2693,
+      "employees": 8647
+    },
+    {
+      "zoneId": "sgis-dong:22050830",
+      "administrativeCode": "22050830",
+      "district": "북구",
+      "label": "국우동",
+      "sourceLabel": "국우동",
+      "businesses": 2429,
+      "employees": 10784
+    },
+    {
+      "zoneId": "sgis-dong:22050840",
+      "administrativeCode": "22050840",
+      "district": "북구",
+      "label": "대현동",
+      "sourceLabel": "대현동",
+      "businesses": 1570,
+      "employees": 5084
+    },
+    {
+      "zoneId": "sgis-dong:22060510",
+      "administrativeCode": "22060510",
+      "district": "수성구",
+      "label": "범어1동",
+      "sourceLabel": "범어1동",
+      "businesses": 1975,
+      "employees": 9857
+    },
+    {
+      "zoneId": "sgis-dong:22060520",
+      "administrativeCode": "22060520",
+      "district": "수성구",
+      "label": "범어2동",
+      "sourceLabel": "범어2동",
+      "businesses": 2005,
+      "employees": 12784
+    },
+    {
+      "zoneId": "sgis-dong:22060530",
+      "administrativeCode": "22060530",
+      "district": "수성구",
+      "label": "범어3동",
+      "sourceLabel": "범어3동",
+      "businesses": 2012,
+      "employees": 8805
+    },
+    {
+      "zoneId": "sgis-dong:22060540",
+      "administrativeCode": "22060540",
+      "district": "수성구",
+      "label": "범어4동",
+      "sourceLabel": "범어4동",
+      "businesses": 1919,
+      "employees": 5917
+    },
+    {
+      "zoneId": "sgis-dong:22060550",
+      "administrativeCode": "22060550",
+      "district": "수성구",
+      "label": "만촌1동",
+      "sourceLabel": "만촌1동",
+      "businesses": 1969,
+      "employees": 7594
+    },
+    {
+      "zoneId": "sgis-dong:22060560",
+      "administrativeCode": "22060560",
+      "district": "수성구",
+      "label": "만촌2동",
+      "sourceLabel": "만촌2동",
+      "businesses": 1182,
+      "employees": 4594
+    },
+    {
+      "zoneId": "sgis-dong:22060570",
+      "administrativeCode": "22060570",
+      "district": "수성구",
+      "label": "만촌3동",
+      "sourceLabel": "만촌3동",
+      "businesses": 1568,
+      "employees": 4908
+    },
+    {
+      "zoneId": "sgis-dong:22060580",
+      "administrativeCode": "22060580",
+      "district": "수성구",
+      "label": "수성1가동",
+      "sourceLabel": "수성1가동",
+      "businesses": 1341,
+      "employees": 3435
+    },
+    {
+      "zoneId": "sgis-dong:22060590",
+      "administrativeCode": "22060590",
+      "district": "수성구",
+      "label": "수성2·3가동",
+      "sourceLabel": "수성2.3가동",
+      "businesses": 1391,
+      "employees": 6972
+    },
+    {
+      "zoneId": "sgis-dong:22060600",
+      "administrativeCode": "22060600",
+      "district": "수성구",
+      "label": "수성4가동",
+      "sourceLabel": "수성4가동",
+      "businesses": 1229,
+      "employees": 4042
+    },
+    {
+      "zoneId": "sgis-dong:22060610",
+      "administrativeCode": "22060610",
+      "district": "수성구",
+      "label": "황금1동",
+      "sourceLabel": "황금1동",
+      "businesses": 1071,
+      "employees": 2434
+    },
+    {
+      "zoneId": "sgis-dong:22060620",
+      "administrativeCode": "22060620",
+      "district": "수성구",
+      "label": "황금2동",
+      "sourceLabel": "황금2동",
+      "businesses": 1734,
+      "employees": 7540
+    },
+    {
+      "zoneId": "sgis-dong:22060630",
+      "administrativeCode": "22060630",
+      "district": "수성구",
+      "label": "중동",
+      "sourceLabel": "중동",
+      "businesses": 1500,
+      "employees": 5113
+    },
+    {
+      "zoneId": "sgis-dong:22060640",
+      "administrativeCode": "22060640",
+      "district": "수성구",
+      "label": "상동",
+      "sourceLabel": "상동",
+      "businesses": 1651,
+      "employees": 4921
+    },
+    {
+      "zoneId": "sgis-dong:22060650",
+      "administrativeCode": "22060650",
+      "district": "수성구",
+      "label": "파동",
+      "sourceLabel": "파동",
+      "businesses": 944,
+      "employees": 2772
+    },
+    {
+      "zoneId": "sgis-dong:22060660",
+      "administrativeCode": "22060660",
+      "district": "수성구",
+      "label": "두산동",
+      "sourceLabel": "두산동",
+      "businesses": 2188,
+      "employees": 8960
+    },
+    {
+      "zoneId": "sgis-dong:22060670",
+      "administrativeCode": "22060670",
+      "district": "수성구",
+      "label": "지산1동",
+      "sourceLabel": "지산1동",
+      "businesses": 2320,
+      "employees": 8321
+    },
+    {
+      "zoneId": "sgis-dong:22060680",
+      "administrativeCode": "22060680",
+      "district": "수성구",
+      "label": "지산2동",
+      "sourceLabel": "지산2동",
+      "businesses": 1654,
+      "employees": 4349
+    },
+    {
+      "zoneId": "sgis-dong:22060690",
+      "administrativeCode": "22060690",
+      "district": "수성구",
+      "label": "범물1동",
+      "sourceLabel": "범물1동",
+      "businesses": 808,
+      "employees": 2631
+    },
+    {
+      "zoneId": "sgis-dong:22060700",
+      "administrativeCode": "22060700",
+      "district": "수성구",
+      "label": "범물2동",
+      "sourceLabel": "범물2동",
+      "businesses": 1093,
+      "employees": 3108
+    },
+    {
+      "zoneId": "sgis-dong:22060710",
+      "administrativeCode": "22060710",
+      "district": "수성구",
+      "label": "고산1동",
+      "sourceLabel": "고산1동",
+      "businesses": 2240,
+      "employees": 7153
+    },
+    {
+      "zoneId": "sgis-dong:22060720",
+      "administrativeCode": "22060720",
+      "district": "수성구",
+      "label": "고산2동",
+      "sourceLabel": "고산2동",
+      "businesses": 2808,
+      "employees": 13811
+    },
+    {
+      "zoneId": "sgis-dong:22060730",
+      "administrativeCode": "22060730",
+      "district": "수성구",
+      "label": "고산3동",
+      "sourceLabel": "고산3동",
+      "businesses": 2164,
+      "employees": 5831
+    },
+    {
+      "zoneId": "sgis-dong:22070550",
+      "administrativeCode": "22070550",
+      "district": "달서구",
+      "label": "두류3동",
+      "sourceLabel": "두류3동",
+      "businesses": 1594,
+      "employees": 5202
+    },
+    {
+      "zoneId": "sgis-dong:22070560",
+      "administrativeCode": "22070560",
+      "district": "달서구",
+      "label": "본리동",
+      "sourceLabel": "본리동",
+      "businesses": 1959,
+      "employees": 5198
+    },
+    {
+      "zoneId": "sgis-dong:22070570",
+      "administrativeCode": "22070570",
+      "district": "달서구",
+      "label": "감삼동",
+      "sourceLabel": "감삼동",
+      "businesses": 2646,
+      "employees": 8155
+    },
+    {
+      "zoneId": "sgis-dong:22070580",
+      "administrativeCode": "22070580",
+      "district": "달서구",
+      "label": "죽전동",
+      "sourceLabel": "죽전동",
+      "businesses": 2436,
+      "employees": 6942
+    },
+    {
+      "zoneId": "sgis-dong:22070590",
+      "administrativeCode": "22070590",
+      "district": "달서구",
+      "label": "장기동",
+      "sourceLabel": "장기동",
+      "businesses": 3188,
+      "employees": 11498
+    },
+    {
+      "zoneId": "sgis-dong:22070600",
+      "administrativeCode": "22070600",
+      "district": "달서구",
+      "label": "이곡1동",
+      "sourceLabel": "이곡1동",
+      "businesses": 2160,
+      "employees": 7885
+    },
+    {
+      "zoneId": "sgis-dong:22070610",
+      "administrativeCode": "22070610",
+      "district": "달서구",
+      "label": "신당동",
+      "sourceLabel": "신당동",
+      "businesses": 6185,
+      "employees": 34332
+    },
+    {
+      "zoneId": "sgis-dong:22070630",
+      "administrativeCode": "22070630",
+      "district": "달서구",
+      "label": "월성2동",
+      "sourceLabel": "월성2동",
+      "businesses": 5851,
+      "employees": 32695
+    },
+    {
+      "zoneId": "sgis-dong:22070650",
+      "administrativeCode": "22070650",
+      "district": "달서구",
+      "label": "상인1동",
+      "sourceLabel": "상인1동",
+      "businesses": 2539,
+      "employees": 8033
+    },
+    {
+      "zoneId": "sgis-dong:22070660",
+      "administrativeCode": "22070660",
+      "district": "달서구",
+      "label": "상인2동",
+      "sourceLabel": "상인2동",
+      "businesses": 2166,
+      "employees": 4517
+    },
+    {
+      "zoneId": "sgis-dong:22070670",
+      "administrativeCode": "22070670",
+      "district": "달서구",
+      "label": "상인3동",
+      "sourceLabel": "상인3동",
+      "businesses": 934,
+      "employees": 2175
+    },
+    {
+      "zoneId": "sgis-dong:22070680",
+      "administrativeCode": "22070680",
+      "district": "달서구",
+      "label": "도원동",
+      "sourceLabel": "도원동",
+      "businesses": 2039,
+      "employees": 5492
+    },
+    {
+      "zoneId": "sgis-dong:22070690",
+      "administrativeCode": "22070690",
+      "district": "달서구",
+      "label": "송현1동",
+      "sourceLabel": "송현1동",
+      "businesses": 1922,
+      "employees": 5673
+    },
+    {
+      "zoneId": "sgis-dong:22070700",
+      "administrativeCode": "22070700",
+      "district": "달서구",
+      "label": "송현2동",
+      "sourceLabel": "송현2동",
+      "businesses": 2190,
+      "employees": 5882
+    },
+    {
+      "zoneId": "sgis-dong:22070710",
+      "administrativeCode": "22070710",
+      "district": "달서구",
+      "label": "본동",
+      "sourceLabel": "본동",
+      "businesses": 1302,
+      "employees": 4778
+    },
+    {
+      "zoneId": "sgis-dong:22070720",
+      "administrativeCode": "22070720",
+      "district": "달서구",
+      "label": "용산1동",
+      "sourceLabel": "용산1동",
+      "businesses": 2514,
+      "employees": 7744
+    },
+    {
+      "zoneId": "sgis-dong:22070730",
+      "administrativeCode": "22070730",
+      "district": "달서구",
+      "label": "용산2동",
+      "sourceLabel": "용산2동",
+      "businesses": 1609,
+      "employees": 4581
+    },
+    {
+      "zoneId": "sgis-dong:22070740",
+      "administrativeCode": "22070740",
+      "district": "달서구",
+      "label": "이곡2동",
+      "sourceLabel": "이곡2동",
+      "businesses": 2882,
+      "employees": 13720
+    },
+    {
+      "zoneId": "sgis-dong:22070750",
+      "administrativeCode": "22070750",
+      "district": "달서구",
+      "label": "성당동",
+      "sourceLabel": "성당동",
+      "businesses": 2256,
+      "employees": 6753
+    },
+    {
+      "zoneId": "sgis-dong:22070760",
+      "administrativeCode": "22070760",
+      "district": "달서구",
+      "label": "두류1·2동",
+      "sourceLabel": "두류1.2동",
+      "businesses": 2014,
+      "employees": 7805
+    },
+    {
+      "zoneId": "sgis-dong:22070770",
+      "administrativeCode": "22070770",
+      "district": "달서구",
+      "label": "월성1동",
+      "sourceLabel": "월성1동",
+      "businesses": 3491,
+      "employees": 9298
+    },
+    {
+      "zoneId": "sgis-dong:22070780",
+      "administrativeCode": "22070780",
+      "district": "달서구",
+      "label": "진천동",
+      "sourceLabel": "진천동",
+      "businesses": 4655,
+      "employees": 14076
+    },
+    {
+      "zoneId": "sgis-dong:22070790",
+      "administrativeCode": "22070790",
+      "district": "달서구",
+      "label": "유천동",
+      "sourceLabel": "유천동",
+      "businesses": 1787,
+      "employees": 5054
+    },
+    {
+      "zoneId": "sgis-dong:22510110",
+      "administrativeCode": "22510110",
+      "district": "달성군",
+      "label": "화원읍",
+      "sourceLabel": "화원읍",
+      "businesses": 4863,
+      "employees": 14050
+    },
+    {
+      "zoneId": "sgis-dong:22510120",
+      "administrativeCode": "22510120",
+      "district": "달성군",
+      "label": "논공읍",
+      "sourceLabel": "논공읍",
+      "businesses": 3284,
+      "employees": 24018
+    },
+    {
+      "zoneId": "sgis-dong:22510130",
+      "administrativeCode": "22510130",
+      "district": "달성군",
+      "label": "다사읍",
+      "sourceLabel": "다사읍",
+      "businesses": 6991,
+      "employees": 24970
+    },
+    {
+      "zoneId": "sgis-dong:22510140",
+      "administrativeCode": "22510140",
+      "district": "달성군",
+      "label": "유가읍",
+      "sourceLabel": "유가읍",
+      "businesses": 2248,
+      "employees": 12366
+    },
+    {
+      "zoneId": "sgis-dong:22510150",
+      "administrativeCode": "22510150",
+      "district": "달성군",
+      "label": "옥포읍",
+      "sourceLabel": "옥포읍",
+      "businesses": 2735,
+      "employees": 7448
+    },
+    {
+      "zoneId": "sgis-dong:22510160",
+      "administrativeCode": "22510160",
+      "district": "달성군",
+      "label": "현풍읍",
+      "sourceLabel": "현풍읍",
+      "businesses": 2730,
+      "employees": 9806
+    },
+    {
+      "zoneId": "sgis-dong:22510310",
+      "administrativeCode": "22510310",
+      "district": "달성군",
+      "label": "가창면",
+      "sourceLabel": "가창면",
+      "businesses": 853,
+      "employees": 4697
+    },
+    {
+      "zoneId": "sgis-dong:22510320",
+      "administrativeCode": "22510320",
+      "district": "달성군",
+      "label": "하빈면",
+      "sourceLabel": "하빈면",
+      "businesses": 1310,
+      "employees": 4505
+    },
+    {
+      "zoneId": "sgis-dong:22510360",
+      "administrativeCode": "22510360",
+      "district": "달성군",
+      "label": "구지면",
+      "sourceLabel": "구지면",
+      "businesses": 2166,
+      "employees": 15276
+    },
+    {
+      "zoneId": "sgis-dong:22520111",
+      "administrativeCode": "22520111",
+      "district": "군위군",
+      "label": "군위읍",
+      "sourceLabel": "군위읍",
+      "businesses": 1364,
+      "employees": 5448
+    },
+    {
+      "zoneId": "sgis-dong:22520311",
+      "administrativeCode": "22520311",
+      "district": "군위군",
+      "label": "소보면",
+      "sourceLabel": "소보면",
+      "businesses": 493,
+      "employees": 710
+    },
+    {
+      "zoneId": "sgis-dong:22520312",
+      "administrativeCode": "22520312",
+      "district": "군위군",
+      "label": "효령면",
+      "sourceLabel": "효령면",
+      "businesses": 626,
+      "employees": 1819
+    },
+    {
+      "zoneId": "sgis-dong:22520313",
+      "administrativeCode": "22520313",
+      "district": "군위군",
+      "label": "부계면",
+      "sourceLabel": "부계면",
+      "businesses": 309,
+      "employees": 655
+    },
+    {
+      "zoneId": "sgis-dong:22520314",
+      "administrativeCode": "22520314",
+      "district": "군위군",
+      "label": "우보면",
+      "sourceLabel": "우보면",
+      "businesses": 201,
+      "employees": 340
+    },
+    {
+      "zoneId": "sgis-dong:22520315",
+      "administrativeCode": "22520315",
+      "district": "군위군",
+      "label": "의흥면",
+      "sourceLabel": "의흥면",
+      "businesses": 283,
+      "employees": 589
+    },
+    {
+      "zoneId": "sgis-dong:22520316",
+      "administrativeCode": "22520316",
+      "district": "군위군",
+      "label": "산성면",
+      "sourceLabel": "산성면",
+      "businesses": 132,
+      "employees": 299
+    },
+    {
+      "zoneId": "sgis-dong:22520317",
+      "administrativeCode": "22520317",
+      "district": "군위군",
+      "label": "삼국유사면",
+      "sourceLabel": "삼국유사면",
+      "businesses": 125,
+      "employees": 194
+    }
+  ],
+  "nameMismatches": [],
+  "limitations": [
+    "전국사업체조사의 사업체 소재지 기준 종사자수이며 거주지 기준 취업자수나 통근 유입인구와 다릅니다.",
+    "2024년 기준 연간 조사 결과이며 실시간·시간대별 체류인구를 의미하지 않습니다.",
+    "SGIS 2025Q2 행정동과 행정코드가 150/150 일치하여 코드로 직접 연결하며 명칭 차이는 감사용으로만 보존합니다.",
+    "종사자수는 업무지구성의 공식 증거로 사용할 수 있으나 매출·방문객·상권 성공확률을 의미하지 않습니다."
+  ]
+}

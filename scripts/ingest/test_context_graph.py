@@ -199,7 +199,14 @@ class ContextGraphTest(unittest.TestCase):
         by_key = {row["key"]: row for row in availability["datasets"]}
         self.assertEqual(by_key["living_population"]["status"], "controlled-data-slot")
         self.assertEqual(by_key["card_spend"]["status"], "controlled-data-slot")
-        self.assertIn("missing", by_key["workplace_population"]["status"])
+        self.assertEqual(
+            by_key["workplace_population"]["status"],
+            "available-official-dong-2024",
+        )
+        self.assertEqual(by_key["workplace_population"]["officialZoneRecords"], 150)
+        self.assertEqual(by_key["workplace_population"]["cityEmployees"], 1021246)
+        self.assertEqual(by_key["commute_od"]["status"], "controlled-or-historical-slot")
+        self.assertEqual(by_key["visitor_population"]["status"], "controlled-data-slot")
         self.assertEqual(
             by_key["resident_population"]["status"],
             "available-district-level-only",
