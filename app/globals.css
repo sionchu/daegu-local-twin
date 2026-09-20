@@ -1,3 +1,4 @@
+@layer theme, base, vworld, components, utilities;
 @import "tailwindcss";
 
 :root {

@@ -96,6 +96,48 @@ test.describe("LocalTwin critical evidence path", () => {
     expect(layout.scrollWidth).toBe(layout.clientWidth);
   });
 
+  test("keeps the app layout stable under the VWorld global CSS reset", async ({ page }) => {
+    await page.setViewportSize({ width: 2048, height: 1120 });
+    await page.goto("/");
+
+    await expect(
+      page.getByRole("heading", { name: "상권 입지 검토" }),
+    ).toBeVisible();
+
+    const main = page.locator("main");
+    const panel = page.getByTestId("candidate-panel");
+    const beforeMain = await main.boundingBox();
+    const beforePanel = await panel.boundingBox();
+
+    expect(beforeMain).not.toBeNull();
+    expect(beforePanel).not.toBeNull();
+
+    await page.addStyleTag({
+      content: `
+        @layer vworld {
+          * {
+            padding: 0;
+            margin: 0;
+            border: 0;
+            outline: 0;
+            box-sizing: border-box;
+            vertical-align: middle;
+          }
+        }
+      `,
+    });
+
+    const afterMain = await main.boundingBox();
+    const afterPanel = await panel.boundingBox();
+
+    expect(afterMain).not.toBeNull();
+    expect(afterPanel).not.toBeNull();
+    expect(afterMain!.x).toBeCloseTo(beforeMain!.x, 0);
+    expect(afterMain!.width).toBeCloseTo(beforeMain!.width, 0);
+    expect(afterPanel!.x).toBeCloseTo(beforePanel!.x, 0);
+    expect(afterPanel!.width).toBeCloseTo(beforePanel!.width, 0);
+  });
+
   test("recalculates candidate finance assumptions in the compare view", async ({ page }) => {
     await page.goto("/");
     await page.getByRole("button", { name: /후보비교/ }).click();
