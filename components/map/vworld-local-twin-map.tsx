@@ -1107,19 +1107,42 @@ export default function VWorldLocalTwinMap({
           duration: 0.8,
         });
       } else {
-        viewer.camera.flyTo({
-          destination: Cesium.Cartesian3.fromDegrees(
-            DAEGU_CENTER[0],
-            DAEGU_CENTER[1],
-            1500,
-          ),
-          orientation: {
-            heading: 0,
-            pitch: Cesium.Math.toRadians(-52),
-            roll: 0,
-          },
-          duration: 0.6,
-        });
+        const target = Cesium.Cartesian3.fromDegrees(
+          DAEGU_CENTER[0],
+          DAEGU_CENTER[1],
+          0,
+        );
+        if (
+          typeof viewer.camera.flyToBoundingSphere === "function" &&
+          Cesium.BoundingSphere &&
+          Cesium.HeadingPitchRange
+        ) {
+          viewer.camera.flyToBoundingSphere(
+            new Cesium.BoundingSphere(target, 35),
+            {
+              offset: new Cesium.HeadingPitchRange(
+                0,
+                Cesium.Math.toRadians(-52),
+                3_000,
+              ),
+              duration: 0.6,
+            },
+          );
+        } else {
+          viewer.camera.flyTo({
+            destination: Cesium.Cartesian3.fromDegrees(
+              DAEGU_CENTER[0],
+              DAEGU_CENTER[1],
+              3_000,
+            ),
+            orientation: {
+              heading: 0,
+              pitch: Cesium.Math.toRadians(-90),
+              roll: 0,
+            },
+            duration: 0.6,
+          });
+        }
       }
       viewer.scene?.requestRender?.();
     }, 220);
