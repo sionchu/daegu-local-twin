@@ -36,9 +36,14 @@ test.describe("LocalTwin critical evidence path", () => {
     await page.getByRole("button", { name: "대구 전체", exact: true }).click();
 
     await expect(
-      page.getByRole("heading", { name: "대구 전역 지역맥락" }),
+      page.getByRole("heading", { name: "대구 전역 상권 분석" }),
     ).toBeVisible();
+    await expect(page.getByRole("button", { name: "상권잠재", exact: true })).toBeVisible();
     await expect(page.getByTestId("citywide-context-panel")).toBeVisible({ timeout: 20_000 });
+    await expect(page.getByTestId("citywide-commercial-analysis")).toBeVisible();
+    await expect(page.getByText("전역 후보 19개", { exact: true })).toBeVisible();
+    await expect(page.getByText(/검색관심: 직접관측 미확보/)).toBeVisible();
+    await expect(page.getByText(/생활인구·카드매출: 반출자료 대기/)).toBeVisible();
     await expect(page.getByText("구·군 주민등록인구", { exact: true })).toBeVisible();
     await expect(page.getByText("공식 학교", { exact: true })).toBeVisible();
     await expect(page.getByText("공식 의료시설", { exact: true })).toBeVisible();
@@ -57,14 +62,24 @@ test.describe("LocalTwin critical evidence path", () => {
     await expect(page.getByText("업종다양성", { exact: true }).first()).toBeVisible();
     await expect(page.getByText(/SEMAS 2026Q2 업종다양성/)).toBeVisible();
 
-    const zoneMetadata = await page.evaluate(async () => {
-      const response = await fetch("/data/daegu_analysis_zones.geojson");
-      const document = await response.json();
-      return document.metadata;
+    const metadata = await page.evaluate(async () => {
+      const [zoneDocument, commercialDocument] = await Promise.all([
+        fetch("/data/daegu_analysis_zones.geojson").then((response) => response.json()),
+        fetch("/data/citywide_commercial_candidates.geojson").then((response) =>
+          response.json(),
+        ),
+      ]);
+      return {
+        zones: zoneDocument.metadata,
+        commercial: commercialDocument.metadata,
+      };
     });
-    expect(zoneMetadata.quality).toBe("official");
-    expect(zoneMetadata.sourceDatasetId).toBe("15129688");
-    expect(zoneMetadata.zoneCount).toBe(150);
+    expect(metadata.zones.quality).toBe("official");
+    expect(metadata.zones.sourceDatasetId).toBe("15129688");
+    expect(metadata.zones.zoneCount).toBe(150);
+    expect(metadata.commercial.coverage.localityCandidateCount).toBe(14);
+    expect(metadata.commercial.coverage.centralCorridorCount).toBe(5);
+    expect(metadata.commercial.coverage.candidateCount).toBe(19);
   });
 
   test("keeps the map and review panel side by side at tablet-desktop width", async ({ page }) => {

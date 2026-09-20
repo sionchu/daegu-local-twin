@@ -35,6 +35,7 @@ export type MapLayer =
   | "retailMarket"
   | "cultureTourism"
   | "parkingAccess"
+  | "commercialPotential"
   | "commercialDensity"
   | "businessDiversity";
 

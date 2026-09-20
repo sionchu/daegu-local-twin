@@ -15,6 +15,13 @@ const DAEGU_RENDER_BOUNDS = {
   north: 36.3271116,
 };
 
+const DAEGU_FOCUS_OUTER_BOUNDS = {
+  west: 127.72,
+  south: 34.95,
+  east: 129.55,
+  north: 36.95,
+};
+
 const CENTRAL_SERVICE_BOUNDS = {
   west: 128.565,
   south: 35.852,
@@ -153,6 +160,45 @@ type CitywideZoneCollection = {
   features: CitywideZoneFeature[];
 };
 
+type CommercialPotentialProfile = {
+  zoneId: string;
+  label: string;
+  district?: string | null;
+  zoneKind: "locality" | "commercial_corridor";
+  labelLon?: number | null;
+  labelLat?: number | null;
+  isCommercialCandidate: boolean;
+  candidateRank?: number | null;
+  candidateTier?: string | null;
+  commercialPotentialScore: number;
+  businessCount: number;
+  businessDensityScore: number;
+  businessDiversityScore: number;
+  transitScore: number;
+  retailMarketScore: number;
+  employmentPublicScore: number;
+  cultureTourismScore: number;
+  boundaryMeaning: string;
+};
+
+type CommercialPotentialFeature = {
+  properties: CommercialPotentialProfile;
+  geometry: CorridorGeometry;
+};
+
+type CommercialPotentialCollection = {
+  metadata?: {
+    coverage?: {
+      candidateCount?: number;
+    };
+  };
+  features: CommercialPotentialFeature[];
+};
+
+type CommercialPotentialProfileDocument = {
+  records: CommercialPotentialProfile[];
+};
+
 type Props = {
   cells: LocationEvidence[];
   selectedCellId?: string;
@@ -210,6 +256,7 @@ const LAYER_LABELS: Record<MapLayer, string> = {
   retailMarket: "시장·대형점포",
   cultureTourism: "문화·관광",
   parkingAccess: "주차·접근",
+  commercialPotential: "상권잠재",
   commercialDensity: "상업밀도",
   businessDiversity: "업종다양성",
 };
@@ -377,6 +424,30 @@ function configureCameraControls(viewer: any) {
   return () => undefined;
 }
 
+function addCitywideOutsideFocusVeil(viewer: any, Cesium: any) {
+  const inner = DAEGU_RENDER_BOUNDS;
+  const outer = DAEGU_FOCUS_OUTER_BOUNDS;
+  const bands = [
+    [outer.west, outer.south, outer.east, inner.south],
+    [outer.west, inner.north, outer.east, outer.north],
+    [outer.west, inner.south, inner.west, inner.north],
+    [inner.east, inner.south, outer.east, inner.north],
+  ] as Array<[number, number, number, number]>;
+
+  return bands.map(([west, south, east, north], index) =>
+    viewer.entities.add({
+      id: `localtwin-daegu-focus-veil-${index}`,
+      name: "대구 외곽 시각 억제",
+      rectangle: {
+        coordinates: Cesium.Rectangle.fromDegrees(west, south, east, north),
+        material: Cesium.Color.fromCssColorString("#02060a").withAlpha(0.46),
+        height: 0,
+        heightReference: Cesium.HeightReference?.CLAMP_TO_GROUND,
+      },
+    }),
+  );
+}
+
 function addDaeguBoundaryOutline(
   viewer: any,
   Cesium: any,
@@ -415,19 +486,25 @@ export default function VWorldLocalTwinMap({
   const contextEntitiesRef = useRef<any[]>([]);
   const cellEntitiesRef = useRef<any[]>([]);
   const contextLayerEntitiesRef = useRef<any[]>([]);
+  const focusVeilEntitiesRef = useRef<any[]>([]);
   const clickCleanupRef = useRef<(() => void) | null>(null);
   const cameraControlCleanupRef = useRef<(() => void) | null>(null);
   const hoveredZoneCellIdRef = useRef<string | null>(null);
   const scopeRef = useRef<"central" | "citywide">(scope);
   const citywideZonesRef = useRef<CitywideZoneFeature[]>([]);
+  const commercialZonesRef = useRef<CommercialPotentialFeature[]>([]);
   const contextProfilesRef = useRef<Record<string, ContextProfile>>({});
   const onContextSelectRef = useRef(onContextSelect);
   const initialSelectionRef = useRef(true);
+  const initialContextSelectionRef = useRef(true);
   const [hoveredZoneCellId, setHoveredZoneCellId] = useState<string | null>(null);
   const [ready, setReady] = useState(false);
   const [buildingsReady, setBuildingsReady] = useState(false);
   const [corridors, setCorridors] = useState<CorridorFeature[]>([]);
   const [citywideZones, setCitywideZones] = useState<CitywideZoneFeature[]>([]);
+  const [commercialZones, setCommercialZones] = useState<CommercialPotentialFeature[]>([]);
+  const [commercialProfiles, setCommercialProfiles] =
+    useState<CommercialPotentialProfile[]>([]);
   const [contextProfiles, setContextProfiles] = useState<Record<string, ContextProfile>>({});
   const [contextAnchors, setContextAnchors] = useState<ContextAnchor[]>([]);
   const contextAnchorCacheRef = useRef<Record<string, ContextAnchor[]>>({});
@@ -435,6 +512,7 @@ export default function VWorldLocalTwinMap({
 
   scopeRef.current = scope;
   citywideZonesRef.current = citywideZones;
+  commercialZonesRef.current = commercialZones;
   contextProfilesRef.current = contextProfiles;
   onContextSelectRef.current = onContextSelect;
 
@@ -604,6 +682,17 @@ export default function VWorldLocalTwinMap({
         };
 
         const zoneCellIdFromIds = (entityIds: string[]) => {
+          const commercialEntityId = entityIds.find((id) =>
+            id.startsWith("localtwin-commercial-"),
+          );
+          if (commercialEntityId) {
+            return (
+              commercialEntityId
+                .slice("localtwin-commercial-".length)
+                .split("::")[0] || null
+            );
+          }
+
           const entityId = entityIds.find((id) => id.startsWith("localtwin-zone-"));
           if (!entityId) return null;
           return entityId.slice("localtwin-zone-".length).split("::")[0] || null;
@@ -619,6 +708,17 @@ export default function VWorldLocalTwinMap({
           const lat = Cesium.Math.toDegrees(cartographic.latitude);
 
           if (scopeRef.current === "citywide") {
+            const commercialMatching = commercialZonesRef.current
+              .filter(
+                (zone) =>
+                  zone.properties.isCommercialCandidate &&
+                  corridorContains(zone, lon, lat),
+              )
+              .sort((left, right) => corridorArea(left) - corridorArea(right));
+            if (commercialMatching[0]) {
+              return commercialMatching[0].properties.zoneId;
+            }
+
             const matching = citywideZonesRef.current
               .filter((zone) => corridorContains(zone, lon, lat))
               .sort((left, right) => corridorArea(left) - corridorArea(right));
@@ -705,6 +805,7 @@ export default function VWorldLocalTwinMap({
       cameraControlCleanupRef.current = null;
       clearEntities(cellEntitiesRef.current);
       clearEntities(contextLayerEntitiesRef.current);
+      clearEntities(focusVeilEntitiesRef.current);
       clearEntities(contextEntitiesRef.current);
       setBuildingsReady(false);
       disposeVWorld(viewerRef.current);
@@ -714,7 +815,12 @@ export default function VWorldLocalTwinMap({
   }, [clearEntities, onSelect, onUnavailable]);
 
   useEffect(() => {
-    if (scope !== "citywide" || citywideZones.length) return;
+    if (
+      scope !== "citywide" ||
+      (citywideZones.length && commercialZones.length && commercialProfiles.length)
+    ) {
+      return;
+    }
     let cancelled = false;
 
     void Promise.all([
@@ -724,10 +830,18 @@ export default function VWorldLocalTwinMap({
       fetch("/data/zone_context_profiles.json").then(
         (response) => response.json() as Promise<ContextProfileDocument>,
       ),
+      fetch("/data/citywide_commercial_candidates.geojson").then(
+        (response) => response.json() as Promise<CommercialPotentialCollection>,
+      ),
+      fetch("/data/citywide_commercial_profiles.json").then(
+        (response) => response.json() as Promise<CommercialPotentialProfileDocument>,
+      ),
     ])
-      .then(([zoneDocument, profileDocument]) => {
+      .then(([zoneDocument, profileDocument, commercialDocument, commercialProfileDocument]) => {
         if (cancelled) return;
         setCitywideZones(zoneDocument.features ?? []);
+        setCommercialZones(commercialDocument.features ?? []);
+        setCommercialProfiles(commercialProfileDocument.records ?? []);
         setContextProfiles((current) => ({
           ...current,
           ...Object.fromEntries(
@@ -739,13 +853,37 @@ export default function VWorldLocalTwinMap({
         }));
       })
       .catch(() => {
-        if (!cancelled) setCitywideZones([]);
+        if (cancelled) return;
+        setCitywideZones([]);
+        setCommercialZones([]);
+        setCommercialProfiles([]);
       });
 
     return () => {
       cancelled = true;
     };
-  }, [citywideZones.length, scope]);
+  }, [
+    citywideZones.length,
+    commercialProfiles.length,
+    commercialZones.length,
+    scope,
+  ]);
+
+  useEffect(() => {
+    const viewer = viewerRef.current;
+    const Cesium = window.Cesium;
+    if (!ready || !viewer?.entities || !Cesium) return;
+
+    clearEntities(focusVeilEntitiesRef.current);
+    if (scope === "citywide") {
+      focusVeilEntitiesRef.current.push(...addCitywideOutsideFocusVeil(viewer, Cesium));
+    }
+    viewer.scene?.requestRender?.();
+
+    return () => {
+      clearEntities(focusVeilEntitiesRef.current);
+    };
+  }, [clearEntities, ready, scope]);
 
   useEffect(() => {
     const viewer = viewerRef.current;
@@ -882,35 +1020,53 @@ export default function VWorldLocalTwinMap({
       !viewer?.entities ||
       !Cesium ||
       scope !== "citywide" ||
-      !citywideZones.length
+      !citywideZones.length ||
+      !commercialProfiles.length ||
+      !commercialZones.length
     ) {
       return;
     }
 
     clearEntities(cellEntitiesRef.current);
     const anchorType = CONTEXT_LAYER_TO_ANCHOR_TYPE[activeLayer];
+    const commercialByZone = new Map(
+      commercialProfiles.map((profile) => [profile.zoneId, profile]),
+    );
 
     for (const zone of citywideZones) {
       const profile = contextProfiles[zone.properties.zoneId];
-      const score = anchorType
-        ? profile?.scores?.[anchorType] ?? null
-        : activeLayer === "commercialDensity"
-          ? profile?.businessSignals?.businessDensityScore ?? null
-          : activeLayer === "businessDiversity"
-            ? profile?.businessSignals?.businessDiversityScore ?? null
-            : null;
+      const commercialProfile = commercialByZone.get(zone.properties.zoneId);
+      const score =
+        activeLayer === "commercialPotential"
+          ? commercialProfile?.commercialPotentialScore ?? null
+          : anchorType
+            ? profile?.scores?.[anchorType] ?? null
+            : activeLayer === "commercialDensity"
+              ? profile?.businessSignals?.businessDensityScore ?? null
+              : activeLayer === "businessDiversity"
+                ? profile?.businessSignals?.businessDiversityScore ?? null
+                : null;
       const selected = selectedContextZoneId === zone.properties.zoneId;
       const hovered = hoveredZoneCellId === zone.properties.zoneId;
       const hoverActive = hoveredZoneCellId !== null;
+      const isCandidate = Boolean(commercialProfile?.isCommercialCandidate);
       const fill = scoreColor(
         Cesium,
         score,
-        hovered ? 0.30 : selected ? 0.24 : hoverActive ? 0.025 : 0.075,
+        hovered
+          ? 0.28
+          : selected
+            ? 0.22
+            : hoverActive
+              ? 0.018
+              : isCandidate
+                ? 0.065
+                : 0.045,
       );
       const border = scoreColor(
         Cesium,
         score,
-        hovered ? 0.95 : selected ? 0.86 : hoverActive ? 0.16 : 0.46,
+        hovered ? 0.92 : selected ? 0.82 : hoverActive ? 0.12 : isCandidate ? 0.38 : 0.28,
       );
 
       corridorRings(zone.geometry).forEach((ring, ringIndex) => {
@@ -934,7 +1090,7 @@ export default function VWorldLocalTwinMap({
           },
           polyline: {
             positions,
-            width: hovered ? 5 : selected ? 3.5 : hoverActive ? 0.8 : 1.4,
+            width: hovered ? 4.5 : selected ? 3.2 : hoverActive ? 0.7 : 1.2,
             material: border,
             clampToGround: true,
           },
@@ -943,6 +1099,7 @@ export default function VWorldLocalTwinMap({
       });
 
       if (
+        !isCandidate &&
         typeof zone.properties.labelLon === "number" &&
         typeof zone.properties.labelLat === "number"
       ) {
@@ -959,7 +1116,7 @@ export default function VWorldLocalTwinMap({
                 : zone.properties.label,
             font: hovered || selected ? "bold 14px sans-serif" : "10px sans-serif",
             fillColor: Cesium.Color.WHITE.withAlpha(
-              hoverActive && !hovered && !selected ? 0.30 : 0.82,
+              hoverActive && !hovered && !selected ? 0.28 : 0.68,
             ),
             outlineColor: Cesium.Color.fromCssColorString("#071018"),
             outlineWidth: hovered || selected ? 3 : 2,
@@ -976,11 +1133,113 @@ export default function VWorldLocalTwinMap({
       }
     }
 
+    const candidateZones = commercialZones.filter(
+      (zone) => zone.properties.isCommercialCandidate,
+    );
+    for (const candidate of candidateZones) {
+      const selected = selectedContextZoneId === candidate.properties.zoneId;
+      const hovered = hoveredZoneCellId === candidate.properties.zoneId;
+      const elevationM = selected ? 30 : hovered ? 24 : 18;
+      const potential = candidate.properties.commercialPotentialScore;
+      const plateFill = scoreColor(
+        Cesium,
+        potential,
+        selected ? 0.38 : hovered ? 0.31 : 0.19,
+      );
+      const edge = scoreColor(
+        Cesium,
+        potential,
+        selected ? 1 : hovered ? 0.96 : 0.76,
+      );
+
+      corridorRings(candidate.geometry).forEach((ring, ringIndex) => {
+        if (!ring?.length) return;
+        const closed = [...ring];
+        const first = ring[0];
+        const last = ring[ring.length - 1];
+        if (first && last && (first[0] !== last[0] || first[1] !== last[1])) {
+          closed.push(first);
+        }
+
+        const entity = viewer.entities.add({
+          id: `localtwin-commercial-${candidate.properties.zoneId}::${ringIndex}`,
+          name: `${candidate.properties.label} 상권 후보`,
+          polygon: {
+            hierarchy: Cesium.Cartesian3.fromDegreesArray(closed.flat()),
+            material: plateFill,
+            height: elevationM,
+            heightReference:
+              Cesium.HeightReference?.RELATIVE_TO_GROUND ??
+              Cesium.HeightReference?.CLAMP_TO_GROUND,
+          },
+        });
+        cellEntitiesRef.current.push(entity);
+
+        const groundEdge = viewer.entities.add({
+          id: `localtwin-commercial-${candidate.properties.zoneId}::edge-${ringIndex}`,
+          name: `${candidate.properties.label} 상권 후보 경계`,
+          polyline: {
+            positions: Cesium.Cartesian3.fromDegreesArray(closed.flat()),
+            width: selected ? 5.5 : hovered ? 4.5 : 2.6,
+            material:
+              (selected || hovered) && Cesium.PolylineGlowMaterialProperty
+                ? new Cesium.PolylineGlowMaterialProperty({
+                    glowPower: 0.18,
+                    taperPower: 0.45,
+                    color: edge,
+                  })
+                : edge,
+            clampToGround: true,
+          },
+        });
+        cellEntitiesRef.current.push(groundEdge);
+      });
+
+      if (
+        typeof candidate.properties.labelLon === "number" &&
+        typeof candidate.properties.labelLat === "number"
+      ) {
+        const kindLabel =
+          candidate.properties.zoneKind === "commercial_corridor"
+            ? "정밀상권"
+            : "상권후보";
+        const label = viewer.entities.add({
+          id: `localtwin-commercial-${candidate.properties.zoneId}::label`,
+          position: Cesium.Cartesian3.fromDegrees(
+            candidate.properties.labelLon,
+            candidate.properties.labelLat,
+            elevationM + 18,
+          ),
+          label: {
+            text: `${candidate.properties.label} · ${kindLabel}\n${Math.round(potential)} / 100`,
+            font: selected || hovered ? "bold 14px sans-serif" : "bold 11px sans-serif",
+            fillColor: Cesium.Color.WHITE,
+            outlineColor: Cesium.Color.fromCssColorString("#071018"),
+            outlineWidth: 3,
+            style: Cesium.LabelStyle.FILL_AND_OUTLINE,
+            showBackground: true,
+            backgroundColor: Cesium.Color.fromCssColorString("#071018").withAlpha(
+              selected || hovered ? 0.94 : 0.78,
+            ),
+            backgroundPadding: new Cesium.Cartesian2(8, 6),
+            heightReference:
+              Cesium.HeightReference?.RELATIVE_TO_GROUND ??
+              Cesium.HeightReference?.CLAMP_TO_GROUND,
+            disableDepthTestDistance: Number.POSITIVE_INFINITY,
+            distanceDisplayCondition: new Cesium.DistanceDisplayCondition(0, 55_000),
+          },
+        });
+        cellEntitiesRef.current.push(label);
+      }
+    }
+
     viewer.scene?.requestRender?.();
   }, [
     activeLayer,
     citywideZones,
     clearEntities,
+    commercialProfiles,
+    commercialZones,
     contextProfiles,
     hoveredZoneCellId,
     ready,
@@ -1150,6 +1409,88 @@ export default function VWorldLocalTwinMap({
   }, [ready, scope]);
 
   useEffect(() => {
+    const viewer = viewerRef.current;
+    const Cesium = window.Cesium;
+    if (
+      !ready ||
+      scope !== "citywide" ||
+      !selectedContextZoneId ||
+      !viewer?.camera ||
+      !Cesium
+    ) {
+      return;
+    }
+
+    if (initialContextSelectionRef.current) {
+      initialContextSelectionRef.current = false;
+      return;
+    }
+
+    const commercialZone = commercialZones.find(
+      (zone) => zone.properties.zoneId === selectedContextZoneId,
+    );
+    const localityZone = citywideZones.find(
+      (zone) => zone.properties.zoneId === selectedContextZoneId,
+    );
+    const properties = commercialZone?.properties ?? localityZone?.properties;
+    if (
+      !properties ||
+      typeof properties.labelLon !== "number" ||
+      typeof properties.labelLat !== "number"
+    ) {
+      return;
+    }
+
+    const isCandidate = Boolean(commercialZone?.properties.isCommercialCandidate);
+    const isPreciseCorridor =
+      commercialZone?.properties.zoneKind === "commercial_corridor";
+    const target = Cesium.Cartesian3.fromDegrees(
+      properties.labelLon,
+      properties.labelLat,
+      0,
+    );
+
+    if (
+      typeof viewer.camera.flyToBoundingSphere === "function" &&
+      Cesium.BoundingSphere &&
+      Cesium.HeadingPitchRange
+    ) {
+      viewer.camera.flyToBoundingSphere(
+        new Cesium.BoundingSphere(target, 45),
+        {
+          offset: new Cesium.HeadingPitchRange(
+            viewer.camera.heading,
+            Cesium.Math.toRadians(isCandidate ? -58 : -70),
+            isPreciseCorridor ? 4_500 : isCandidate ? 6_500 : 9_000,
+          ),
+          duration: 0.7,
+        },
+      );
+    } else {
+      viewer.camera.flyTo({
+        destination: Cesium.Cartesian3.fromDegrees(
+          properties.labelLon,
+          properties.labelLat,
+          isPreciseCorridor ? 4_500 : isCandidate ? 6_500 : 9_000,
+        ),
+        orientation: {
+          heading: viewer.camera.heading,
+          pitch: Cesium.Math.toRadians(-90),
+          roll: 0,
+        },
+        duration: 0.7,
+      });
+    }
+    viewer.scene?.requestRender?.();
+  }, [
+    citywideZones,
+    commercialZones,
+    ready,
+    scope,
+    selectedContextZoneId,
+  ]);
+
+  useEffect(() => {
     if (!ready || !containerRef.current) return;
     const observer = new ResizeObserver(() => {
       mapRef.current?.updateSize?.();
@@ -1239,7 +1580,7 @@ export default function VWorldLocalTwinMap({
         </div>
         <div>
           {scope === "citywide"
-            ? "읍·면·동 권역을 클릭하면 배후시설 프로필을 확인합니다 · 공식 SGIS 행정동 경계·공식/공개 앵커 기반 상대지표 · "
+            ? "띄워진 상권후보를 우선 클릭해 전역 상권분석을 확인합니다 · 일반 권역은 SGIS 행정동 분석단위 · 대구 외곽은 시각적으로 낮춰 표시 · "
             : "권역에 마우스를 올리면 강조되고 클릭하면 후보가 선택됩니다 · 실제 도로·시장 기반 분석영역 · 공식 상권 경계 아님 · "}
           <a
             href="https://www.openstreetmap.org/copyright"

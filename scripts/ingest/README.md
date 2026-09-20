@@ -47,8 +47,10 @@ It does not alter transit, rent, Buzz, spillover, or mobility/footfall values.
 
 `refresh_daegu_boundary.py` stores the public OpenStreetMap/Nominatim administrative
 polygon for 대구광역시 as `public/data/daegu_boundary.geojson`. The application uses
-this geometry only to limit 3D map rendering and to dim the outside area; it is not a
-commercial-area or business-evidence input.
+this geometry only for the visible Daegu boundary outline; it does not hard-clamp camera
+movement. Citywide mode separately applies a visual-only outside focus veil so neighboring
+regions remain navigable but less prominent. Neither artifact is a commercial-area or
+business-evidence input.
 
 ## Map-derived corridor zones
 
@@ -84,6 +86,18 @@ coordinates, and controlled data.
    All 118,357 valid Daegu business points currently map to an official SGIS locality.
 5. `derive_context_graph.py` derives distance-decay anchor signals, official business
    structure, `NEAR` edges and `HAS_BUSINESS_PROFILE` edges.
+6. `derive_citywide_commercial_candidates.py` combines the derived SEMAS density/diversity
+   and transit/market/employment/culture/healthcare accessibility scores into a deterministic
+   **commercial-potential review score**. It keeps the five central map-derived corridors and
+   selects only evidence-qualified SGIS administrative-dong candidates, capped at two per
+   district with a spatial-separation rule. It writes the 155-zone lightweight score/status
+   table to `public/data/citywide_commercial_profiles.json` and keeps geometry only for
+   the 19 selected candidates in `public/data/citywide_commercial_candidates.geojson`;
+   the 150 SGIS geometries remain single-sourced in `daegu_analysis_zones.geojson`.
+
+The candidate layer is modelled prioritization evidence. It is not an official commercial-area
+designation, footfall observation, revenue forecast, success probability, or replacement for
+missing citywide rent/search/living-population/card-spend observations.
 
 Raw national/Daegu source downloads are **not committed**. The committed snapshots contain
 only normalized data required to reproduce the product. Living-population, card-spend,

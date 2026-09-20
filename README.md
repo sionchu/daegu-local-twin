@@ -56,9 +56,13 @@ map-derived visualization corridors.
 The Daegu-wide context view adds the official 2026Q2 SEMAS store structure, HIRA
 hospital/pharmacy coordinates, Daegu education-office school registry, Daegu registered
 factory registry, district resident-population totals, and the official SGIS 2025Q2
-150 administrative-dong polygons. Overture Places is used only to fill remaining
-anchor-coordinate gaps where no official spatial source is available. Source quality is
-preserved per record and per derived edge. LocalTwin then derives cell-level mobility, rent
+150 administrative-dong polygons. A deterministic citywide commercial-candidate layer
+combines SEMAS density/diversity with transit, market, employment/public, culture and
+healthcare accessibility. It keeps the five central map-derived corridors and selects
+only evidence-qualified administrative-dong review candidates; these are **not** official
+commercial-area boundaries or sales/success predictions. Overture Places is used only to
+fill remaining anchor-coordinate gaps where no official spatial source is available.
+Source quality is preserved per record and per derived edge. LocalTwin then derives cell-level mobility, rent
 mapping, regeneration context, rent benchmarks, and spillover deterministically. Cells without
 an exact R-ONE commercial-area name use an explicitly modelled distance-decay blend of
 the exact-mapped official R-ONE benchmarks; this remains a benchmark, not a store quote.
@@ -92,6 +96,8 @@ Current product snapshots:
 - `public/data/context_anchors.json`
 - `public/data/context_anchors/*.json` (lazy client map layers)
 - `public/data/zone_context_profiles.json`
+- `public/data/citywide_commercial_profiles.json`
+- `public/data/citywide_commercial_candidates.geojson`
 - `public/data/corridor_context_profiles.json`
 - `public/data/zone_business_profiles.json`
 - `public/data/context_graph.json`
