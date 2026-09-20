@@ -111,6 +111,11 @@ missing citywide rent/search/living-population/card-spend observations.
    1,086 official Daegu parking coordinates, writes the lazy `parking_access` layer, and
    preserves spaces as evidence without using capacity as a hidden scoring weight. Re-run
    `derive_context_graph.py` afterwards to refresh zone/corridor parking-access scores.
+10. `refresh_kosis_workplace_employment.py` normalizes the KOSIS 2024 National Business
+   Survey online-publication table "읍면동 산업대분류별 총괄". KOSIS administrative
+   codes match all 150 SGIS Daegu dongs directly, so no name inference or spatial
+   redistribution is required. It writes official business-location employee and business
+   counts to `public/data/workplace_employment.json`.
 
 Raw national/Daegu source downloads are **not committed**. The committed snapshots contain
 only normalized data required to reproduce the product. Living-population, card-spend,

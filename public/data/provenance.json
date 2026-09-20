@@ -416,6 +416,30 @@
       "sourceSha256": "C698CC5DDCB4E5DC92791CF09E5201E71CC410B3095151A23103939347D95D3A"
     },
     {
+      "id": "kosis-workplace-employment-2024",
+      "title": "KOSIS 전국사업체조사 2024 읍면동 산업대분류별 총괄 — 대구 직장 종사자",
+      "provider": "국가데이터처 / KOSIS",
+      "url": "https://kosis.kr/upsHtml/online.do?isOnline=Y&PART=G&isNew=Y&dev=Y",
+      "geographicLevel": "대구광역시 SGIS 행정동 150개",
+      "sourceVersion": "2024년 기준",
+      "sourceDate": "2024",
+      "retrievedAt": "2026-09-20T09:47:29Z",
+      "sourceSha256": "C4E9D5EC7084477F7E2597C1242DA41A34B518D09841484C5889EDA0B7DBA3B5",
+      "fieldsUsed": [
+        "지역",
+        "산업분류",
+        "사업체수",
+        "종사자수"
+      ],
+      "limitations": [
+        "사업체 소재지 기준 종사자수이며 거주지 기준 취업자수나 통근 유입인구와 다르다.",
+        "2024년 기준 연간 조사 결과이며 실시간·시간대별 체류인구가 아니다.",
+        "KOSIS 행정구역 코드와 SGIS 2025Q2 행정동 코드가 150/150 일치하여 코드로 직접 연결한다.",
+        "종사자수는 업무지구성의 공식 증거로 사용할 수 있으나 매출·방문객·상권 성공확률을 뜻하지 않는다."
+      ],
+      "mode": "official-snapshot"
+    },
+    {
       "id": "official-resident-population",
       "title": "대구광역시 주민등록인구및세대현황",
       "provider": "대구광역시 / 공공데이터포털",

@@ -60,9 +60,15 @@
     },
     {
       "key": "workplace_population",
-      "status": "missing",
-      "source": "SGIS/KOSIS workplace or employee statistics",
-      "quality": "official-needed"
+      "status": "available-official-dong-2024",
+      "source": "KOSIS 전국사업체조사 2024 읍면동 산업대분류별 총괄",
+      "sourceUrl": "https://kosis.kr/upsHtml/online.do?isOnline=Y&PART=G&isNew=Y&dev=Y",
+      "quality": "official",
+      "officialZoneRecords": 150,
+      "cityBusinesses": 286841,
+      "cityEmployees": 1021246,
+      "output": "workplace_employment.json",
+      "limitation": "사업체 소재지 기준 종사자수이며 거주지 기준 취업자수·통근유입·시간대별 체류인구가 아님"
     },
     {
       "key": "resident_population",
