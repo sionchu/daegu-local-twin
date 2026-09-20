@@ -59,11 +59,15 @@ export function loadVWorld(apiKey: string) {
         const href = child.getAttribute("href");
         if (!href) return;
         const secureHref = secureVWorldUrl(href);
-        if (Array.from(document.styleSheets).some((sheet) => sheet.href === secureHref)) return;
-        const link = document.createElement("link");
-        link.rel = "stylesheet";
-        link.href = secureHref;
-        document.head.appendChild(link);
+        const alreadyLoaded = Array.from(
+          document.querySelectorAll<HTMLStyleElement>("style[data-vworld-stylesheet]"),
+        ).some((style) => style.dataset.vworldStylesheet === secureHref);
+        if (alreadyLoaded) return;
+
+        const style = document.createElement("style");
+        style.dataset.vworldStylesheet = secureHref;
+        style.textContent = `@import url("${secureHref}") layer(vworld);`;
+        document.head.appendChild(style);
       });
       template.content.querySelectorAll("script[src]").forEach((child) => {
         const src = child.getAttribute("src");

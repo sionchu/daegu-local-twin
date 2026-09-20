@@ -377,7 +377,7 @@ function configureCameraControls(viewer: any) {
   return () => undefined;
 }
 
-function addDaeguBoundaryMask(
+function addDaeguBoundaryOutline(
   viewer: any,
   Cesium: any,
   geometry: AdminGeometry | undefined,
@@ -386,45 +386,17 @@ function addDaeguBoundaryMask(
   const rings = displayRings(geometry).filter((ring) => ring.length >= 3);
   if (!rings.length) return [];
 
-  const outer = [
-    [DAEGU_RENDER_BOUNDS.west, DAEGU_RENDER_BOUNDS.south],
-    [DAEGU_RENDER_BOUNDS.east, DAEGU_RENDER_BOUNDS.south],
-    [DAEGU_RENDER_BOUNDS.east, DAEGU_RENDER_BOUNDS.north],
-    [DAEGU_RENDER_BOUNDS.west, DAEGU_RENDER_BOUNDS.north],
-    [DAEGU_RENDER_BOUNDS.west, DAEGU_RENDER_BOUNDS.south],
-  ];
-  const hierarchy = new Cesium.PolygonHierarchy(
-    Cesium.Cartesian3.fromDegreesArray(outer.flat()),
-    rings.map(
-      (ring) =>
-        new Cesium.PolygonHierarchy(
-          Cesium.Cartesian3.fromDegreesArray(ring.flat()),
-        ),
-    ),
-  );
-
-  const mask = viewer.entities.add({
-    name: "대구 행정경계 외곽 마스크",
-    polygon: {
-      hierarchy,
-      material: Cesium.Color.fromCssColorString("#03070b").withAlpha(0.62),
-      heightReference: Cesium.HeightReference?.CLAMP_TO_GROUND,
-    },
-  });
-
-  const boundaries = rings.map((ring) =>
+  return rings.map((ring) =>
     viewer.entities.add({
       name: "대구광역시 경계",
       polyline: {
         positions: Cesium.Cartesian3.fromDegreesArray(ring.flat()),
-        width: 2,
-        material: Cesium.Color.fromCssColorString("#dbe7ea").withAlpha(0.42),
+        width: 2.4,
+        material: Cesium.Color.fromCssColorString("#dbe7ea").withAlpha(0.58),
         clampToGround: true,
       },
     }),
   );
-
-  return [mask, ...boundaries];
 }
 
 export default function VWorldLocalTwinMap({
@@ -444,7 +416,7 @@ export default function VWorldLocalTwinMap({
   const cellEntitiesRef = useRef<any[]>([]);
   const contextLayerEntitiesRef = useRef<any[]>([]);
   const clickCleanupRef = useRef<(() => void) | null>(null);
-  const spatialLimitCleanupRef = useRef<(() => void) | null>(null);
+  const cameraControlCleanupRef = useRef<(() => void) | null>(null);
   const hoveredZoneCellIdRef = useRef<string | null>(null);
   const scopeRef = useRef<"central" | "citywide">(scope);
   const citywideZonesRef = useRef<CitywideZoneFeature[]>([]);
@@ -516,7 +488,7 @@ export default function VWorldLocalTwinMap({
         viewer.shadows = false;
 
         const Cesium = window.Cesium;
-        spatialLimitCleanupRef.current = configureCameraControls(viewer);
+        cameraControlCleanupRef.current = configureCameraControls(viewer);
 
         const [
           adminResponse,
@@ -548,12 +520,12 @@ export default function VWorldLocalTwinMap({
           ),
         }));
 
-        const maskEntities = addDaeguBoundaryMask(
+        const boundaryEntities = addDaeguBoundaryOutline(
           viewer,
           Cesium,
           daeguBoundary.features?.[0]?.geometry,
         );
-        contextEntitiesRef.current.push(...maskEntities);
+        contextEntitiesRef.current.push(...boundaryEntities);
 
         for (const feature of admin.features ?? []) {
           for (const ring of displayRings(feature.geometry)) {
@@ -729,8 +701,8 @@ export default function VWorldLocalTwinMap({
     return () => {
       cancelled = true;
       clickCleanupRef.current?.();
-      spatialLimitCleanupRef.current?.();
-      spatialLimitCleanupRef.current = null;
+      cameraControlCleanupRef.current?.();
+      cameraControlCleanupRef.current = null;
       clearEntities(cellEntitiesRef.current);
       clearEntities(contextLayerEntitiesRef.current);
       clearEntities(contextEntitiesRef.current);
@@ -1183,20 +1155,23 @@ export default function VWorldLocalTwinMap({
       return;
     }
 
+    const selectedCorridor = corridors.find((zone) =>
+      zone.properties.memberCellIds.includes(selectedCell.cellId),
+    );
+    const [targetLon, targetLat] = selectedCorridor
+      ? zoneCenter(selectedCorridor, cells)
+      : [selectedCell.center.lon, selectedCell.center.lat];
+
     viewer.camera.flyTo({
-      destination: Cesium.Cartesian3.fromDegrees(
-        selectedCell.center.lon,
-        selectedCell.center.lat,
-        720,
-      ),
+      destination: Cesium.Cartesian3.fromDegrees(targetLon, targetLat, 1_100),
       orientation: {
-        heading: 0,
-        pitch: Cesium.Math.toRadians(-52),
-        roll: 0,
+        heading: viewer.camera.heading,
+        pitch: viewer.camera.pitch,
+        roll: viewer.camera.roll,
       },
-      duration: 0.75,
+      duration: 0.65,
     });
-  }, [ready, scope, selectedCell]);
+  }, [cells, corridors, ready, scope, selectedCell]);
 
   return (
     <div
