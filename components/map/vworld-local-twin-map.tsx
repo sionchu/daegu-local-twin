@@ -187,6 +187,7 @@ type CommercialPotentialProfile = {
   isCommercialCandidate: boolean;
   candidateRank?: number | null;
   candidateTier?: string | null;
+  memberCellIds?: string[];
   commercialPotentialScore: number;
   businessCount: number;
   businessDensityScore: number;
@@ -222,6 +223,7 @@ type CandidateOverlayPoint = {
   zoneKind: "locality" | "commercial_corridor";
   score: number;
   rank: number | null | undefined;
+  memberCellIds?: string[];
   x: number;
   y: number;
 };
@@ -864,9 +866,25 @@ export default function VWorldLocalTwinMap({
   }, [clearEntities, onSelect, onUnavailable]);
 
   useEffect(() => {
+    if (commercialZones.length) return;
+    let cancelled = false;
+    void fetch("/data/citywide_commercial_candidates.geojson")
+      .then((response) => response.json() as Promise<CommercialPotentialCollection>)
+      .then((document) => {
+        if (!cancelled) setCommercialZones(document.features ?? []);
+      })
+      .catch(() => {
+        if (!cancelled) setCommercialZones([]);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [commercialZones.length]);
+
+  useEffect(() => {
     if (
       scope !== "citywide" ||
-      (citywideZones.length && commercialZones.length && commercialProfiles.length)
+      (citywideZones.length && commercialProfiles.length)
     ) {
       return;
     }
@@ -879,17 +897,13 @@ export default function VWorldLocalTwinMap({
       fetch("/data/zone_context_profiles.json").then(
         (response) => response.json() as Promise<ContextProfileDocument>,
       ),
-      fetch("/data/citywide_commercial_candidates.geojson").then(
-        (response) => response.json() as Promise<CommercialPotentialCollection>,
-      ),
       fetch("/data/citywide_commercial_profiles.json").then(
         (response) => response.json() as Promise<CommercialPotentialProfileDocument>,
       ),
     ])
-      .then(([zoneDocument, profileDocument, commercialDocument, commercialProfileDocument]) => {
+      .then(([zoneDocument, profileDocument, commercialProfileDocument]) => {
         if (cancelled) return;
         setCitywideZones(zoneDocument.features ?? []);
-        setCommercialZones(commercialDocument.features ?? []);
         setCommercialProfiles(commercialProfileDocument.records ?? []);
         setContextProfiles((current) => ({
           ...current,
@@ -904,7 +918,6 @@ export default function VWorldLocalTwinMap({
       .catch(() => {
         if (cancelled) return;
         setCitywideZones([]);
-        setCommercialZones([]);
         setCommercialProfiles([]);
       });
 
@@ -914,7 +927,6 @@ export default function VWorldLocalTwinMap({
   }, [
     citywideZones.length,
     commercialProfiles.length,
-    commercialZones.length,
     scope,
   ]);
 
@@ -955,8 +967,8 @@ export default function VWorldLocalTwinMap({
       const primaryCellId = memberCells[0].cellId;
       const hovered = hoveredZoneCellId === primaryCellId;
       const hoverActive = hoveredZoneCellId !== null;
-      const fillAlpha = hovered ? 0.34 : selected ? 0.24 : hoverActive ? 0.035 : 0.11;
-      const borderAlpha = hovered ? 1 : selected ? 0.92 : hoverActive ? 0.20 : 0.68;
+      const fillAlpha = hovered ? 0.24 : selected ? 0.16 : hoverActive ? 0.02 : 0.045;
+      const borderAlpha = hovered ? 0.92 : selected ? 0.78 : hoverActive ? 0.12 : 0.34;
       const fill = scoreColor(Cesium, score, fillAlpha);
       const border = scoreColor(Cesium, score, borderAlpha);
 
@@ -981,7 +993,7 @@ export default function VWorldLocalTwinMap({
           },
           polyline: {
             positions,
-            width: hovered ? 7 : selected ? 4.5 : hoverActive ? 1.25 : 2.5,
+            width: hovered ? 5 : selected ? 3.5 : hoverActive ? 1 : 1.5,
             material:
               hovered && Cesium.PolylineGlowMaterialProperty
                 ? new Cesium.PolylineGlowMaterialProperty({
@@ -1001,9 +1013,8 @@ export default function VWorldLocalTwinMap({
         id: `localtwin-zone-${primaryCellId}::label`,
         position: Cesium.Cartesian3.fromDegrees(zoneLon, zoneLat),
         label: {
-          text: hovered || selected
-            ? `${zone.properties.label}\n${score === null ? "데이터 부족" : Math.round(score) + " / 100"}`
-            : zone.properties.label,
+          show: hovered || selected,
+          text: `${zone.properties.label}\n${score === null ? "데이터 부족" : Math.round(score) + " / 100"}`,
           font: hovered
             ? "bold 16px sans-serif"
             : selected
@@ -1048,11 +1059,64 @@ export default function VWorldLocalTwinMap({
       cellEntitiesRef.current.push(point);
     }
 
+    const centralCandidates = commercialZones.filter((zone) => {
+      if (!zone.properties.isCommercialCandidate) return false;
+      const { labelLon, labelLat } = zone.properties;
+      return (
+        typeof labelLon === "number" &&
+        typeof labelLat === "number" &&
+        labelLon >= CENTRAL_SERVICE_BOUNDS.west &&
+        labelLon <= CENTRAL_SERVICE_BOUNDS.east &&
+        labelLat >= CENTRAL_SERVICE_BOUNDS.south &&
+        labelLat <= CENTRAL_SERVICE_BOUNDS.north
+      );
+    });
+
+    for (const candidate of centralCandidates) {
+      const selected =
+        candidate.properties.memberCellIds?.includes(selectedCellId ?? "") ?? false;
+      const potential = candidate.properties.commercialPotentialScore;
+      const plateFill = scoreColor(Cesium, potential, selected ? 0.28 : 0.12);
+      const edge = scoreColor(Cesium, potential, selected ? 1 : 0.72);
+
+      corridorRings(candidate.geometry).forEach((ring, ringIndex) => {
+        if (!ring?.length) return;
+        const closed = [...ring];
+        const first = ring[0];
+        const last = ring[ring.length - 1];
+        if (first && last && (first[0] !== last[0] || first[1] !== last[1])) {
+          closed.push(first);
+        }
+
+        cellEntitiesRef.current.push(
+          viewer.entities.add({
+            id: `localtwin-central-candidate-${candidate.properties.zoneId}::${ringIndex}`,
+            name: `${candidate.properties.label} 상권 후보`,
+            polygon: {
+              hierarchy: Cesium.Cartesian3.fromDegreesArray(closed.flat()),
+              material: plateFill,
+              height: 12,
+              heightReference:
+                Cesium.HeightReference?.RELATIVE_TO_GROUND ??
+                Cesium.HeightReference?.CLAMP_TO_GROUND,
+            },
+            polyline: {
+              positions: Cesium.Cartesian3.fromDegreesArray(closed.flat()),
+              width: selected ? 4.8 : 2.4,
+              material: edge,
+              clampToGround: true,
+            },
+          }),
+        );
+      });
+    }
+
     viewer.scene?.requestRender?.();
   }, [
     activeLayer,
     cells,
     clearEntities,
+    commercialZones,
     contextProfiles,
     corridors,
     hoveredZoneCellId,
@@ -1513,7 +1577,6 @@ export default function VWorldLocalTwinMap({
     const container = containerRef.current;
     if (
       !ready ||
-      scope !== "citywide" ||
       !viewer?.scene ||
       !Cesium ||
       !container ||
@@ -1535,6 +1598,19 @@ export default function VWorldLocalTwinMap({
         const containerRect = containerRef.current.getBoundingClientRect();
         const next = commercialZones
           .filter((zone) => zone.properties.isCommercialCandidate)
+          .filter((zone) => {
+            if (scope === "citywide") return true;
+            if (zone.properties.zoneKind !== "commercial_corridor") return false;
+            const { labelLon, labelLat } = zone.properties;
+            return (
+              typeof labelLon === "number" &&
+              typeof labelLat === "number" &&
+              labelLon >= CENTRAL_SERVICE_BOUNDS.west &&
+              labelLon <= CENTRAL_SERVICE_BOUNDS.east &&
+              labelLat >= CENTRAL_SERVICE_BOUNDS.south &&
+              labelLat <= CENTRAL_SERVICE_BOUNDS.north
+            );
+          })
           .map((zone) => {
             const { labelLon, labelLat } = zone.properties;
             if (typeof labelLon !== "number" || typeof labelLat !== "number") {
@@ -1560,6 +1636,7 @@ export default function VWorldLocalTwinMap({
               zoneKind: zone.properties.zoneKind,
               score: zone.properties.commercialPotentialScore,
               rank: zone.properties.candidateRank,
+              memberCellIds: zone.properties.memberCellIds,
               x: canvasRect.left - containerRect.left + screen.x,
               y: canvasRect.top - containerRect.top + screen.y,
             } satisfies CandidateOverlayPoint;
@@ -1669,20 +1746,24 @@ export default function VWorldLocalTwinMap({
       data-hovered-zone={hoveredZoneCellId ?? ""}
     >
       <div ref={containerRef} id={containerId} className="absolute inset-0 h-full w-full" />
-      {scope === "citywide" && ready ? (
+      {ready && candidateOverlayPoints.length ? (
         <>
           <div
             className="pointer-events-none absolute inset-0 z-[9]"
-            data-testid="citywide-candidate-overlay"
-            data-candidate-count={commercialZones.filter(
-              (zone) => zone.properties.isCommercialCandidate,
-            ).length}
+            data-testid={scope === "citywide" ? "citywide-candidate-overlay" : "central-candidate-overlay"}
+            data-candidate-count={candidateOverlayPoints.length}
           >
             {candidateOverlayPoints.map((point) => {
-              const selected = selectedContextZoneId === point.zoneId;
+              const selected =
+                scope === "citywide"
+                  ? selectedContextZoneId === point.zoneId
+                  : point.memberCellIds?.includes(selectedCellId ?? "") ?? false;
               const topCandidate =
-                point.zoneKind === "locality" &&
-                (point.rank ?? Number.POSITIVE_INFINITY) <= 5;
+                scope === "citywide"
+                  ? point.zoneKind === "locality" &&
+                    (point.rank ?? Number.POSITIVE_INFINITY) <= 5
+                  : point.zoneKind === "commercial_corridor" &&
+                    (point.rank ?? Number.POSITIVE_INFINITY) <= 3;
               const showLabel = selected || topCandidate;
 
               return (
@@ -1705,7 +1786,11 @@ export default function VWorldLocalTwinMap({
                   onClick={(event) => {
                     event.preventDefault();
                     event.stopPropagation();
-                    onContextSelect?.(point.zoneId);
+                    if (scope === "citywide") {
+                      onContextSelect?.(point.zoneId);
+                    } else if (point.memberCellIds?.[0]) {
+                      onSelect(point.memberCellIds[0]);
+                    }
                   }}
                 >
                   <span
@@ -1741,12 +1826,12 @@ export default function VWorldLocalTwinMap({
           <div className="pointer-events-none absolute right-3 top-3 z-10 rounded-xl border border-emerald-300/12 bg-slate-950/78 px-3 py-2 text-[10px] leading-4 text-slate-300 backdrop-blur-md">
             <div className="flex items-center gap-2 font-semibold text-white">
               <span className="citywide-candidate-legend-dot relative inline-block h-2 w-2 rounded-full bg-emerald-400 shadow-[0_0_12px_rgba(52,211,153,0.72)]" />
-              상권 후보 {commercialZones.filter(
-                (zone) => zone.properties.isCommercialCandidate,
-              ).length}곳
+              상권 후보 {candidateOverlayPoints.length}곳
             </div>
             <div className="mt-0.5 text-[9px] text-slate-500">
-              pulse marker는 후보 위치 · 클릭하면 분석/카메라 이동
+              {scope === "citywide"
+                ? "pulse marker는 후보 위치 · 클릭하면 분석/카메라 이동"
+                : "전역과 같은 후보 경계/순위 표현 · corridor 클릭 시 후보 선택"}
             </div>
           </div>
         </>
@@ -1764,7 +1849,7 @@ export default function VWorldLocalTwinMap({
         <div>
           {scope === "citywide"
             ? "띄워진 상권후보를 우선 클릭해 전역 상권분석을 확인합니다 · 일반 권역은 SGIS 행정동 분석단위 · 대구 외곽은 시각적으로 낮춰 표시 · "
-            : "권역에 마우스를 올리면 강조되고 클릭하면 후보가 선택됩니다 · 실제 도로·시장 기반 분석영역 · 공식 상권 경계 아님 · "}
+            : "전역과 같은 상권후보 경계를 겹쳐 표시하고 corridor를 클릭하면 후보가 선택됩니다 · 분석권역은 공식 상권 경계가 아님 · "}
           <a
             href="https://www.openstreetmap.org/copyright"
             target="_blank"
