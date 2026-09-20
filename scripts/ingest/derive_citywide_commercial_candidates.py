@@ -323,6 +323,11 @@ def main() -> int:
         "sourceProfiles": "public/data/zone_context_profiles.json",
         "sourceCentralCorridors": "public/data/corridor_zones.geojson",
         "scoreWeights": LOCALITY_WEIGHTS,
+        "scoreCalibration": {
+            "method": "upstream empirical percentile index",
+            "referenceZoneKind": "locality",
+            "positiveScoreRange": [5, 95],
+        },
         "selection": {
             "minCandidateScore": MIN_CANDIDATE_SCORE,
             "minBusinessCount": MIN_BUSINESS_COUNT,
