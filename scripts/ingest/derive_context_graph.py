@@ -10,10 +10,10 @@ from __future__ import annotations
 import argparse
 import json
 import math
+from bisect import bisect_left, bisect_right
 from collections import defaultdict
 from datetime import datetime, timezone
 from pathlib import Path
-from statistics import quantiles
 from typing import Any
 
 RULES = {
@@ -120,13 +120,22 @@ def generated_at(value: str | None) -> str:
     return datetime.now(timezone.utc).replace(microsecond=0).isoformat().replace("+00:00", "Z")
 
 
-def p90(values: list[float]) -> float:
-    nonzero = sorted(value for value in values if value > 0)
-    if not nonzero:
-        return 1.0
-    if len(nonzero) < 10:
-        return nonzero[-1]
-    return quantiles(nonzero, n=10, method="inclusive")[8]
+def percentile_index(values: list[float], value: float) -> float:
+    """Map a positive value to a shared citywide percentile index.
+
+    Zero stays zero. Positive values use the locality distribution as the common
+    reference and are compressed to 5..95 so no single facility-density signal
+    presents itself as an absolute 100/100.
+    """
+    if value <= 0:
+        return 0.0
+    ordered = sorted(float(item) for item in values if math.isfinite(float(item)))
+    if not ordered:
+        return 0.0
+    left = bisect_left(ordered, value)
+    right = bisect_right(ordered, value)
+    percentile = (left + (right - left) / 2) / len(ordered)
+    return round(5.0 + 90.0 * percentile, 1)
 
 
 def zone_features(city_zones: dict[str, Any], corridors: dict[str, Any]) -> list[dict[str, Any]]:
@@ -332,31 +341,40 @@ def main() -> int:
         detail_by_zone[zone["zoneId"]] = type_details
         graph_edge_candidates[zone["zoneId"]] = type_edges
 
-    zone_kind_by_id = {zone["zoneId"]: zone["zoneKind"] for zone in zones}
-    zone_kinds = sorted(set(zone_kind_by_id.values()))
-    normalization_by_kind = {
-        zone_kind: {
-            anchor_type: p90(
-                [
-                    raw_by_zone[zone_id].get(anchor_type, 0.0)
-                    for zone_id in raw_by_zone
-                    if zone_kind_by_id[zone_id] == zone_kind
-                ]
+    locality_zone_ids = [
+        zone["zoneId"] for zone in zones if zone["zoneKind"] == "locality"
+    ]
+    anchor_references = {
+        anchor_type: [
+            raw_by_zone[zone_id].get(anchor_type, 0.0)
+            for zone_id in locality_zone_ids
+        ]
+        for anchor_type in RULES
+    }
+    business_density_reference = [
+        float(business_profiles_by_zone[zone_id].get("businessesPerSqKm") or 0.0)
+        for zone_id in locality_zone_ids
+        if zone_id in business_profiles_by_zone
+    ]
+    category_density_references = {
+        category: [
+            (
+                float((business_profiles_by_zone[zone_id].get("categoryCounts") or {}).get(category) or 0)
+                / max(float(business_profiles_by_zone[zone_id].get("areaSqKm") or 0.0), 1e-6)
             )
-            for anchor_type in RULES
-        }
-        for zone_kind in zone_kinds
+            for zone_id in locality_zone_ids
+            if zone_id in business_profiles_by_zone
+        ]
+        for category in BUSINESS_CATEGORY_LABELS
     }
 
     profile_rows: list[dict[str, Any]] = []
     for zone in zones:
         zone_id = zone["zoneId"]
-        normalization = normalization_by_kind[zone["zoneKind"]]
         scores = {
-            anchor_type: round(
-                min(raw_by_zone[zone_id].get(anchor_type, 0.0) / normalization[anchor_type], 1.0)
-                * 100,
-                1,
+            anchor_type: percentile_index(
+                anchor_references[anchor_type],
+                raw_by_zone[zone_id].get(anchor_type, 0.0),
             )
             for anchor_type in RULES
         }
@@ -397,10 +415,28 @@ def main() -> int:
                     {
                         "businessCount": business_profiles_by_zone[zone_id]["businessCount"],
                         "businessesPerSqKm": business_profiles_by_zone[zone_id]["businessesPerSqKm"],
-                        "businessDensityScore": business_profiles_by_zone[zone_id]["businessDensityScore"],
+                        "businessDensityScore": percentile_index(
+                            business_density_reference,
+                            float(business_profiles_by_zone[zone_id].get("businessesPerSqKm") or 0.0),
+                        ),
                         "businessDiversityScore": business_profiles_by_zone[zone_id]["businessDiversityScore"],
                         "categoryCounts": business_profiles_by_zone[zone_id]["categoryCounts"],
-                        "categoryDensityScores": business_profiles_by_zone[zone_id]["categoryDensityScores"],
+                        "categoryDensityScores": {
+                            category: percentile_index(
+                                category_density_references[category],
+                                (
+                                    float(
+                                        (business_profiles_by_zone[zone_id].get("categoryCounts") or {}).get(category)
+                                        or 0
+                                    )
+                                    / max(
+                                        float(business_profiles_by_zone[zone_id].get("areaSqKm") or 0.0),
+                                        1e-6,
+                                    )
+                                ),
+                            )
+                            for category in BUSINESS_CATEGORY_LABELS
+                        },
                         "topMajorCategories": business_profiles_by_zone[zone_id]["topMajorCategories"],
                         "topMidCategories": business_profiles_by_zone[zone_id]["topMidCategories"],
                         "quality": "official-snapshot",
@@ -569,14 +605,16 @@ def main() -> int:
             "description": "Anchor proximity signals using polygon-to-point distance, exponential distance decay, and subtype base weights",
             "rules": RULES,
             "normalization": {
-                "method": "p90 capped at 100, normalized separately by zoneKind",
-                "p90RawDecaySumByZoneKind": {
-                    zone_kind: {
-                        key: round(value, 6)
-                        for key, value in values.items()
-                    }
-                    for zone_kind, values in normalization_by_kind.items()
-                },
+                "method": "empirical percentile index using citywide locality reference",
+                "referenceZoneKind": "locality",
+                "positiveScoreRange": [5, 95],
+                "zeroScore": 0,
+                "referenceZoneCount": len(locality_zone_ids),
+                "appliesTo": [
+                    "anchor proximity scores",
+                    "business density score",
+                    "category density scores",
+                ],
             },
             "limitations": [
                 "공식 이용자수/종사자수 capacity가 없는 시설은 subtype별 기본가중치만 사용함",
