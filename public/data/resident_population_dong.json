@@ -1,0 +1,3283 @@
+{
+  "schemaVersion": 1,
+  "generatedAt": "2026-09-20T10:12:14Z",
+  "source": {
+    "provider": "행정안전부",
+    "datasetId": "3033254",
+    "title": "지역별(행정동) 성별 주민등록 인구증감",
+    "url": "https://www.data.go.kr/data/3033254/fileData.do",
+    "sourceVersion": "2026-08-31",
+    "retrievedAt": "2026-09-20T10:12:14Z",
+    "sourceSha256": "33808E6A0DAF1F6923618727BCE9188EEBFF7F58B4EF4BBA06BDD033025FE233",
+    "encoding": "cp949",
+    "sourceRecordCount": 3619,
+    "sourceMonth": "2026-08-31",
+    "downloadFileId": "FILE_000000007644766"
+  },
+  "coverage": {
+    "sourceDaeguAgencyRows": 152,
+    "directNameMatchedRows": 150,
+    "branchOfficeRows": 2,
+    "sgisZoneCount": 150,
+    "sgisCoveragePct": 100.0,
+    "districtCount": 9,
+    "previousPopulation": 2347389,
+    "population": 2346277,
+    "male": 1148130,
+    "female": 1198147,
+    "populationChange": -1112
+  },
+  "byDistrict": [
+    {
+      "district": "군위군",
+      "previousPopulation": 22552,
+      "population": 22493,
+      "male": 11747,
+      "female": 10746,
+      "populationChange": -59
+    },
+    {
+      "district": "남구",
+      "previousPopulation": 141659,
+      "population": 141722,
+      "male": 67390,
+      "female": 74332,
+      "populationChange": 63
+    },
+    {
+      "district": "달서구",
+      "previousPopulation": 512963,
+      "population": 512577,
+      "male": 250575,
+      "female": 262002,
+      "populationChange": -386
+    },
+    {
+      "district": "달성군",
+      "previousPopulation": 251993,
+      "population": 251789,
+      "male": 127525,
+      "female": 124264,
+      "populationChange": -204
+    },
+    {
+      "district": "동구",
+      "previousPopulation": 338544,
+      "population": 338699,
+      "male": 165263,
+      "female": 173436,
+      "populationChange": 155
+    },
+    {
+      "district": "북구",
+      "previousPopulation": 406587,
+      "population": 406214,
+      "male": 200738,
+      "female": 205476,
+      "populationChange": -373
+    },
+    {
+      "district": "서구",
+      "previousPopulation": 163456,
+      "population": 163319,
+      "male": 80700,
+      "female": 82619,
+      "populationChange": -137
+    },
+    {
+      "district": "수성구",
+      "previousPopulation": 407820,
+      "population": 407570,
+      "male": 195514,
+      "female": 212056,
+      "populationChange": -250
+    },
+    {
+      "district": "중구",
+      "previousPopulation": 101815,
+      "population": 101894,
+      "male": 48678,
+      "female": 53216,
+      "populationChange": 79
+    }
+  ],
+  "records": [
+    {
+      "zoneId": "sgis-dong:22520111",
+      "district": "군위군",
+      "label": "군위읍",
+      "sourceAgencyCodes": [
+        "2772025000"
+      ],
+      "sourceAgencyLabels": [
+        "군위읍"
+      ],
+      "linkQuality": "official-name-exact",
+      "previousPopulation": 7901,
+      "previousMale": 4113,
+      "previousFemale": 3788,
+      "population": 7871,
+      "male": 4102,
+      "female": 3769,
+      "populationChange": -30,
+      "maleChange": -11,
+      "femaleChange": -19
+    },
+    {
+      "zoneId": "sgis-dong:22520313",
+      "district": "군위군",
+      "label": "부계면",
+      "sourceAgencyCodes": [
+        "2772033000"
+      ],
+      "sourceAgencyLabels": [
+        "부계면"
+      ],
+      "linkQuality": "official-name-exact",
+      "previousPopulation": 2106,
+      "previousMale": 1111,
+      "previousFemale": 995,
+      "population": 2111,
+      "male": 1115,
+      "female": 996,
+      "populationChange": 5,
+      "maleChange": 4,
+      "femaleChange": 1
+    },
+    {
+      "zoneId": "sgis-dong:22520316",
+      "district": "군위군",
+      "label": "산성면",
+      "sourceAgencyCodes": [
+        "2772036000"
+      ],
+      "sourceAgencyLabels": [
+        "산성면"
+      ],
+      "linkQuality": "official-name-exact",
+      "previousPopulation": 1201,
+      "previousMale": 619,
+      "previousFemale": 582,
+      "population": 1195,
+      "male": 618,
+      "female": 577,
+      "populationChange": -6,
+      "maleChange": -1,
+      "femaleChange": -5
+    },
+    {
+      "zoneId": "sgis-dong:22520317",
+      "district": "군위군",
+      "label": "삼국유사면",
+      "sourceAgencyCodes": [
+        "2772037000"
+      ],
+      "sourceAgencyLabels": [
+        "삼국유사면"
+      ],
+      "linkQuality": "official-name-exact",
+      "previousPopulation": 1330,
+      "previousMale": 716,
+      "previousFemale": 614,
+      "population": 1327,
+      "male": 715,
+      "female": 612,
+      "populationChange": -3,
+      "maleChange": -1,
+      "femaleChange": -2
+    },
+    {
+      "zoneId": "sgis-dong:22520311",
+      "district": "군위군",
+      "label": "소보면",
+      "sourceAgencyCodes": [
+        "2772031000"
+      ],
+      "sourceAgencyLabels": [
+        "소보면"
+      ],
+      "linkQuality": "official-name-exact",
+      "previousPopulation": 2221,
+      "previousMale": 1187,
+      "previousFemale": 1034,
+      "population": 2205,
+      "male": 1177,
+      "female": 1028,
+      "populationChange": -16,
+      "maleChange": -10,
+      "femaleChange": -6
+    },
+    {
+      "zoneId": "sgis-dong:22520314",
+      "district": "군위군",
+      "label": "우보면",
+      "sourceAgencyCodes": [
+        "2772034000"
+      ],
+      "sourceAgencyLabels": [
+        "우보면"
+      ],
+      "linkQuality": "official-name-exact",
+      "previousPopulation": 1937,
+      "previousMale": 999,
+      "previousFemale": 938,
+      "population": 1925,
+      "male": 996,
+      "female": 929,
+      "populationChange": -12,
+      "maleChange": -3,
+      "femaleChange": -9
+    },
+    {
+      "zoneId": "sgis-dong:22520315",
+      "district": "군위군",
+      "label": "의흥면",
+      "sourceAgencyCodes": [
+        "2772035000"
+      ],
+      "sourceAgencyLabels": [
+        "의흥면"
+      ],
+      "linkQuality": "official-name-exact",
+      "previousPopulation": 2217,
+      "previousMale": 1102,
+      "previousFemale": 1115,
+      "population": 2218,
+      "male": 1104,
+      "female": 1114,
+      "populationChange": 1,
+      "maleChange": 2,
+      "femaleChange": -1
+    },
+    {
+      "zoneId": "sgis-dong:22520312",
+      "district": "군위군",
+      "label": "효령면",
+      "sourceAgencyCodes": [
+        "2772032000"
+      ],
+      "sourceAgencyLabels": [
+        "효령면"
+      ],
+      "linkQuality": "official-name-exact",
+      "previousPopulation": 3639,
+      "previousMale": 1913,
+      "previousFemale": 1726,
+      "population": 3641,
+      "male": 1920,
+      "female": 1721,
+      "populationChange": 2,
+      "maleChange": 7,
+      "femaleChange": -5
+    },
+    {
+      "zoneId": "sgis-dong:22040650",
+      "district": "남구",
+      "label": "대명10동",
+      "sourceAgencyCodes": [
+        "2720065000"
+      ],
+      "sourceAgencyLabels": [
+        "대명10동"
+      ],
+      "linkQuality": "official-name-exact",
+      "previousPopulation": 7805,
+      "previousMale": 3625,
+      "previousFemale": 4180,
+      "population": 7805,
+      "male": 3619,
+      "female": 4186,
+      "populationChange": 0,
+      "maleChange": -6,
+      "femaleChange": 6
+    },
+    {
+      "zoneId": "sgis-dong:22040660",
+      "district": "남구",
+      "label": "대명11동",
+      "sourceAgencyCodes": [
+        "2720066000"
+      ],
+      "sourceAgencyLabels": [
+        "대명11동"
+      ],
+      "linkQuality": "official-name-exact",
+      "previousPopulation": 7152,
+      "previousMale": 3330,
+      "previousFemale": 3822,
+      "population": 7113,
+      "male": 3317,
+      "female": 3796,
+      "populationChange": -39,
+      "maleChange": -13,
+      "femaleChange": -26
+    },
+    {
+      "zoneId": "sgis-dong:22040560",
+      "district": "남구",
+      "label": "대명1동",
+      "sourceAgencyCodes": [
+        "2720056000"
+      ],
+      "sourceAgencyLabels": [
+        "대명1동"
+      ],
+      "linkQuality": "official-name-exact",
+      "previousPopulation": 9242,
+      "previousMale": 4495,
+      "previousFemale": 4747,
+      "population": 9228,
+      "male": 4493,
+      "female": 4735,
+      "populationChange": -14,
+      "maleChange": -2,
+      "femaleChange": -12
+    },
+    {
+      "zoneId": "sgis-dong:22040570",
+      "district": "남구",
+      "label": "대명2동",
+      "sourceAgencyCodes": [
+        "2720057100"
+      ],
+      "sourceAgencyLabels": [
+        "대명2동"
+      ],
+      "linkQuality": "official-name-exact",
+      "previousPopulation": 15229,
+      "previousMale": 7211,
+      "previousFemale": 8018,
+      "population": 15249,
+      "male": 7200,
+      "female": 8049,
+      "populationChange": 20,
+      "maleChange": -11,
+      "femaleChange": 31
+    },
+    {
+      "zoneId": "sgis-dong:22040580",
+      "district": "남구",
+      "label": "대명3동",
+      "sourceAgencyCodes": [
+        "2720058600"
+      ],
+      "sourceAgencyLabels": [
+        "대명3동"
+      ],
+      "linkQuality": "official-name-exact",
+      "previousPopulation": 12166,
+      "previousMale": 5907,
+      "previousFemale": 6259,
+      "population": 12297,
+      "male": 5983,
+      "female": 6314,
+      "populationChange": 131,
+      "maleChange": 76,
+      "femaleChange": 55
+    },
+    {
+      "zoneId": "sgis-dong:22040590",
+      "district": "남구",
+      "label": "대명4동",
+      "sourceAgencyCodes": [
+        "2720059000"
+      ],
+      "sourceAgencyLabels": [
+        "대명4동"
+      ],
+      "linkQuality": "official-name-exact",
+      "previousPopulation": 9003,
+      "previousMale": 4249,
+      "previousFemale": 4754,
+      "population": 8980,
+      "male": 4237,
+      "female": 4743,
+      "populationChange": -23,
+      "maleChange": -12,
+      "femaleChange": -11
+    },
+    {
+      "zoneId": "sgis-dong:22040600",
+      "district": "남구",
+      "label": "대명5동",
+      "sourceAgencyCodes": [
+        "2720060000"
+      ],
+      "sourceAgencyLabels": [
+        "대명5동"
+      ],
+      "linkQuality": "official-name-exact",
+      "previousPopulation": 8896,
+      "previousMale": 4209,
+      "previousFemale": 4687,
+      "population": 8992,
+      "male": 4270,
+      "female": 4722,
+      "populationChange": 96,
+      "maleChange": 61,
+      "femaleChange": 35
+    },
+    {
+      "zoneId": "sgis-dong:22040610",
+      "district": "남구",
+      "label": "대명6동",
+      "sourceAgencyCodes": [
+        "2720061000"
+      ],
+      "sourceAgencyLabels": [
+        "대명6동"
+      ],
+      "linkQuality": "official-name-exact",
+      "previousPopulation": 10276,
+      "previousMale": 4913,
+      "previousFemale": 5363,
+      "population": 10271,
+      "male": 4914,
+      "female": 5357,
+      "populationChange": -5,
+      "maleChange": 1,
+      "femaleChange": -6
+    },
+    {
+      "zoneId": "sgis-dong:22040640",
+      "district": "남구",
+      "label": "대명9동",
+      "sourceAgencyCodes": [
+        "2720064000"
+      ],
+      "sourceAgencyLabels": [
+        "대명9동"
+      ],
+      "linkQuality": "official-name-exact",
+      "previousPopulation": 13110,
+      "previousMale": 6343,
+      "previousFemale": 6767,
+      "population": 13111,
+      "male": 6342,
+      "female": 6769,
+      "populationChange": 1,
+      "maleChange": -1,
+      "femaleChange": 2
+    },
+    {
+      "zoneId": "sgis-dong:22040530",
+      "district": "남구",
+      "label": "봉덕1동",
+      "sourceAgencyCodes": [
+        "2720053000"
+      ],
+      "sourceAgencyLabels": [
+        "봉덕1동"
+      ],
+      "linkQuality": "official-name-exact",
+      "previousPopulation": 7680,
+      "previousMale": 3696,
+      "previousFemale": 3984,
+      "population": 7645,
+      "male": 3683,
+      "female": 3962,
+      "populationChange": -35,
+      "maleChange": -13,
+      "femaleChange": -22
+    },
+    {
+      "zoneId": "sgis-dong:22040540",
+      "district": "남구",
+      "label": "봉덕2동",
+      "sourceAgencyCodes": [
+        "2720054000"
+      ],
+      "sourceAgencyLabels": [
+        "봉덕2동"
+      ],
+      "linkQuality": "official-name-exact",
+      "previousPopulation": 12852,
+      "previousMale": 6067,
+      "previousFemale": 6785,
+      "population": 12827,
+      "male": 6053,
+      "female": 6774,
+      "populationChange": -25,
+      "maleChange": -14,
+      "femaleChange": -11
+    },
+    {
+      "zoneId": "sgis-dong:22040550",
+      "district": "남구",
+      "label": "봉덕3동",
+      "sourceAgencyCodes": [
+        "2720055000"
+      ],
+      "sourceAgencyLabels": [
+        "봉덕3동"
+      ],
+      "linkQuality": "official-name-exact",
+      "previousPopulation": 14003,
+      "previousMale": 6604,
+      "previousFemale": 7399,
+      "population": 13976,
+      "male": 6596,
+      "female": 7380,
+      "populationChange": -27,
+      "maleChange": -8,
+      "femaleChange": -19
+    },
+    {
+      "zoneId": "sgis-dong:22040510",
+      "district": "남구",
+      "label": "이천동",
+      "sourceAgencyCodes": [
+        "2720051500"
+      ],
+      "sourceAgencyLabels": [
+        "이천동"
+      ],
+      "linkQuality": "official-name-exact",
+      "previousPopulation": 14245,
+      "previousMale": 6690,
+      "previousFemale": 7555,
+      "population": 14228,
+      "male": 6683,
+      "female": 7545,
+      "populationChange": -17,
+      "maleChange": -7,
+      "femaleChange": -10
+    },
+    {
+      "zoneId": "sgis-dong:22070570",
+      "district": "달서구",
+      "label": "감삼동",
+      "sourceAgencyCodes": [
+        "2729055500"
+      ],
+      "sourceAgencyLabels": [
+        "감삼동"
+      ],
+      "linkQuality": "official-name-exact",
+      "previousPopulation": 31125,
+      "previousMale": 15128,
+      "previousFemale": 15997,
+      "population": 31140,
+      "male": 15131,
+      "female": 16009,
+      "populationChange": 15,
+      "maleChange": 3,
+      "femaleChange": 12
+    },
+    {
+      "zoneId": "sgis-dong:22070680",
+      "district": "달서구",
+      "label": "도원동",
+      "sourceAgencyCodes": [
+        "2729062800"
+      ],
+      "sourceAgencyLabels": [
+        "도원동"
+      ],
+      "linkQuality": "official-name-exact",
+      "previousPopulation": 30857,
+      "previousMale": 14645,
+      "previousFemale": 16212,
+      "population": 30780,
+      "male": 14601,
+      "female": 16179,
+      "populationChange": -77,
+      "maleChange": -44,
+      "femaleChange": -33
+    },
+    {
+      "zoneId": "sgis-dong:22070760",
+      "district": "달서구",
+      "label": "두류1·2동",
+      "sourceAgencyCodes": [
+        "2729053500"
+      ],
+      "sourceAgencyLabels": [
+        "두류1.2동"
+      ],
+      "linkQuality": "official-name-exact",
+      "previousPopulation": 15672,
+      "previousMale": 7693,
+      "previousFemale": 7979,
+      "population": 15672,
+      "male": 7695,
+      "female": 7977,
+      "populationChange": 0,
+      "maleChange": 2,
+      "femaleChange": -2
+    },
+    {
+      "zoneId": "sgis-dong:22070550",
+      "district": "달서구",
+      "label": "두류3동",
+      "sourceAgencyCodes": [
+        "2729055000"
+      ],
+      "sourceAgencyLabels": [
+        "두류3동"
+      ],
+      "linkQuality": "official-name-exact",
+      "previousPopulation": 8931,
+      "previousMale": 4312,
+      "previousFemale": 4619,
+      "population": 8926,
+      "male": 4295,
+      "female": 4631,
+      "populationChange": -5,
+      "maleChange": -17,
+      "femaleChange": 12
+    },
+    {
+      "zoneId": "sgis-dong:22070710",
+      "district": "달서구",
+      "label": "본동",
+      "sourceAgencyCodes": [
+        "2729065000"
+      ],
+      "sourceAgencyLabels": [
+        "본동"
+      ],
+      "linkQuality": "official-name-exact",
+      "previousPopulation": 13148,
+      "previousMale": 6441,
+      "previousFemale": 6707,
+      "population": 13266,
+      "male": 6518,
+      "female": 6748,
+      "populationChange": 118,
+      "maleChange": 77,
+      "femaleChange": 41
+    },
+    {
+      "zoneId": "sgis-dong:22070560",
+      "district": "달서구",
+      "label": "본리동",
+      "sourceAgencyCodes": [
+        "2729059000"
+      ],
+      "sourceAgencyLabels": [
+        "본리동"
+      ],
+      "linkQuality": "official-name-exact",
+      "previousPopulation": 22993,
+      "previousMale": 11298,
+      "previousFemale": 11695,
+      "population": 23007,
+      "male": 11295,
+      "female": 11712,
+      "populationChange": 14,
+      "maleChange": -3,
+      "femaleChange": 17
+    },
+    {
+      "zoneId": "sgis-dong:22070650",
+      "district": "달서구",
+      "label": "상인1동",
+      "sourceAgencyCodes": [
+        "2729062400"
+      ],
+      "sourceAgencyLabels": [
+        "상인1동"
+      ],
+      "linkQuality": "official-name-exact",
+      "previousPopulation": 31919,
+      "previousMale": 15296,
+      "previousFemale": 16623,
+      "population": 31859,
+      "male": 15260,
+      "female": 16599,
+      "populationChange": -60,
+      "maleChange": -36,
+      "femaleChange": -24
+    },
+    {
+      "zoneId": "sgis-dong:22070660",
+      "district": "달서구",
+      "label": "상인2동",
+      "sourceAgencyCodes": [
+        "2729062500"
+      ],
+      "sourceAgencyLabels": [
+        "상인2동"
+      ],
+      "linkQuality": "official-name-exact",
+      "previousPopulation": 16737,
+      "previousMale": 8272,
+      "previousFemale": 8465,
+      "population": 16964,
+      "male": 8373,
+      "female": 8591,
+      "populationChange": 227,
+      "maleChange": 101,
+      "femaleChange": 126
+    },
+    {
+      "zoneId": "sgis-dong:22070670",
+      "district": "달서구",
+      "label": "상인3동",
+      "sourceAgencyCodes": [
+        "2729062600"
+      ],
+      "sourceAgencyLabels": [
+        "상인3동"
+      ],
+      "linkQuality": "official-name-exact",
+      "previousPopulation": 9445,
+      "previousMale": 4508,
+      "previousFemale": 4937,
+      "population": 9436,
+      "male": 4501,
+      "female": 4935,
+      "populationChange": -9,
+      "maleChange": -7,
+      "femaleChange": -2
+    },
+    {
+      "zoneId": "sgis-dong:22070750",
+      "district": "달서구",
+      "label": "성당동",
+      "sourceAgencyCodes": [
+        "2729051500"
+      ],
+      "sourceAgencyLabels": [
+        "성당동"
+      ],
+      "linkQuality": "official-name-exact",
+      "previousPopulation": 19920,
+      "previousMale": 9622,
+      "previousFemale": 10298,
+      "population": 19860,
+      "male": 9604,
+      "female": 10256,
+      "populationChange": -60,
+      "maleChange": -18,
+      "femaleChange": -42
+    },
+    {
+      "zoneId": "sgis-dong:22070690",
+      "district": "달서구",
+      "label": "송현1동",
+      "sourceAgencyCodes": [
+        "2729063000"
+      ],
+      "sourceAgencyLabels": [
+        "송현1동"
+      ],
+      "linkQuality": "official-name-exact",
+      "previousPopulation": 15927,
+      "previousMale": 7997,
+      "previousFemale": 7930,
+      "population": 15862,
+      "male": 7981,
+      "female": 7881,
+      "populationChange": -65,
+      "maleChange": -16,
+      "femaleChange": -49
+    },
+    {
+      "zoneId": "sgis-dong:22070700",
+      "district": "달서구",
+      "label": "송현2동",
+      "sourceAgencyCodes": [
+        "2729064000"
+      ],
+      "sourceAgencyLabels": [
+        "송현2동"
+      ],
+      "linkQuality": "official-name-exact",
+      "previousPopulation": 17618,
+      "previousMale": 8353,
+      "previousFemale": 9265,
+      "population": 17635,
+      "male": 8361,
+      "female": 9274,
+      "populationChange": 17,
+      "maleChange": 8,
+      "femaleChange": 9
+    },
+    {
+      "zoneId": "sgis-dong:22070610",
+      "district": "달서구",
+      "label": "신당동",
+      "sourceAgencyCodes": [
+        "2729058500"
+      ],
+      "sourceAgencyLabels": [
+        "신당동"
+      ],
+      "linkQuality": "official-name-exact",
+      "previousPopulation": 27882,
+      "previousMale": 14062,
+      "previousFemale": 13820,
+      "population": 27830,
+      "male": 14035,
+      "female": 13795,
+      "populationChange": -52,
+      "maleChange": -27,
+      "femaleChange": -25
+    },
+    {
+      "zoneId": "sgis-dong:22070720",
+      "district": "달서구",
+      "label": "용산1동",
+      "sourceAgencyCodes": [
+        "2729057100"
+      ],
+      "sourceAgencyLabels": [
+        "용산1동"
+      ],
+      "linkQuality": "official-name-exact",
+      "previousPopulation": 27808,
+      "previousMale": 13872,
+      "previousFemale": 13936,
+      "population": 27731,
+      "male": 13825,
+      "female": 13906,
+      "populationChange": -77,
+      "maleChange": -47,
+      "femaleChange": -30
+    },
+    {
+      "zoneId": "sgis-dong:22070730",
+      "district": "달서구",
+      "label": "용산2동",
+      "sourceAgencyCodes": [
+        "2729057200"
+      ],
+      "sourceAgencyLabels": [
+        "용산2동"
+      ],
+      "linkQuality": "official-name-exact",
+      "previousPopulation": 24584,
+      "previousMale": 12158,
+      "previousFemale": 12426,
+      "population": 24557,
+      "male": 12138,
+      "female": 12419,
+      "populationChange": -27,
+      "maleChange": -20,
+      "femaleChange": -7
+    },
+    {
+      "zoneId": "sgis-dong:22070770",
+      "district": "달서구",
+      "label": "월성1동",
+      "sourceAgencyCodes": [
+        "2729060100"
+      ],
+      "sourceAgencyLabels": [
+        "월성1동"
+      ],
+      "linkQuality": "official-name-exact",
+      "previousPopulation": 39423,
+      "previousMale": 19209,
+      "previousFemale": 20214,
+      "population": 39351,
+      "male": 19168,
+      "female": 20183,
+      "populationChange": -72,
+      "maleChange": -41,
+      "femaleChange": -31
+    },
+    {
+      "zoneId": "sgis-dong:22070630",
+      "district": "달서구",
+      "label": "월성2동",
+      "sourceAgencyCodes": [
+        "2729060200"
+      ],
+      "sourceAgencyLabels": [
+        "월성2동"
+      ],
+      "linkQuality": "official-name-exact",
+      "previousPopulation": 13435,
+      "previousMale": 6323,
+      "previousFemale": 7112,
+      "population": 13411,
+      "male": 6326,
+      "female": 7085,
+      "populationChange": -24,
+      "maleChange": 3,
+      "femaleChange": -27
+    },
+    {
+      "zoneId": "sgis-dong:22070790",
+      "district": "달서구",
+      "label": "유천동",
+      "sourceAgencyCodes": [
+        "2729061700"
+      ],
+      "sourceAgencyLabels": [
+        "유천동"
+      ],
+      "linkQuality": "official-name-exact",
+      "previousPopulation": 32864,
+      "previousMale": 16278,
+      "previousFemale": 16586,
+      "population": 32805,
+      "male": 16240,
+      "female": 16565,
+      "populationChange": -59,
+      "maleChange": -38,
+      "femaleChange": -21
+    },
+    {
+      "zoneId": "sgis-dong:22070600",
+      "district": "달서구",
+      "label": "이곡1동",
+      "sourceAgencyCodes": [
+        "2729057600"
+      ],
+      "sourceAgencyLabels": [
+        "이곡1동"
+      ],
+      "linkQuality": "official-name-exact",
+      "previousPopulation": 19663,
+      "previousMale": 9794,
+      "previousFemale": 9869,
+      "population": 19612,
+      "male": 9759,
+      "female": 9853,
+      "populationChange": -51,
+      "maleChange": -35,
+      "femaleChange": -16
+    },
+    {
+      "zoneId": "sgis-dong:22070740",
+      "district": "달서구",
+      "label": "이곡2동",
+      "sourceAgencyCodes": [
+        "2729057700"
+      ],
+      "sourceAgencyLabels": [
+        "이곡2동"
+      ],
+      "linkQuality": "official-name-exact",
+      "previousPopulation": 14054,
+      "previousMale": 7102,
+      "previousFemale": 6952,
+      "population": 14032,
+      "male": 7091,
+      "female": 6941,
+      "populationChange": -22,
+      "maleChange": -11,
+      "femaleChange": -11
+    },
+    {
+      "zoneId": "sgis-dong:22070590",
+      "district": "달서구",
+      "label": "장기동",
+      "sourceAgencyCodes": [
+        "2729056800"
+      ],
+      "sourceAgencyLabels": [
+        "장기동"
+      ],
+      "linkQuality": "official-name-exact",
+      "previousPopulation": 15347,
+      "previousMale": 7429,
+      "previousFemale": 7918,
+      "population": 15315,
+      "male": 7433,
+      "female": 7882,
+      "populationChange": -32,
+      "maleChange": 4,
+      "femaleChange": -36
+    },
+    {
+      "zoneId": "sgis-dong:22070580",
+      "district": "달서구",
+      "label": "죽전동",
+      "sourceAgencyCodes": [
+        "2729056300"
+      ],
+      "sourceAgencyLabels": [
+        "죽전동"
+      ],
+      "linkQuality": "official-name-exact",
+      "previousPopulation": 14344,
+      "previousMale": 7054,
+      "previousFemale": 7290,
+      "population": 14360,
+      "male": 7072,
+      "female": 7288,
+      "populationChange": 16,
+      "maleChange": 18,
+      "femaleChange": -2
+    },
+    {
+      "zoneId": "sgis-dong:22070780",
+      "district": "달서구",
+      "label": "진천동",
+      "sourceAgencyCodes": [
+        "2729061500"
+      ],
+      "sourceAgencyLabels": [
+        "진천동"
+      ],
+      "linkQuality": "official-name-exact",
+      "previousPopulation": 49267,
+      "previousMale": 23925,
+      "previousFemale": 25342,
+      "population": 49166,
+      "male": 23873,
+      "female": 25293,
+      "populationChange": -101,
+      "maleChange": -52,
+      "femaleChange": -49
+    },
+    {
+      "zoneId": "sgis-dong:22510310",
+      "district": "달성군",
+      "label": "가창면",
+      "sourceAgencyCodes": [
+        "2771031000"
+      ],
+      "sourceAgencyLabels": [
+        "가창면"
+      ],
+      "linkQuality": "official-name-exact",
+      "previousPopulation": 6719,
+      "previousMale": 3300,
+      "previousFemale": 3419,
+      "population": 6686,
+      "male": 3281,
+      "female": 3405,
+      "populationChange": -33,
+      "maleChange": -19,
+      "femaleChange": -14
+    },
+    {
+      "zoneId": "sgis-dong:22510360",
+      "district": "달성군",
+      "label": "구지면",
+      "sourceAgencyCodes": [
+        "2771038000"
+      ],
+      "sourceAgencyLabels": [
+        "구지면"
+      ],
+      "linkQuality": "official-name-exact",
+      "previousPopulation": 18847,
+      "previousMale": 9971,
+      "previousFemale": 8876,
+      "population": 18827,
+      "male": 9973,
+      "female": 8854,
+      "populationChange": -20,
+      "maleChange": 2,
+      "femaleChange": -22
+    },
+    {
+      "zoneId": "sgis-dong:22510120",
+      "district": "달성군",
+      "label": "논공읍",
+      "sourceAgencyCodes": [
+        "2771025300",
+        "2771025400"
+      ],
+      "sourceAgencyLabels": [
+        "논공읍",
+        "논공읍공단출장소"
+      ],
+      "linkQuality": "official-name-exact-plus-branch-office",
+      "previousPopulation": 14804,
+      "previousMale": 8023,
+      "previousFemale": 6781,
+      "population": 14755,
+      "male": 7992,
+      "female": 6763,
+      "populationChange": -49,
+      "maleChange": -31,
+      "femaleChange": -18
+    },
+    {
+      "zoneId": "sgis-dong:22510130",
+      "district": "달성군",
+      "label": "다사읍",
+      "sourceAgencyCodes": [
+        "2771025600",
+        "2771025700"
+      ],
+      "sourceAgencyLabels": [
+        "다사읍",
+        "다사읍서재출장소"
+      ],
+      "linkQuality": "official-name-exact-plus-branch-office",
+      "previousPopulation": 88904,
+      "previousMale": 44288,
+      "previousFemale": 44616,
+      "population": 88881,
+      "male": 44259,
+      "female": 44622,
+      "populationChange": -23,
+      "maleChange": -29,
+      "femaleChange": 6
+    },
+    {
+      "zoneId": "sgis-dong:22510150",
+      "district": "달성군",
+      "label": "옥포읍",
+      "sourceAgencyCodes": [
+        "2771026200"
+      ],
+      "sourceAgencyLabels": [
+        "옥포읍"
+      ],
+      "linkQuality": "official-name-exact",
+      "previousPopulation": 22138,
+      "previousMale": 11110,
+      "previousFemale": 11028,
+      "population": 22134,
+      "male": 11113,
+      "female": 11021,
+      "populationChange": -4,
+      "maleChange": 3,
+      "femaleChange": -7
+    },
+    {
+      "zoneId": "sgis-dong:22510140",
+      "district": "달성군",
+      "label": "유가읍",
+      "sourceAgencyCodes": [
+        "2771025900"
+      ],
+      "sourceAgencyLabels": [
+        "유가읍"
+      ],
+      "linkQuality": "official-name-exact",
+      "previousPopulation": 31236,
+      "previousMale": 15897,
+      "previousFemale": 15339,
+      "population": 31265,
+      "male": 15908,
+      "female": 15357,
+      "populationChange": 29,
+      "maleChange": 11,
+      "femaleChange": 18
+    },
+    {
+      "zoneId": "sgis-dong:22510320",
+      "district": "달성군",
+      "label": "하빈면",
+      "sourceAgencyCodes": [
+        "2771033000"
+      ],
+      "sourceAgencyLabels": [
+        "하빈면"
+      ],
+      "linkQuality": "official-name-exact",
+      "previousPopulation": 3104,
+      "previousMale": 1698,
+      "previousFemale": 1406,
+      "population": 3081,
+      "male": 1688,
+      "female": 1393,
+      "populationChange": -23,
+      "maleChange": -10,
+      "femaleChange": -13
+    },
+    {
+      "zoneId": "sgis-dong:22510160",
+      "district": "달성군",
+      "label": "현풍읍",
+      "sourceAgencyCodes": [
+        "2771026500"
+      ],
+      "sourceAgencyLabels": [
+        "현풍읍"
+      ],
+      "linkQuality": "official-name-exact",
+      "previousPopulation": 20887,
+      "previousMale": 11038,
+      "previousFemale": 9849,
+      "population": 20879,
+      "male": 11052,
+      "female": 9827,
+      "populationChange": -8,
+      "maleChange": 14,
+      "femaleChange": -22
+    },
+    {
+      "zoneId": "sgis-dong:22510110",
+      "district": "달성군",
+      "label": "화원읍",
+      "sourceAgencyCodes": [
+        "2771025000"
+      ],
+      "sourceAgencyLabels": [
+        "화원읍"
+      ],
+      "linkQuality": "official-name-exact",
+      "previousPopulation": 45354,
+      "previousMale": 22305,
+      "previousFemale": 23049,
+      "population": 45281,
+      "male": 22259,
+      "female": 23022,
+      "populationChange": -73,
+      "maleChange": -46,
+      "femaleChange": -27
+    },
+    {
+      "zoneId": "sgis-dong:22020710",
+      "district": "동구",
+      "label": "공산동",
+      "sourceAgencyCodes": [
+        "2714076000"
+      ],
+      "sourceAgencyLabels": [
+        "공산동"
+      ],
+      "linkQuality": "official-name-exact",
+      "previousPopulation": 19708,
+      "previousMale": 9533,
+      "previousFemale": 10175,
+      "population": 19671,
+      "male": 9524,
+      "female": 10147,
+      "populationChange": -37,
+      "maleChange": -9,
+      "femaleChange": -28
+    },
+    {
+      "zoneId": "sgis-dong:22020620",
+      "district": "동구",
+      "label": "도평동",
+      "sourceAgencyCodes": [
+        "2714061500"
+      ],
+      "sourceAgencyLabels": [
+        "도평동"
+      ],
+      "linkQuality": "official-name-exact",
+      "previousPopulation": 3371,
+      "previousMale": 1834,
+      "previousFemale": 1537,
+      "population": 3374,
+      "male": 1834,
+      "female": 1540,
+      "populationChange": 3,
+      "maleChange": 0,
+      "femaleChange": 3
+    },
+    {
+      "zoneId": "sgis-dong:22020660",
+      "district": "동구",
+      "label": "동촌동",
+      "sourceAgencyCodes": [
+        "2714065500"
+      ],
+      "sourceAgencyLabels": [
+        "동촌동"
+      ],
+      "linkQuality": "official-name-exact",
+      "previousPopulation": 13815,
+      "previousMale": 6950,
+      "previousFemale": 6865,
+      "population": 13783,
+      "male": 6929,
+      "female": 6854,
+      "populationChange": -32,
+      "maleChange": -21,
+      "femaleChange": -11
+    },
+    {
+      "zoneId": "sgis-dong:22020680",
+      "district": "동구",
+      "label": "방촌동",
+      "sourceAgencyCodes": [
+        "2714067000"
+      ],
+      "sourceAgencyLabels": [
+        "방촌동"
+      ],
+      "linkQuality": "official-name-exact",
+      "previousPopulation": 16714,
+      "previousMale": 8056,
+      "previousFemale": 8658,
+      "population": 16700,
+      "male": 8049,
+      "female": 8651,
+      "populationChange": -14,
+      "maleChange": -7,
+      "femaleChange": -7
+    },
+    {
+      "zoneId": "sgis-dong:22020630",
+      "district": "동구",
+      "label": "불로·봉무동",
+      "sourceAgencyCodes": [
+        "2714062000"
+      ],
+      "sourceAgencyLabels": [
+        "불로.봉무동"
+      ],
+      "linkQuality": "official-name-exact",
+      "previousPopulation": 19381,
+      "previousMale": 9521,
+      "previousFemale": 9860,
+      "population": 19392,
+      "male": 9528,
+      "female": 9864,
+      "populationChange": 11,
+      "maleChange": 7,
+      "femaleChange": 4
+    },
+    {
+      "zoneId": "sgis-dong:22020510",
+      "district": "동구",
+      "label": "신암1동",
+      "sourceAgencyCodes": [
+        "2714051000"
+      ],
+      "sourceAgencyLabels": [
+        "신암1동"
+      ],
+      "linkQuality": "official-name-exact",
+      "previousPopulation": 10781,
+      "previousMale": 5347,
+      "previousFemale": 5434,
+      "population": 10786,
+      "male": 5351,
+      "female": 5435,
+      "populationChange": 5,
+      "maleChange": 4,
+      "femaleChange": 1
+    },
+    {
+      "zoneId": "sgis-dong:22020520",
+      "district": "동구",
+      "label": "신암2동",
+      "sourceAgencyCodes": [
+        "2714052000"
+      ],
+      "sourceAgencyLabels": [
+        "신암2동"
+      ],
+      "linkQuality": "official-name-exact",
+      "previousPopulation": 11446,
+      "previousMale": 5385,
+      "previousFemale": 6061,
+      "population": 11425,
+      "male": 5380,
+      "female": 6045,
+      "populationChange": -21,
+      "maleChange": -5,
+      "femaleChange": -16
+    },
+    {
+      "zoneId": "sgis-dong:22020530",
+      "district": "동구",
+      "label": "신암3동",
+      "sourceAgencyCodes": [
+        "2714053000"
+      ],
+      "sourceAgencyLabels": [
+        "신암3동"
+      ],
+      "linkQuality": "official-name-exact",
+      "previousPopulation": 11150,
+      "previousMale": 5482,
+      "previousFemale": 5668,
+      "population": 11174,
+      "male": 5494,
+      "female": 5680,
+      "populationChange": 24,
+      "maleChange": 12,
+      "femaleChange": 12
+    },
+    {
+      "zoneId": "sgis-dong:22020540",
+      "district": "동구",
+      "label": "신암4동",
+      "sourceAgencyCodes": [
+        "2714054000"
+      ],
+      "sourceAgencyLabels": [
+        "신암4동"
+      ],
+      "linkQuality": "official-name-exact",
+      "previousPopulation": 18383,
+      "previousMale": 9059,
+      "previousFemale": 9324,
+      "population": 18410,
+      "male": 9062,
+      "female": 9348,
+      "populationChange": 27,
+      "maleChange": 3,
+      "femaleChange": 24
+    },
+    {
+      "zoneId": "sgis-dong:22020550",
+      "district": "동구",
+      "label": "신암5동",
+      "sourceAgencyCodes": [
+        "2714054100"
+      ],
+      "sourceAgencyLabels": [
+        "신암5동"
+      ],
+      "linkQuality": "official-name-exact",
+      "previousPopulation": 7315,
+      "previousMale": 3463,
+      "previousFemale": 3852,
+      "population": 7319,
+      "male": 3462,
+      "female": 3857,
+      "populationChange": 4,
+      "maleChange": -1,
+      "femaleChange": 5
+    },
+    {
+      "zoneId": "sgis-dong:22020560",
+      "district": "동구",
+      "label": "신천1·2동",
+      "sourceAgencyCodes": [
+        "2714055500"
+      ],
+      "sourceAgencyLabels": [
+        "신천1.2동"
+      ],
+      "linkQuality": "official-name-exact",
+      "previousPopulation": 10994,
+      "previousMale": 5084,
+      "previousFemale": 5910,
+      "population": 10985,
+      "male": 5075,
+      "female": 5910,
+      "populationChange": -9,
+      "maleChange": -9,
+      "femaleChange": 0
+    },
+    {
+      "zoneId": "sgis-dong:22020580",
+      "district": "동구",
+      "label": "신천3동",
+      "sourceAgencyCodes": [
+        "2714057000"
+      ],
+      "sourceAgencyLabels": [
+        "신천3동"
+      ],
+      "linkQuality": "official-name-exact",
+      "previousPopulation": 14835,
+      "previousMale": 7313,
+      "previousFemale": 7522,
+      "population": 14952,
+      "male": 7382,
+      "female": 7570,
+      "populationChange": 117,
+      "maleChange": 69,
+      "femaleChange": 48
+    },
+    {
+      "zoneId": "sgis-dong:22020590",
+      "district": "동구",
+      "label": "신천4동",
+      "sourceAgencyCodes": [
+        "2714058000"
+      ],
+      "sourceAgencyLabels": [
+        "신천4동"
+      ],
+      "linkQuality": "official-name-exact",
+      "previousPopulation": 12937,
+      "previousMale": 6320,
+      "previousFemale": 6617,
+      "population": 13095,
+      "male": 6366,
+      "female": 6729,
+      "populationChange": 158,
+      "maleChange": 46,
+      "femaleChange": 112
+    },
+    {
+      "zoneId": "sgis-dong:22020730",
+      "district": "동구",
+      "label": "안심1동",
+      "sourceAgencyCodes": [
+        "2714072000"
+      ],
+      "sourceAgencyLabels": [
+        "안심1동"
+      ],
+      "linkQuality": "official-name-exact",
+      "previousPopulation": 37158,
+      "previousMale": 17974,
+      "previousFemale": 19184,
+      "population": 37124,
+      "male": 17968,
+      "female": 19156,
+      "populationChange": -34,
+      "maleChange": -6,
+      "femaleChange": -28
+    },
+    {
+      "zoneId": "sgis-dong:22020740",
+      "district": "동구",
+      "label": "안심2동",
+      "sourceAgencyCodes": [
+        "2714073000"
+      ],
+      "sourceAgencyLabels": [
+        "안심2동"
+      ],
+      "linkQuality": "official-name-exact",
+      "previousPopulation": 17002,
+      "previousMale": 8483,
+      "previousFemale": 8519,
+      "population": 16987,
+      "male": 8474,
+      "female": 8513,
+      "populationChange": -15,
+      "maleChange": -9,
+      "femaleChange": -6
+    },
+    {
+      "zoneId": "sgis-dong:22020760",
+      "district": "동구",
+      "label": "안심3동",
+      "sourceAgencyCodes": [
+        "2714074200"
+      ],
+      "sourceAgencyLabels": [
+        "안심3동"
+      ],
+      "linkQuality": "official-name-exact",
+      "previousPopulation": 19897,
+      "previousMale": 9634,
+      "previousFemale": 10263,
+      "population": 19884,
+      "male": 9637,
+      "female": 10247,
+      "populationChange": -13,
+      "maleChange": 3,
+      "femaleChange": -16
+    },
+    {
+      "zoneId": "sgis-dong:22020770",
+      "district": "동구",
+      "label": "안심4동",
+      "sourceAgencyCodes": [
+        "2714074700"
+      ],
+      "sourceAgencyLabels": [
+        "안심4동"
+      ],
+      "linkQuality": "official-name-exact",
+      "previousPopulation": 26289,
+      "previousMale": 12831,
+      "previousFemale": 13458,
+      "population": 26286,
+      "male": 12839,
+      "female": 13447,
+      "populationChange": -3,
+      "maleChange": 8,
+      "femaleChange": -11
+    },
+    {
+      "zoneId": "sgis-dong:22020650",
+      "district": "동구",
+      "label": "지저동",
+      "sourceAgencyCodes": [
+        "2714064000"
+      ],
+      "sourceAgencyLabels": [
+        "지저동"
+      ],
+      "linkQuality": "official-name-exact",
+      "previousPopulation": 12323,
+      "previousMale": 6072,
+      "previousFemale": 6251,
+      "population": 12295,
+      "male": 6048,
+      "female": 6247,
+      "populationChange": -28,
+      "maleChange": -24,
+      "femaleChange": -4
+    },
+    {
+      "zoneId": "sgis-dong:22020690",
+      "district": "동구",
+      "label": "해안동",
+      "sourceAgencyCodes": [
+        "2714068500"
+      ],
+      "sourceAgencyLabels": [
+        "해안동"
+      ],
+      "linkQuality": "official-name-exact",
+      "previousPopulation": 12925,
+      "previousMale": 6419,
+      "previousFemale": 6506,
+      "population": 12875,
+      "male": 6387,
+      "female": 6488,
+      "populationChange": -50,
+      "maleChange": -32,
+      "femaleChange": -18
+    },
+    {
+      "zoneId": "sgis-dong:22020780",
+      "district": "동구",
+      "label": "혁신동",
+      "sourceAgencyCodes": [
+        "2714075500"
+      ],
+      "sourceAgencyLabels": [
+        "혁신동"
+      ],
+      "linkQuality": "official-name-exact",
+      "previousPopulation": 16501,
+      "previousMale": 8078,
+      "previousFemale": 8423,
+      "population": 16509,
+      "male": 8085,
+      "female": 8424,
+      "populationChange": 8,
+      "maleChange": 7,
+      "femaleChange": 1
+    },
+    {
+      "zoneId": "sgis-dong:22020600",
+      "district": "동구",
+      "label": "효목1동",
+      "sourceAgencyCodes": [
+        "2714059000"
+      ],
+      "sourceAgencyLabels": [
+        "효목1동"
+      ],
+      "linkQuality": "official-name-exact",
+      "previousPopulation": 11472,
+      "previousMale": 5678,
+      "previousFemale": 5794,
+      "population": 11467,
+      "male": 5681,
+      "female": 5786,
+      "populationChange": -5,
+      "maleChange": 3,
+      "femaleChange": -8
+    },
+    {
+      "zoneId": "sgis-dong:22020610",
+      "district": "동구",
+      "label": "효목2동",
+      "sourceAgencyCodes": [
+        "2714060000"
+      ],
+      "sourceAgencyLabels": [
+        "효목2동"
+      ],
+      "linkQuality": "official-name-exact",
+      "previousPopulation": 14147,
+      "previousMale": 6684,
+      "previousFemale": 7463,
+      "population": 14206,
+      "male": 6708,
+      "female": 7498,
+      "populationChange": 59,
+      "maleChange": 24,
+      "femaleChange": 35
+    },
+    {
+      "zoneId": "sgis-dong:22050700",
+      "district": "북구",
+      "label": "검단동",
+      "sourceAgencyCodes": [
+        "2723068000"
+      ],
+      "sourceAgencyLabels": [
+        "검단동"
+      ],
+      "linkQuality": "official-name-exact",
+      "previousPopulation": 5414,
+      "previousMale": 2621,
+      "previousFemale": 2793,
+      "population": 5381,
+      "male": 2604,
+      "female": 2777,
+      "populationChange": -33,
+      "maleChange": -17,
+      "femaleChange": -16
+    },
+    {
+      "zoneId": "sgis-dong:22050510",
+      "district": "북구",
+      "label": "고성동",
+      "sourceAgencyCodes": [
+        "2723051000"
+      ],
+      "sourceAgencyLabels": [
+        "고성동"
+      ],
+      "linkQuality": "official-name-exact",
+      "previousPopulation": 14603,
+      "previousMale": 7217,
+      "previousFemale": 7386,
+      "population": 14592,
+      "male": 7220,
+      "female": 7372,
+      "populationChange": -11,
+      "maleChange": 3,
+      "femaleChange": -14
+    },
+    {
+      "zoneId": "sgis-dong:22050750",
+      "district": "북구",
+      "label": "관문동",
+      "sourceAgencyCodes": [
+        "2723071500"
+      ],
+      "sourceAgencyLabels": [
+        "관문동"
+      ],
+      "linkQuality": "official-name-exact",
+      "previousPopulation": 31975,
+      "previousMale": 15824,
+      "previousFemale": 16151,
+      "population": 31924,
+      "male": 15782,
+      "female": 16142,
+      "populationChange": -51,
+      "maleChange": -42,
+      "femaleChange": -9
+    },
+    {
+      "zoneId": "sgis-dong:22050770",
+      "district": "북구",
+      "label": "관음동",
+      "sourceAgencyCodes": [
+        "2723075000"
+      ],
+      "sourceAgencyLabels": [
+        "관음동"
+      ],
+      "linkQuality": "official-name-exact",
+      "previousPopulation": 13689,
+      "previousMale": 6872,
+      "previousFemale": 6817,
+      "population": 13683,
+      "male": 6868,
+      "female": 6815,
+      "populationChange": -6,
+      "maleChange": -4,
+      "femaleChange": -2
+    },
+    {
+      "zoneId": "sgis-dong:22050790",
+      "district": "북구",
+      "label": "구암동",
+      "sourceAgencyCodes": [
+        "2723074500"
+      ],
+      "sourceAgencyLabels": [
+        "구암동"
+      ],
+      "linkQuality": "official-name-exact",
+      "previousPopulation": 30230,
+      "previousMale": 14672,
+      "previousFemale": 15558,
+      "population": 30182,
+      "male": 14655,
+      "female": 15527,
+      "populationChange": -48,
+      "maleChange": -17,
+      "femaleChange": -31
+    },
+    {
+      "zoneId": "sgis-dong:22050830",
+      "district": "북구",
+      "label": "국우동",
+      "sourceAgencyCodes": [
+        "2723080000"
+      ],
+      "sourceAgencyLabels": [
+        "국우동"
+      ],
+      "linkQuality": "official-name-exact",
+      "previousPopulation": 29112,
+      "previousMale": 14395,
+      "previousFemale": 14717,
+      "population": 29097,
+      "male": 14402,
+      "female": 14695,
+      "populationChange": -15,
+      "maleChange": 7,
+      "femaleChange": -22
+    },
+    {
+      "zoneId": "sgis-dong:22050810",
+      "district": "북구",
+      "label": "노원동",
+      "sourceAgencyCodes": [
+        "2723079000"
+      ],
+      "sourceAgencyLabels": [
+        "노원동"
+      ],
+      "linkQuality": "official-name-exact",
+      "previousPopulation": 10954,
+      "previousMale": 5607,
+      "previousFemale": 5347,
+      "population": 10938,
+      "male": 5594,
+      "female": 5344,
+      "populationChange": -16,
+      "maleChange": -13,
+      "femaleChange": -3
+    },
+    {
+      "zoneId": "sgis-dong:22050840",
+      "district": "북구",
+      "label": "대현동",
+      "sourceAgencyCodes": [
+        "2723064500"
+      ],
+      "sourceAgencyLabels": [
+        "대현동"
+      ],
+      "linkQuality": "official-name-exact",
+      "previousPopulation": 15618,
+      "previousMale": 7894,
+      "previousFemale": 7724,
+      "population": 15532,
+      "male": 7844,
+      "female": 7688,
+      "populationChange": -86,
+      "maleChange": -50,
+      "femaleChange": -36
+    },
+    {
+      "zoneId": "sgis-dong:22050820",
+      "district": "북구",
+      "label": "동천동",
+      "sourceAgencyCodes": [
+        "2723078000"
+      ],
+      "sourceAgencyLabels": [
+        "동천동"
+      ],
+      "linkQuality": "official-name-exact",
+      "previousPopulation": 24635,
+      "previousMale": 11817,
+      "previousFemale": 12818,
+      "population": 24591,
+      "male": 11803,
+      "female": 12788,
+      "populationChange": -44,
+      "maleChange": -14,
+      "femaleChange": -30
+    },
+    {
+      "zoneId": "sgis-dong:22050710",
+      "district": "북구",
+      "label": "무태조야동",
+      "sourceAgencyCodes": [
+        "2723069500"
+      ],
+      "sourceAgencyLabels": [
+        "무태조야동"
+      ],
+      "linkQuality": "official-name-exact",
+      "previousPopulation": 32499,
+      "previousMale": 16591,
+      "previousFemale": 15908,
+      "population": 32466,
+      "male": 16562,
+      "female": 15904,
+      "populationChange": -33,
+      "maleChange": -29,
+      "femaleChange": -4
+    },
+    {
+      "zoneId": "sgis-dong:22050650",
+      "district": "북구",
+      "label": "복현1동",
+      "sourceAgencyCodes": [
+        "2723067100"
+      ],
+      "sourceAgencyLabels": [
+        "복현1동"
+      ],
+      "linkQuality": "official-name-exact",
+      "previousPopulation": 7131,
+      "previousMale": 4027,
+      "previousFemale": 3104,
+      "population": 7117,
+      "male": 4013,
+      "female": 3104,
+      "populationChange": -14,
+      "maleChange": -14,
+      "femaleChange": 0
+    },
+    {
+      "zoneId": "sgis-dong:22050660",
+      "district": "북구",
+      "label": "복현2동",
+      "sourceAgencyCodes": [
+        "2723067200"
+      ],
+      "sourceAgencyLabels": [
+        "복현2동"
+      ],
+      "linkQuality": "official-name-exact",
+      "previousPopulation": 28733,
+      "previousMale": 14203,
+      "previousFemale": 14530,
+      "population": 28702,
+      "male": 14180,
+      "female": 14522,
+      "populationChange": -31,
+      "maleChange": -23,
+      "femaleChange": -8
+    },
+    {
+      "zoneId": "sgis-dong:22050610",
+      "district": "북구",
+      "label": "산격1동",
+      "sourceAgencyCodes": [
+        "2723061000"
+      ],
+      "sourceAgencyLabels": [
+        "산격1동"
+      ],
+      "linkQuality": "official-name-exact",
+      "previousPopulation": 7370,
+      "previousMale": 3584,
+      "previousFemale": 3786,
+      "population": 7354,
+      "male": 3581,
+      "female": 3773,
+      "populationChange": -16,
+      "maleChange": -3,
+      "femaleChange": -13
+    },
+    {
+      "zoneId": "sgis-dong:22050620",
+      "district": "북구",
+      "label": "산격2동",
+      "sourceAgencyCodes": [
+        "2723062000"
+      ],
+      "sourceAgencyLabels": [
+        "산격2동"
+      ],
+      "linkQuality": "official-name-exact",
+      "previousPopulation": 9376,
+      "previousMale": 4561,
+      "previousFemale": 4815,
+      "population": 9351,
+      "male": 4545,
+      "female": 4806,
+      "populationChange": -25,
+      "maleChange": -16,
+      "femaleChange": -9
+    },
+    {
+      "zoneId": "sgis-dong:22050630",
+      "district": "북구",
+      "label": "산격3동",
+      "sourceAgencyCodes": [
+        "2723063000"
+      ],
+      "sourceAgencyLabels": [
+        "산격3동"
+      ],
+      "linkQuality": "official-name-exact",
+      "previousPopulation": 8390,
+      "previousMale": 4353,
+      "previousFemale": 4037,
+      "population": 8380,
+      "male": 4353,
+      "female": 4027,
+      "populationChange": -10,
+      "maleChange": 0,
+      "femaleChange": -10
+    },
+    {
+      "zoneId": "sgis-dong:22050640",
+      "district": "북구",
+      "label": "산격4동",
+      "sourceAgencyCodes": [
+        "2723063100"
+      ],
+      "sourceAgencyLabels": [
+        "산격4동"
+      ],
+      "linkQuality": "official-name-exact",
+      "previousPopulation": 6961,
+      "previousMale": 3622,
+      "previousFemale": 3339,
+      "population": 6931,
+      "male": 3603,
+      "female": 3328,
+      "populationChange": -30,
+      "maleChange": -19,
+      "femaleChange": -11
+    },
+    {
+      "zoneId": "sgis-dong:22050760",
+      "district": "북구",
+      "label": "읍내동",
+      "sourceAgencyCodes": [
+        "2723077000"
+      ],
+      "sourceAgencyLabels": [
+        "읍내동"
+      ],
+      "linkQuality": "official-name-exact",
+      "previousPopulation": 24576,
+      "previousMale": 12189,
+      "previousFemale": 12387,
+      "population": 24548,
+      "male": 12159,
+      "female": 12389,
+      "populationChange": -28,
+      "maleChange": -30,
+      "femaleChange": 2
+    },
+    {
+      "zoneId": "sgis-dong:22050520",
+      "district": "북구",
+      "label": "칠성동",
+      "sourceAgencyCodes": [
+        "2723052600"
+      ],
+      "sourceAgencyLabels": [
+        "칠성동"
+      ],
+      "linkQuality": "official-name-exact",
+      "previousPopulation": 23657,
+      "previousMale": 11254,
+      "previousFemale": 12403,
+      "population": 23907,
+      "male": 11373,
+      "female": 12534,
+      "populationChange": 250,
+      "maleChange": 119,
+      "femaleChange": 131
+    },
+    {
+      "zoneId": "sgis-dong:22050550",
+      "district": "북구",
+      "label": "침산1동",
+      "sourceAgencyCodes": [
+        "2723055000"
+      ],
+      "sourceAgencyLabels": [
+        "침산1동"
+      ],
+      "linkQuality": "official-name-exact",
+      "previousPopulation": 3441,
+      "previousMale": 1834,
+      "previousFemale": 1607,
+      "population": 3424,
+      "male": 1824,
+      "female": 1600,
+      "populationChange": -17,
+      "maleChange": -10,
+      "femaleChange": -7
+    },
+    {
+      "zoneId": "sgis-dong:22050560",
+      "district": "북구",
+      "label": "침산2동",
+      "sourceAgencyCodes": [
+        "2723056000"
+      ],
+      "sourceAgencyLabels": [
+        "침산2동"
+      ],
+      "linkQuality": "official-name-exact",
+      "previousPopulation": 17835,
+      "previousMale": 8502,
+      "previousFemale": 9333,
+      "population": 17825,
+      "male": 8484,
+      "female": 9341,
+      "populationChange": -10,
+      "maleChange": -18,
+      "femaleChange": 8
+    },
+    {
+      "zoneId": "sgis-dong:22050570",
+      "district": "북구",
+      "label": "침산3동",
+      "sourceAgencyCodes": [
+        "2723057000"
+      ],
+      "sourceAgencyLabels": [
+        "침산3동"
+      ],
+      "linkQuality": "official-name-exact",
+      "previousPopulation": 17704,
+      "previousMale": 8375,
+      "previousFemale": 9329,
+      "population": 17655,
+      "male": 8356,
+      "female": 9299,
+      "populationChange": -49,
+      "maleChange": -19,
+      "femaleChange": -30
+    },
+    {
+      "zoneId": "sgis-dong:22050780",
+      "district": "북구",
+      "label": "태전1동",
+      "sourceAgencyCodes": [
+        "2723072500"
+      ],
+      "sourceAgencyLabels": [
+        "태전1동"
+      ],
+      "linkQuality": "official-name-exact",
+      "previousPopulation": 21074,
+      "previousMale": 10488,
+      "previousFemale": 10586,
+      "population": 21082,
+      "male": 10488,
+      "female": 10594,
+      "populationChange": 8,
+      "maleChange": 0,
+      "femaleChange": 8
+    },
+    {
+      "zoneId": "sgis-dong:22050740",
+      "district": "북구",
+      "label": "태전2동",
+      "sourceAgencyCodes": [
+        "2723073500"
+      ],
+      "sourceAgencyLabels": [
+        "태전2동"
+      ],
+      "linkQuality": "official-name-exact",
+      "previousPopulation": 21610,
+      "previousMale": 10472,
+      "previousFemale": 11138,
+      "population": 21552,
+      "male": 10445,
+      "female": 11107,
+      "populationChange": -58,
+      "maleChange": -27,
+      "femaleChange": -31
+    },
+    {
+      "zoneId": "sgis-dong:22030510",
+      "district": "서구",
+      "label": "내당1동",
+      "sourceAgencyCodes": [
+        "2717051000"
+      ],
+      "sourceAgencyLabels": [
+        "내당1동"
+      ],
+      "linkQuality": "official-name-exact",
+      "previousPopulation": 14683,
+      "previousMale": 7208,
+      "previousFemale": 7475,
+      "population": 14720,
+      "male": 7220,
+      "female": 7500,
+      "populationChange": 37,
+      "maleChange": 12,
+      "femaleChange": 25
+    },
+    {
+      "zoneId": "sgis-dong:22030520",
+      "district": "서구",
+      "label": "내당2·3동",
+      "sourceAgencyCodes": [
+        "2717052500"
+      ],
+      "sourceAgencyLabels": [
+        "내당2.3동"
+      ],
+      "linkQuality": "official-name-exact",
+      "previousPopulation": 8091,
+      "previousMale": 3898,
+      "previousFemale": 4193,
+      "population": 8107,
+      "male": 3900,
+      "female": 4207,
+      "populationChange": 16,
+      "maleChange": 2,
+      "femaleChange": 14
+    },
+    {
+      "zoneId": "sgis-dong:22030530",
+      "district": "서구",
+      "label": "내당4동",
+      "sourceAgencyCodes": [
+        "2717054000"
+      ],
+      "sourceAgencyLabels": [
+        "내당4동"
+      ],
+      "linkQuality": "official-name-exact",
+      "previousPopulation": 14119,
+      "previousMale": 6689,
+      "previousFemale": 7430,
+      "population": 14114,
+      "male": 6687,
+      "female": 7427,
+      "populationChange": -5,
+      "maleChange": -2,
+      "femaleChange": -3
+    },
+    {
+      "zoneId": "sgis-dong:22030540",
+      "district": "서구",
+      "label": "비산1동",
+      "sourceAgencyCodes": [
+        "2717055000"
+      ],
+      "sourceAgencyLabels": [
+        "비산1동"
+      ],
+      "linkQuality": "official-name-exact",
+      "previousPopulation": 7738,
+      "previousMale": 3881,
+      "previousFemale": 3857,
+      "population": 7702,
+      "male": 3866,
+      "female": 3836,
+      "populationChange": -36,
+      "maleChange": -15,
+      "femaleChange": -21
+    },
+    {
+      "zoneId": "sgis-dong:22030550",
+      "district": "서구",
+      "label": "비산2·3동",
+      "sourceAgencyCodes": [
+        "2717056500"
+      ],
+      "sourceAgencyLabels": [
+        "비산2.3동"
+      ],
+      "linkQuality": "official-name-exact",
+      "previousPopulation": 7550,
+      "previousMale": 3680,
+      "previousFemale": 3870,
+      "population": 7527,
+      "male": 3666,
+      "female": 3861,
+      "populationChange": -23,
+      "maleChange": -14,
+      "femaleChange": -9
+    },
+    {
+      "zoneId": "sgis-dong:22030560",
+      "district": "서구",
+      "label": "비산4동",
+      "sourceAgencyCodes": [
+        "2717058000"
+      ],
+      "sourceAgencyLabels": [
+        "비산4동"
+      ],
+      "linkQuality": "official-name-exact",
+      "previousPopulation": 8143,
+      "previousMale": 3928,
+      "previousFemale": 4215,
+      "population": 8120,
+      "male": 3920,
+      "female": 4200,
+      "populationChange": -23,
+      "maleChange": -8,
+      "femaleChange": -15
+    },
+    {
+      "zoneId": "sgis-dong:22030570",
+      "district": "서구",
+      "label": "비산5동",
+      "sourceAgencyCodes": [
+        "2717059000"
+      ],
+      "sourceAgencyLabels": [
+        "비산5동"
+      ],
+      "linkQuality": "official-name-exact",
+      "previousPopulation": 4744,
+      "previousMale": 2395,
+      "previousFemale": 2349,
+      "population": 4726,
+      "male": 2380,
+      "female": 2346,
+      "populationChange": -18,
+      "maleChange": -15,
+      "femaleChange": -3
+    },
+    {
+      "zoneId": "sgis-dong:22030580",
+      "district": "서구",
+      "label": "비산6동",
+      "sourceAgencyCodes": [
+        "2717060000"
+      ],
+      "sourceAgencyLabels": [
+        "비산6동"
+      ],
+      "linkQuality": "official-name-exact",
+      "previousPopulation": 6319,
+      "previousMale": 3068,
+      "previousFemale": 3251,
+      "population": 6292,
+      "male": 3048,
+      "female": 3244,
+      "populationChange": -27,
+      "maleChange": -20,
+      "femaleChange": -7
+    },
+    {
+      "zoneId": "sgis-dong:22030590",
+      "district": "서구",
+      "label": "비산7동",
+      "sourceAgencyCodes": [
+        "2717061000"
+      ],
+      "sourceAgencyLabels": [
+        "비산7동"
+      ],
+      "linkQuality": "official-name-exact",
+      "previousPopulation": 9260,
+      "previousMale": 4868,
+      "previousFemale": 4392,
+      "population": 9324,
+      "male": 4902,
+      "female": 4422,
+      "populationChange": 64,
+      "maleChange": 34,
+      "femaleChange": 30
+    },
+    {
+      "zoneId": "sgis-dong:22030660",
+      "district": "서구",
+      "label": "상중이동",
+      "sourceAgencyCodes": [
+        "2717067500"
+      ],
+      "sourceAgencyLabels": [
+        "상중이동"
+      ],
+      "linkQuality": "official-name-exact",
+      "previousPopulation": 16863,
+      "previousMale": 8338,
+      "previousFemale": 8525,
+      "population": 16829,
+      "male": 8324,
+      "female": 8505,
+      "populationChange": -34,
+      "maleChange": -14,
+      "femaleChange": -20
+    },
+    {
+      "zoneId": "sgis-dong:22030680",
+      "district": "서구",
+      "label": "원대동",
+      "sourceAgencyCodes": [
+        "2717069500"
+      ],
+      "sourceAgencyLabels": [
+        "원대동"
+      ],
+      "linkQuality": "official-name-exact",
+      "previousPopulation": 9963,
+      "previousMale": 4973,
+      "previousFemale": 4990,
+      "population": 9937,
+      "male": 4964,
+      "female": 4973,
+      "populationChange": -26,
+      "maleChange": -9,
+      "femaleChange": -17
+    },
+    {
+      "zoneId": "sgis-dong:22030600",
+      "district": "서구",
+      "label": "평리1동",
+      "sourceAgencyCodes": [
+        "2717062000"
+      ],
+      "sourceAgencyLabels": [
+        "평리1동"
+      ],
+      "linkQuality": "official-name-exact",
+      "previousPopulation": 6126,
+      "previousMale": 3059,
+      "previousFemale": 3067,
+      "population": 6112,
+      "male": 3058,
+      "female": 3054,
+      "populationChange": -14,
+      "maleChange": -1,
+      "femaleChange": -13
+    },
+    {
+      "zoneId": "sgis-dong:22030610",
+      "district": "서구",
+      "label": "평리2동",
+      "sourceAgencyCodes": [
+        "2717063000"
+      ],
+      "sourceAgencyLabels": [
+        "평리2동"
+      ],
+      "linkQuality": "official-name-exact",
+      "previousPopulation": 6820,
+      "previousMale": 3284,
+      "previousFemale": 3536,
+      "population": 6827,
+      "male": 3293,
+      "female": 3534,
+      "populationChange": 7,
+      "maleChange": 9,
+      "femaleChange": -2
+    },
+    {
+      "zoneId": "sgis-dong:22030620",
+      "district": "서구",
+      "label": "평리3동",
+      "sourceAgencyCodes": [
+        "2717064000"
+      ],
+      "sourceAgencyLabels": [
+        "평리3동"
+      ],
+      "linkQuality": "official-name-exact",
+      "previousPopulation": 12090,
+      "previousMale": 5994,
+      "previousFemale": 6096,
+      "population": 12071,
+      "male": 5982,
+      "female": 6089,
+      "populationChange": -19,
+      "maleChange": -12,
+      "femaleChange": -7
+    },
+    {
+      "zoneId": "sgis-dong:22030630",
+      "district": "서구",
+      "label": "평리4동",
+      "sourceAgencyCodes": [
+        "2717065000"
+      ],
+      "sourceAgencyLabels": [
+        "평리4동"
+      ],
+      "linkQuality": "official-name-exact",
+      "previousPopulation": 15025,
+      "previousMale": 7483,
+      "previousFemale": 7542,
+      "population": 15008,
+      "male": 7462,
+      "female": 7546,
+      "populationChange": -17,
+      "maleChange": -21,
+      "femaleChange": 4
+    },
+    {
+      "zoneId": "sgis-dong:22030640",
+      "district": "서구",
+      "label": "평리5동",
+      "sourceAgencyCodes": [
+        "2717066000"
+      ],
+      "sourceAgencyLabels": [
+        "평리5동"
+      ],
+      "linkQuality": "official-name-exact",
+      "previousPopulation": 10531,
+      "previousMale": 5258,
+      "previousFemale": 5273,
+      "population": 10510,
+      "male": 5239,
+      "female": 5271,
+      "populationChange": -21,
+      "maleChange": -19,
+      "femaleChange": -2
+    },
+    {
+      "zoneId": "sgis-dong:22030650",
+      "district": "서구",
+      "label": "평리6동",
+      "sourceAgencyCodes": [
+        "2717066100"
+      ],
+      "sourceAgencyLabels": [
+        "평리6동"
+      ],
+      "linkQuality": "official-name-exact",
+      "previousPopulation": 5391,
+      "previousMale": 2792,
+      "previousFemale": 2599,
+      "population": 5393,
+      "male": 2789,
+      "female": 2604,
+      "populationChange": 2,
+      "maleChange": -3,
+      "femaleChange": 5
+    },
+    {
+      "zoneId": "sgis-dong:22060710",
+      "district": "수성구",
+      "label": "고산1동",
+      "sourceAgencyCodes": [
+        "2726067000"
+      ],
+      "sourceAgencyLabels": [
+        "고산1동"
+      ],
+      "linkQuality": "official-name-exact",
+      "previousPopulation": 31066,
+      "previousMale": 14890,
+      "previousFemale": 16176,
+      "population": 31015,
+      "male": 14849,
+      "female": 16166,
+      "populationChange": -51,
+      "maleChange": -41,
+      "femaleChange": -10
+    },
+    {
+      "zoneId": "sgis-dong:22060720",
+      "district": "수성구",
+      "label": "고산2동",
+      "sourceAgencyCodes": [
+        "2726068000"
+      ],
+      "sourceAgencyLabels": [
+        "고산2동"
+      ],
+      "linkQuality": "official-name-exact",
+      "previousPopulation": 25533,
+      "previousMale": 12481,
+      "previousFemale": 13052,
+      "population": 25478,
+      "male": 12451,
+      "female": 13027,
+      "populationChange": -55,
+      "maleChange": -30,
+      "femaleChange": -25
+    },
+    {
+      "zoneId": "sgis-dong:22060730",
+      "district": "수성구",
+      "label": "고산3동",
+      "sourceAgencyCodes": [
+        "2726069000"
+      ],
+      "sourceAgencyLabels": [
+        "고산3동"
+      ],
+      "linkQuality": "official-name-exact",
+      "previousPopulation": 29136,
+      "previousMale": 13886,
+      "previousFemale": 15250,
+      "population": 29123,
+      "male": 13874,
+      "female": 15249,
+      "populationChange": -13,
+      "maleChange": -12,
+      "femaleChange": -1
+    },
+    {
+      "zoneId": "sgis-dong:22060660",
+      "district": "수성구",
+      "label": "두산동",
+      "sourceAgencyCodes": [
+        "2726064000"
+      ],
+      "sourceAgencyLabels": [
+        "두산동"
+      ],
+      "linkQuality": "official-name-exact",
+      "previousPopulation": 14840,
+      "previousMale": 7171,
+      "previousFemale": 7669,
+      "population": 14799,
+      "male": 7164,
+      "female": 7635,
+      "populationChange": -41,
+      "maleChange": -7,
+      "femaleChange": -34
+    },
+    {
+      "zoneId": "sgis-dong:22060550",
+      "district": "수성구",
+      "label": "만촌1동",
+      "sourceAgencyCodes": [
+        "2726055000"
+      ],
+      "sourceAgencyLabels": [
+        "만촌1동"
+      ],
+      "linkQuality": "official-name-exact",
+      "previousPopulation": 20174,
+      "previousMale": 9777,
+      "previousFemale": 10397,
+      "population": 20173,
+      "male": 9759,
+      "female": 10414,
+      "populationChange": -1,
+      "maleChange": -18,
+      "femaleChange": 17
+    },
+    {
+      "zoneId": "sgis-dong:22060560",
+      "district": "수성구",
+      "label": "만촌2동",
+      "sourceAgencyCodes": [
+        "2726056000"
+      ],
+      "sourceAgencyLabels": [
+        "만촌2동"
+      ],
+      "linkQuality": "official-name-exact",
+      "previousPopulation": 13080,
+      "previousMale": 6548,
+      "previousFemale": 6532,
+      "population": 13052,
+      "male": 6527,
+      "female": 6525,
+      "populationChange": -28,
+      "maleChange": -21,
+      "femaleChange": -7
+    },
+    {
+      "zoneId": "sgis-dong:22060570",
+      "district": "수성구",
+      "label": "만촌3동",
+      "sourceAgencyCodes": [
+        "2726056100"
+      ],
+      "sourceAgencyLabels": [
+        "만촌3동"
+      ],
+      "linkQuality": "official-name-exact",
+      "previousPopulation": 20523,
+      "previousMale": 10643,
+      "previousFemale": 9880,
+      "population": 20532,
+      "male": 10646,
+      "female": 9886,
+      "populationChange": 9,
+      "maleChange": 3,
+      "femaleChange": 6
+    },
+    {
+      "zoneId": "sgis-dong:22060690",
+      "district": "수성구",
+      "label": "범물1동",
+      "sourceAgencyCodes": [
+        "2726066100"
+      ],
+      "sourceAgencyLabels": [
+        "범물1동"
+      ],
+      "linkQuality": "official-name-exact",
+      "previousPopulation": 9654,
+      "previousMale": 4297,
+      "previousFemale": 5357,
+      "population": 9655,
+      "male": 4293,
+      "female": 5362,
+      "populationChange": 1,
+      "maleChange": -4,
+      "femaleChange": 5
+    },
+    {
+      "zoneId": "sgis-dong:22060700",
+      "district": "수성구",
+      "label": "범물2동",
+      "sourceAgencyCodes": [
+        "2726066200"
+      ],
+      "sourceAgencyLabels": [
+        "범물2동"
+      ],
+      "linkQuality": "official-name-exact",
+      "previousPopulation": 15526,
+      "previousMale": 7402,
+      "previousFemale": 8124,
+      "population": 15530,
+      "male": 7404,
+      "female": 8126,
+      "populationChange": 4,
+      "maleChange": 2,
+      "femaleChange": 2
+    },
+    {
+      "zoneId": "sgis-dong:22060510",
+      "district": "수성구",
+      "label": "범어1동",
+      "sourceAgencyCodes": [
+        "2726051000"
+      ],
+      "sourceAgencyLabels": [
+        "범어1동"
+      ],
+      "linkQuality": "official-name-exact",
+      "previousPopulation": 22679,
+      "previousMale": 10859,
+      "previousFemale": 11820,
+      "population": 22730,
+      "male": 10873,
+      "female": 11857,
+      "populationChange": 51,
+      "maleChange": 14,
+      "femaleChange": 37
+    },
+    {
+      "zoneId": "sgis-dong:22060520",
+      "district": "수성구",
+      "label": "범어2동",
+      "sourceAgencyCodes": [
+        "2726052000"
+      ],
+      "sourceAgencyLabels": [
+        "범어2동"
+      ],
+      "linkQuality": "official-name-exact",
+      "previousPopulation": 15345,
+      "previousMale": 7278,
+      "previousFemale": 8067,
+      "population": 15392,
+      "male": 7303,
+      "female": 8089,
+      "populationChange": 47,
+      "maleChange": 25,
+      "femaleChange": 22
+    },
+    {
+      "zoneId": "sgis-dong:22060530",
+      "district": "수성구",
+      "label": "범어3동",
+      "sourceAgencyCodes": [
+        "2726053000"
+      ],
+      "sourceAgencyLabels": [
+        "범어3동"
+      ],
+      "linkQuality": "official-name-exact",
+      "previousPopulation": 17016,
+      "previousMale": 8114,
+      "previousFemale": 8902,
+      "population": 17014,
+      "male": 8121,
+      "female": 8893,
+      "populationChange": -2,
+      "maleChange": 7,
+      "femaleChange": -9
+    },
+    {
+      "zoneId": "sgis-dong:22060540",
+      "district": "수성구",
+      "label": "범어4동",
+      "sourceAgencyCodes": [
+        "2726054000"
+      ],
+      "sourceAgencyLabels": [
+        "범어4동"
+      ],
+      "linkQuality": "official-name-exact",
+      "previousPopulation": 18446,
+      "previousMale": 9074,
+      "previousFemale": 9372,
+      "population": 18388,
+      "male": 9037,
+      "female": 9351,
+      "populationChange": -58,
+      "maleChange": -37,
+      "femaleChange": -21
+    },
+    {
+      "zoneId": "sgis-dong:22060640",
+      "district": "수성구",
+      "label": "상동",
+      "sourceAgencyCodes": [
+        "2726062000"
+      ],
+      "sourceAgencyLabels": [
+        "상동"
+      ],
+      "linkQuality": "official-name-exact",
+      "previousPopulation": 13938,
+      "previousMale": 6761,
+      "previousFemale": 7177,
+      "population": 13954,
+      "male": 6779,
+      "female": 7175,
+      "populationChange": 16,
+      "maleChange": 18,
+      "femaleChange": -2
+    },
+    {
+      "zoneId": "sgis-dong:22060580",
+      "district": "수성구",
+      "label": "수성1가동",
+      "sourceAgencyCodes": [
+        "2726057000"
+      ],
+      "sourceAgencyLabels": [
+        "수성1가동"
+      ],
+      "linkQuality": "official-name-exact",
+      "previousPopulation": 16970,
+      "previousMale": 7626,
+      "previousFemale": 9344,
+      "population": 16922,
+      "male": 7598,
+      "female": 9324,
+      "populationChange": -48,
+      "maleChange": -28,
+      "femaleChange": -20
+    },
+    {
+      "zoneId": "sgis-dong:22060590",
+      "district": "수성구",
+      "label": "수성2·3가동",
+      "sourceAgencyCodes": [
+        "2726058000"
+      ],
+      "sourceAgencyLabels": [
+        "수성2.3가동"
+      ],
+      "linkQuality": "official-name-exact",
+      "previousPopulation": 10185,
+      "previousMale": 4952,
+      "previousFemale": 5233,
+      "population": 10138,
+      "male": 4915,
+      "female": 5223,
+      "populationChange": -47,
+      "maleChange": -37,
+      "femaleChange": -10
+    },
+    {
+      "zoneId": "sgis-dong:22060600",
+      "district": "수성구",
+      "label": "수성4가동",
+      "sourceAgencyCodes": [
+        "2726059000"
+      ],
+      "sourceAgencyLabels": [
+        "수성4가동"
+      ],
+      "linkQuality": "official-name-exact",
+      "previousPopulation": 12798,
+      "previousMale": 5867,
+      "previousFemale": 6931,
+      "population": 12800,
+      "male": 5868,
+      "female": 6932,
+      "populationChange": 2,
+      "maleChange": 1,
+      "femaleChange": 1
+    },
+    {
+      "zoneId": "sgis-dong:22060630",
+      "district": "수성구",
+      "label": "중동",
+      "sourceAgencyCodes": [
+        "2726061000"
+      ],
+      "sourceAgencyLabels": [
+        "중동"
+      ],
+      "linkQuality": "official-name-exact",
+      "previousPopulation": 14422,
+      "previousMale": 7047,
+      "previousFemale": 7375,
+      "population": 14395,
+      "male": 7028,
+      "female": 7367,
+      "populationChange": -27,
+      "maleChange": -19,
+      "femaleChange": -8
+    },
+    {
+      "zoneId": "sgis-dong:22060670",
+      "district": "수성구",
+      "label": "지산1동",
+      "sourceAgencyCodes": [
+        "2726065100"
+      ],
+      "sourceAgencyLabels": [
+        "지산1동"
+      ],
+      "linkQuality": "official-name-exact",
+      "previousPopulation": 18617,
+      "previousMale": 8813,
+      "previousFemale": 9804,
+      "population": 18605,
+      "male": 8809,
+      "female": 9796,
+      "populationChange": -12,
+      "maleChange": -4,
+      "femaleChange": -8
+    },
+    {
+      "zoneId": "sgis-dong:22060680",
+      "district": "수성구",
+      "label": "지산2동",
+      "sourceAgencyCodes": [
+        "2726065200"
+      ],
+      "sourceAgencyLabels": [
+        "지산2동"
+      ],
+      "linkQuality": "official-name-exact",
+      "previousPopulation": 18149,
+      "previousMale": 8408,
+      "previousFemale": 9741,
+      "population": 18120,
+      "male": 8411,
+      "female": 9709,
+      "populationChange": -29,
+      "maleChange": 3,
+      "femaleChange": -32
+    },
+    {
+      "zoneId": "sgis-dong:22060650",
+      "district": "수성구",
+      "label": "파동",
+      "sourceAgencyCodes": [
+        "2726063000"
+      ],
+      "sourceAgencyLabels": [
+        "파동"
+      ],
+      "linkQuality": "official-name-exact",
+      "previousPopulation": 17133,
+      "previousMale": 8198,
+      "previousFemale": 8935,
+      "population": 17209,
+      "male": 8233,
+      "female": 8976,
+      "populationChange": 76,
+      "maleChange": 35,
+      "femaleChange": 41
+    },
+    {
+      "zoneId": "sgis-dong:22060610",
+      "district": "수성구",
+      "label": "황금1동",
+      "sourceAgencyCodes": [
+        "2726060100"
+      ],
+      "sourceAgencyLabels": [
+        "황금1동"
+      ],
+      "linkQuality": "official-name-exact",
+      "previousPopulation": 20820,
+      "previousMale": 9953,
+      "previousFemale": 10867,
+      "population": 20792,
+      "male": 9935,
+      "female": 10857,
+      "populationChange": -28,
+      "maleChange": -18,
+      "femaleChange": -10
+    },
+    {
+      "zoneId": "sgis-dong:22060620",
+      "district": "수성구",
+      "label": "황금2동",
+      "sourceAgencyCodes": [
+        "2726060200"
+      ],
+      "sourceAgencyLabels": [
+        "황금2동"
+      ],
+      "linkQuality": "official-name-exact",
+      "previousPopulation": 11770,
+      "previousMale": 5644,
+      "previousFemale": 6126,
+      "population": 11754,
+      "male": 5637,
+      "female": 6117,
+      "populationChange": -16,
+      "maleChange": -7,
+      "femaleChange": -9
+    },
+    {
+      "zoneId": "sgis-dong:22010640",
+      "district": "중구",
+      "label": "남산1동",
+      "sourceAgencyCodes": [
+        "2711064000"
+      ],
+      "sourceAgencyLabels": [
+        "남산1동"
+      ],
+      "linkQuality": "official-name-exact",
+      "previousPopulation": 5062,
+      "previousMale": 2374,
+      "previousFemale": 2688,
+      "population": 5059,
+      "male": 2368,
+      "female": 2691,
+      "populationChange": -3,
+      "maleChange": -6,
+      "femaleChange": 3
+    },
+    {
+      "zoneId": "sgis-dong:22010650",
+      "district": "중구",
+      "label": "남산2동",
+      "sourceAgencyCodes": [
+        "2711065000"
+      ],
+      "sourceAgencyLabels": [
+        "남산2동"
+      ],
+      "linkQuality": "official-name-exact",
+      "previousPopulation": 7394,
+      "previousMale": 3462,
+      "previousFemale": 3932,
+      "population": 7424,
+      "male": 3473,
+      "female": 3951,
+      "populationChange": 30,
+      "maleChange": 11,
+      "femaleChange": 19
+    },
+    {
+      "zoneId": "sgis-dong:22010660",
+      "district": "중구",
+      "label": "남산3동",
+      "sourceAgencyCodes": [
+        "2711066000"
+      ],
+      "sourceAgencyLabels": [
+        "남산3동"
+      ],
+      "linkQuality": "official-name-exact",
+      "previousPopulation": 5779,
+      "previousMale": 2648,
+      "previousFemale": 3131,
+      "population": 5800,
+      "male": 2658,
+      "female": 3142,
+      "populationChange": 21,
+      "maleChange": 10,
+      "femaleChange": 11
+    },
+    {
+      "zoneId": "sgis-dong:22010670",
+      "district": "중구",
+      "label": "남산4동",
+      "sourceAgencyCodes": [
+        "2711067000"
+      ],
+      "sourceAgencyLabels": [
+        "남산4동"
+      ],
+      "linkQuality": "official-name-exact",
+      "previousPopulation": 15842,
+      "previousMale": 7379,
+      "previousFemale": 8463,
+      "population": 15856,
+      "male": 7388,
+      "female": 8468,
+      "populationChange": 14,
+      "maleChange": 9,
+      "femaleChange": 5
+    },
+    {
+      "zoneId": "sgis-dong:22010680",
+      "district": "중구",
+      "label": "대봉1동",
+      "sourceAgencyCodes": [
+        "2711068000"
+      ],
+      "sourceAgencyLabels": [
+        "대봉1동"
+      ],
+      "linkQuality": "official-name-exact",
+      "previousPopulation": 7666,
+      "previousMale": 3530,
+      "previousFemale": 4136,
+      "population": 7652,
+      "male": 3524,
+      "female": 4128,
+      "populationChange": -14,
+      "maleChange": -6,
+      "femaleChange": -8
+    },
+    {
+      "zoneId": "sgis-dong:22010690",
+      "district": "중구",
+      "label": "대봉2동",
+      "sourceAgencyCodes": [
+        "2711069000"
+      ],
+      "sourceAgencyLabels": [
+        "대봉2동"
+      ],
+      "linkQuality": "official-name-exact",
+      "previousPopulation": 5933,
+      "previousMale": 2815,
+      "previousFemale": 3118,
+      "population": 5943,
+      "male": 2820,
+      "female": 3123,
+      "populationChange": 10,
+      "maleChange": 5,
+      "femaleChange": 5
+    },
+    {
+      "zoneId": "sgis-dong:22010620",
+      "district": "중구",
+      "label": "대신동",
+      "sourceAgencyCodes": [
+        "2711059500"
+      ],
+      "sourceAgencyLabels": [
+        "대신동"
+      ],
+      "linkQuality": "official-name-exact",
+      "previousPopulation": 7249,
+      "previousMale": 3494,
+      "previousFemale": 3755,
+      "population": 7230,
+      "male": 3485,
+      "female": 3745,
+      "populationChange": -19,
+      "maleChange": -9,
+      "femaleChange": -10
+    },
+    {
+      "zoneId": "sgis-dong:22010700",
+      "district": "중구",
+      "label": "동인동",
+      "sourceAgencyCodes": [
+        "2711051700"
+      ],
+      "sourceAgencyLabels": [
+        "동인동"
+      ],
+      "linkQuality": "official-name-exact",
+      "previousPopulation": 10997,
+      "previousMale": 5449,
+      "previousFemale": 5548,
+      "population": 11000,
+      "male": 5438,
+      "female": 5562,
+      "populationChange": 3,
+      "maleChange": -11,
+      "femaleChange": 14
+    },
+    {
+      "zoneId": "sgis-dong:22010540",
+      "district": "중구",
+      "label": "삼덕동",
+      "sourceAgencyCodes": [
+        "2711054500"
+      ],
+      "sourceAgencyLabels": [
+        "삼덕동"
+      ],
+      "linkQuality": "official-name-exact",
+      "previousPopulation": 7460,
+      "previousMale": 3649,
+      "previousFemale": 3811,
+      "population": 7449,
+      "male": 3642,
+      "female": 3807,
+      "populationChange": -11,
+      "maleChange": -7,
+      "femaleChange": -4
+    },
+    {
+      "zoneId": "sgis-dong:22010560",
+      "district": "중구",
+      "label": "성내1동",
+      "sourceAgencyCodes": [
+        "2711056500"
+      ],
+      "sourceAgencyLabels": [
+        "성내1동"
+      ],
+      "linkQuality": "official-name-exact",
+      "previousPopulation": 5527,
+      "previousMale": 2644,
+      "previousFemale": 2883,
+      "population": 5538,
+      "male": 2652,
+      "female": 2886,
+      "populationChange": 11,
+      "maleChange": 8,
+      "femaleChange": 3
+    },
+    {
+      "zoneId": "sgis-dong:22010590",
+      "district": "중구",
+      "label": "성내2동",
+      "sourceAgencyCodes": [
+        "2711057500"
+      ],
+      "sourceAgencyLabels": [
+        "성내2동"
+      ],
+      "linkQuality": "official-name-exact",
+      "previousPopulation": 9263,
+      "previousMale": 4422,
+      "previousFemale": 4841,
+      "population": 9263,
+      "male": 4410,
+      "female": 4853,
+      "populationChange": 0,
+      "maleChange": -12,
+      "femaleChange": 12
+    },
+    {
+      "zoneId": "sgis-dong:22010610",
+      "district": "중구",
+      "label": "성내3동",
+      "sourceAgencyCodes": [
+        "2711058500"
+      ],
+      "sourceAgencyLabels": [
+        "성내3동"
+      ],
+      "linkQuality": "official-name-exact",
+      "previousPopulation": 13643,
+      "previousMale": 6781,
+      "previousFemale": 6862,
+      "population": 13680,
+      "male": 6820,
+      "female": 6860,
+      "populationChange": 37,
+      "maleChange": 39,
+      "femaleChange": -2
+    }
+  ],
+  "branchOfficeAssignments": [
+    {
+      "sourceAgencyCode": "2771025400",
+      "sourceDistrict": "달성군",
+      "sourceLabel": "논공읍공단출장소",
+      "targetDistrict": "달성군",
+      "targetLabel": "논공읍"
+    },
+    {
+      "sourceAgencyCode": "2771025700",
+      "sourceDistrict": "달성군",
+      "sourceLabel": "다사읍서재출장소",
+      "targetDistrict": "달성군",
+      "targetLabel": "다사읍"
+    }
+  ],
+  "limitations": [
+    "주민등록지에 신고된 대한민국 국민 기준이며 외국인은 포함하지 않습니다.",
+    "주민등록인구는 거주인구의 공식 행정통계이지만 통신 기반 생활인구·방문인구·시간대별 체류인구와 다릅니다.",
+    "SGIS 공개 경계는 2025-06-30 기준이고 MOIS 원본은 2026-08-31 기준이므로 행정기관코드 체계는 직접 변환하지 않습니다.",
+    "SGIS 150개 권역은 구·군+행정동명 exact match로 모두 연결하고 논공읍공단출장소·다사읍서재출장소는 명시적으로 각 부모 읍에 합산합니다.",
+    "주민등록인구만으로 업무지구·주거생활권·통근형을 최종 확정하지 않으며 생활인구와 OD가 추가로 필요합니다."
+  ]
+}

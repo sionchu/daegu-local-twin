@@ -72,12 +72,17 @@
     },
     {
       "key": "resident_population",
-      "status": "available-district-level-only",
-      "source": "대구광역시 주민등록인구및세대현황 2026-05-31",
-      "sourceUrl": "https://www.data.go.kr/data/3077757/fileData.do",
+      "status": "available-official-dong-2026-08",
+      "source": "행정안전부 지역별(행정동) 성별 주민등록 인구증감 2026-08-31",
+      "sourceUrl": "https://www.data.go.kr/data/3033254/fileData.do",
       "quality": "official",
-      "output": "official_context_summary.json",
-      "limitation": "구·군 단위이므로 동/권역 생활성격 판정에는 단독 사용하지 않음"
+      "officialZoneRecords": 150,
+      "sourceDaeguAgencyRows": 152,
+      "branchOfficeRows": 2,
+      "population": 2346277,
+      "populationChange": -1112,
+      "output": "resident_population_dong.json",
+      "limitation": "주민등록지 기준 대한민국 국민이며 생활인구·방문인구·시간대별 체류인구와 다름"
     },
     {
       "key": "healthcare_official",
