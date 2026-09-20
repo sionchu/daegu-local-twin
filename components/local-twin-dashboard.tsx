@@ -173,6 +173,42 @@ type ZoneContextProfileDocument = {
   records: ZoneContextProfile[];
 };
 
+type CitywideCommercialZone = {
+  zoneId: string;
+  label: string;
+  district?: string | null;
+  zoneKind: "locality" | "commercial_corridor";
+  labelLon?: number | null;
+  labelLat?: number | null;
+  isCommercialCandidate: boolean;
+  candidateRank?: number | null;
+  candidateTier?: "strong" | "review" | "emerging" | "precise-corridor" | null;
+  commercialPotentialScore: number;
+  businessCount: number;
+  businessDensityScore: number;
+  businessDiversityScore: number;
+  transitScore: number;
+  retailMarketScore: number;
+  employmentPublicScore: number;
+  cultureTourismScore: number;
+  healthcareScore: number;
+  boundaryMeaning: string;
+  selectionMeaning: string;
+};
+
+type CitywideCommercialProfileDocument = {
+  metadata?: {
+    coverage?: {
+      profileCount?: number;
+      localityZoneCount?: number;
+      localityCandidateCount?: number;
+      centralCorridorCount?: number;
+      candidateCount?: number;
+    };
+  };
+  records: CitywideCommercialZone[];
+};
+
 const layerLabels: Record<MapLayer, string> = {
   opportunity: "입지종합",
   demand: "수요여건",
@@ -189,6 +225,7 @@ const layerLabels: Record<MapLayer, string> = {
   retailMarket: "시장·대형점포",
   cultureTourism: "문화·관광",
   parkingAccess: "주차·접근",
+  commercialPotential: "상권잠재",
   commercialDensity: "상업밀도",
   businessDiversity: "업종다양성",
 };
@@ -214,9 +251,21 @@ const contextLayers: MapLayer[] = [
   "parkingAccess",
 ];
 
-const citywideStructureLayers: MapLayer[] = [
+const citywideCommercialLayers: MapLayer[] = [
+  "commercialPotential",
   "commercialDensity",
   "businessDiversity",
+  "transitHub",
+  "retailMarket",
+  "employmentPublic",
+];
+
+const citywideContextLayers: MapLayer[] = [
+  "education",
+  "healthcare",
+  "industrial",
+  "cultureTourism",
+  "parkingAccess",
 ];
 
 const contextLayerProfileKey: Partial<
@@ -508,18 +557,22 @@ function MarketRelationGraph({
 
 function CitywideContextPanel({
   profile,
+  commercialZone,
+  candidateCount,
   activeLayer,
 }: {
   profile?: ZoneContextProfile;
+  commercialZone?: CitywideCommercialZone;
+  candidateCount?: number;
   activeLayer: MapLayer;
 }) {
   if (!profile) {
     return (
       <Card data-testid="citywide-context-panel">
         <CardHeader>
-          <CardTitle>대구 전역 배후시설</CardTitle>
+          <CardTitle>대구 전역 상권·배후환경</CardTitle>
           <CardDescription>
-            지도에서 지역을 선택하면 교육·의료·업무·산업·교통·시장·문화관광·주차 여건을 확인할 수 있습니다.
+            상권후보와 지역을 선택하면 점포구조·교통·시장·업무·교육·의료 등 전역 여건을 함께 확인할 수 있습니다.
           </CardDescription>
         </CardHeader>
       </Card>
@@ -528,19 +581,23 @@ function CitywideContextPanel({
 
   const activeKey = contextLayerProfileKey[activeLayer];
   const activeScore =
-    activeLayer === "commercialDensity"
-      ? profile.businessSignals?.businessDensityScore ?? 0
-      : activeLayer === "businessDiversity"
-        ? profile.businessSignals?.businessDiversityScore ?? 0
-        : activeKey
-          ? profile.scores[activeKey]
-          : 0;
+    activeLayer === "commercialPotential"
+      ? commercialZone?.commercialPotentialScore ?? 0
+      : activeLayer === "commercialDensity"
+        ? profile.businessSignals?.businessDensityScore ?? 0
+        : activeLayer === "businessDiversity"
+          ? profile.businessSignals?.businessDiversityScore ?? 0
+          : activeKey
+            ? profile.scores[activeKey]
+            : 0;
   const activeMetricNote =
-    activeLayer === "commercialDensity"
-      ? "SEMAS 2026Q2 점포밀도 상대지표 / 100"
-      : activeLayer === "businessDiversity"
-        ? "SEMAS 2026Q2 업종다양성 / 100"
-        : "거리감쇠 상대지표 / 100";
+    activeLayer === "commercialPotential"
+      ? "SEMAS 점포구조 + 교통·시장·업무·문화 접근성 결합 / 100"
+      : activeLayer === "commercialDensity"
+        ? "SEMAS 2026Q2 점포밀도 상대지표 / 100"
+        : activeLayer === "businessDiversity"
+          ? "SEMAS 2026Q2 업종다양성 / 100"
+          : "거리감쇠 상대지표 / 100";
   const rows = contextLayers.map((layer) => {
     const key = contextLayerProfileKey[layer]!;
     const evidence = profile.anchorEvidence[key];
@@ -560,11 +617,17 @@ function CitywideContextPanel({
         <CardHeader className="border-b border-white/8">
           <div className="flex items-start justify-between gap-3">
             <div>
-              <div className="text-[10px] font-medium text-slate-500">대구 전역 지역맥락</div>
+              <div className="text-[10px] font-medium text-slate-500">대구 전역 상권·지역맥락</div>
               <CardTitle className="mt-1 text-xl">{profile.label}</CardTitle>
               <CardDescription>{profile.district ?? "대구광역시"}</CardDescription>
             </div>
-            <Badge variant="outline">공식·공개자료 결합</Badge>
+            <Badge variant={commercialZone?.isCommercialCandidate ? "default" : "outline"}>
+              {commercialZone?.isCommercialCandidate
+                ? commercialZone.zoneKind === "commercial_corridor"
+                  ? "정밀 상권"
+                  : "상권 후보" + (commercialZone.candidateRank ? " #" + commercialZone.candidateRank : "")
+                : "일반 분석권역"}
+            </Badge>
           </div>
         </CardHeader>
         <CardContent className="pt-4">
@@ -578,11 +641,90 @@ function CitywideContextPanel({
             <div className="text-right text-[10px] leading-4 text-slate-500">
               {activeMetricNote}
               <br />
-              {citywideStructureLayers.includes(activeLayer)
-                ? "점포구조 지표이며 매출을 뜻하지 않음"
+              {citywideCommercialLayers.includes(activeLayer)
+                ? "상권 검토용 상대지표이며 매출·성공확률을 뜻하지 않음"
                 : "이용자수·매출을 뜻하지 않음"}
             </div>
           </div>
+
+          {commercialZone ? (
+            <div
+              className="mt-4 rounded-xl border border-emerald-300/12 bg-emerald-300/[0.035] p-3"
+              data-testid="citywide-commercial-analysis"
+            >
+              <div className="flex items-start justify-between gap-3">
+                <div>
+                  <div className="text-[10px] font-semibold text-emerald-100">전역 상권분석</div>
+                  <div className="mt-1 text-[9px] leading-4 text-slate-500">
+                    SEMAS 점포구조와 교통·시장·업무·문화 접근성을 결합한 후보 선별입니다.
+                  </div>
+                </div>
+                <Badge variant={commercialZone.isCommercialCandidate ? "default" : "outline"}>
+                  {commercialZone.zoneKind === "commercial_corridor"
+                    ? "중앙 정밀상권"
+                    : commercialZone.isCommercialCandidate
+                      ? "후보 " + (commercialZone.candidateRank ? "#" + commercialZone.candidateRank : "")
+                      : "후보 기준 미달"}
+                </Badge>
+              </div>
+
+              <div className="mt-3 grid grid-cols-3 gap-2">
+                <MetricTile
+                  label="상권잠재"
+                  value={Math.round(commercialZone.commercialPotentialScore) + " / 100"}
+                  note={
+                    commercialZone.isCommercialCandidate
+                      ? "전역 검토 우선순위"
+                      : "전역 후보선정 기준 미달"
+                  }
+                  accent={commercialZone.isCommercialCandidate}
+                />
+                <MetricTile
+                  label="점포수"
+                  value={commercialZone.businessCount.toLocaleString("ko-KR") + "개"}
+                  note="SEMAS 2026Q2"
+                />
+                <MetricTile
+                  label="업종다양성"
+                  value={Math.round(commercialZone.businessDiversityScore) + " / 100"}
+                  note="공식 점포구조 기반"
+                />
+                <MetricTile
+                  label="교통접근"
+                  value={Math.round(commercialZone.transitScore) + " / 100"}
+                  note="교통거점 거리감쇠"
+                />
+                <MetricTile
+                  label="시장·집객"
+                  value={Math.round(commercialZone.retailMarketScore) + " / 100"}
+                  note="시장·대형점포 접근성"
+                />
+                <MetricTile
+                  label="업무·공공"
+                  value={Math.round(commercialZone.employmentPublicScore) + " / 100"}
+                  note="업무·공공 앵커 접근성"
+                />
+              </div>
+
+              <div className="mt-3 flex flex-wrap gap-1.5 text-[9px] text-slate-500">
+                <span className="rounded-full border border-white/8 px-2 py-1">
+                  전역 후보 {candidateCount ?? "—"}개
+                </span>
+                <span className="rounded-full border border-white/8 px-2 py-1">
+                  검색관심: 직접관측 미확보
+                </span>
+                <span className="rounded-full border border-white/8 px-2 py-1">
+                  점포 임대료: 전역 직접매칭 미확보
+                </span>
+                <span className="rounded-full border border-white/8 px-2 py-1">
+                  생활인구·카드매출: 반출자료 대기
+                </span>
+              </div>
+              <div className="mt-3 text-[9px] leading-4 text-slate-600">
+                {commercialZone.boundaryMeaning} · 후보점수는 매출·유동인구·성공확률을 의미하지 않습니다.
+              </div>
+            </div>
+          ) : null}
 
           {profile.officialDistrictSignals ? (
             <div className="mt-4 grid grid-cols-2 gap-2 rounded-xl border border-white/6 bg-white/[0.018] p-3 sm:grid-cols-4">
@@ -942,6 +1084,9 @@ export default function LocalTwinDashboard() {
   const [programs, setPrograms] = useState<SupportProgram[]>([]);
   const [contextProfiles, setContextProfiles] = useState<ZoneContextProfile[]>([]);
   const [citywideContextProfiles, setCitywideContextProfiles] = useState<ZoneContextProfile[]>([]);
+  const [citywideCommercialProfiles, setCitywideCommercialProfiles] =
+    useState<CitywideCommercialZone[]>([]);
+  const [citywideCandidateCount, setCitywideCandidateCount] = useState(0);
   const [dataError, setDataError] = useState<string>();
 
   const actions = useMemo(
@@ -976,44 +1121,71 @@ export default function LocalTwinDashboard() {
   }, []);
 
   useEffect(() => {
-    if (mapScope !== "citywide" || citywideContextProfiles.length) return;
+    if (
+      mapScope !== "citywide" ||
+      (citywideContextProfiles.length && citywideCommercialProfiles.length)
+    ) {
+      return;
+    }
     let alive = true;
 
-    fetch("/data/zone_context_profiles.json")
-      .then((response) => {
+    Promise.all([
+      fetch("/data/zone_context_profiles.json").then((response) => {
         if (!response.ok) throw new Error("대구 전역 배후시설 데이터를 불러오지 못했습니다.");
         return response.json() as Promise<ZoneContextProfileDocument>;
-      })
-      .then((document) => {
+      }),
+      fetch("/data/citywide_commercial_profiles.json").then((response) => {
+        if (!response.ok) throw new Error("대구 전역 상권후보 데이터를 불러오지 못했습니다.");
+        return response.json() as Promise<CitywideCommercialProfileDocument>;
+      }),
+    ])
+      .then(([profileDocument, commercialDocument]) => {
         if (!alive) return;
-        const localityProfiles = (document.records ?? []).filter(
-          (profile) => profile.zoneKind === "locality",
+        const profiles = profileDocument.records ?? [];
+        const commercialProfiles = commercialDocument.records ?? [];
+        setCitywideContextProfiles(profiles);
+        setCitywideCommercialProfiles(commercialProfiles);
+        setCitywideCandidateCount(
+          commercialDocument.metadata?.coverage?.candidateCount ??
+            commercialProfiles.filter((zone) => zone.isCommercialCandidate).length,
         );
-        setCitywideContextProfiles(localityProfiles);
+
+        const defaultCommercialZone = [...commercialProfiles]
+          .filter(
+            (zone) =>
+              zone.zoneKind === "locality" &&
+              zone.isCommercialCandidate &&
+              typeof zone.candidateRank === "number",
+          )
+          .sort(
+            (left, right) =>
+              (left.candidateRank ?? Number.POSITIVE_INFINITY) -
+              (right.candidateRank ?? Number.POSITIVE_INFINITY),
+          )[0];
         const defaultProfile =
-          localityProfiles.find((profile) => profile.district === "중구") ??
-          localityProfiles[0];
+          profiles.find((profile) => profile.zoneId === defaultCommercialZone?.zoneId) ??
+          profiles.find((profile) => profile.zoneKind === "locality") ??
+          profiles[0];
         setSelectedContextZoneId((current) => current ?? defaultProfile?.zoneId);
       })
       .catch(() => {
-        if (alive) setDataError("대구 전역 배후시설 데이터를 불러오지 못했습니다.");
+        if (alive) setDataError("대구 전역 상권·배후시설 데이터를 불러오지 못했습니다.");
       });
 
     return () => {
       alive = false;
     };
-  }, [citywideContextProfiles.length, mapScope]);
+  }, [citywideCommercialProfiles.length, citywideContextProfiles.length, mapScope]);
 
   const handleScopeChange = useCallback(
     (nextScope: MapScope) => {
       setMapScope(nextScope);
       if (nextScope === "citywide") {
-        if (!contextLayers.includes(stateRef.current.activeLayer)) {
-          actions.setLayer("education");
-        }
+        actions.setLayer("commercialPotential");
       } else if (
-        contextLayers.includes(stateRef.current.activeLayer) ||
-        citywideStructureLayers.includes(stateRef.current.activeLayer)
+        stateRef.current.activeLayer === "commercialPotential" ||
+        citywideCommercialLayers.includes(stateRef.current.activeLayer) ||
+        citywideContextLayers.includes(stateRef.current.activeLayer)
       ) {
         actions.setLayer("opportunity");
       }
@@ -1046,6 +1218,9 @@ export default function LocalTwinDashboard() {
     : undefined;
   const selectedCitywideContextProfile = selectedContextZoneId
     ? citywideContextProfiles.find((profile) => profile.zoneId === selectedContextZoneId)
+    : undefined;
+  const selectedCitywideCommercialZone = selectedContextZoneId
+    ? citywideCommercialProfiles.find((zone) => zone.zoneId === selectedContextZoneId)
     : undefined;
 
   const activeScenario = state.activeScenarioId
@@ -1163,15 +1338,15 @@ export default function LocalTwinDashboard() {
                         <MapPin className="h-3.5 w-3.5" />
                         {mapScope === "central"
                           ? "대구 중앙도심 · 상권분석 지도"
-                          : "대구광역시 · 배후시설 맥락 지도"}
+                          : "대구광역시 · 전역 상권·배후환경 분석"}
                       </div>
                       <h1 className="text-[28px] font-semibold leading-[1.18] tracking-[-0.035em] text-white">
-                        {mapScope === "central" ? "상권 입지 검토" : "대구 전역 지역맥락"}
+                        {mapScope === "central" ? "상권 입지 검토" : "대구 전역 상권 분석"}
                       </h1>
                       <p className="mt-2 max-w-3xl text-xs leading-5 text-slate-500">
                         {mapScope === "central"
                           ? "교통·수요·임대·도시재생 여건을 실제 도시 공간에서 함께 비교합니다."
-                          : "교육·의료·업무·산업·교통·시장·문화관광·주차시설의 배후 영향 구조를 지역별로 비교합니다."}
+                          : "상권잠재·점포구조·교통·시장·업무 신호와 교육·의료·산업·문화관광 배후환경을 대구 전역에서 함께 비교합니다."}
                       </p>
                     </div>
                     <div className="flex rounded-xl border border-white/8 bg-white/[0.025] p-1">
@@ -1201,51 +1376,13 @@ export default function LocalTwinDashboard() {
                   </div>
 
                   <div className="space-y-2">
-                    {mapScope === "central" ? (
-                      <div className="flex items-center gap-2">
-                        <span className="w-12 shrink-0 text-[10px] font-medium text-slate-600">
-                          상권지표
-                        </span>
-                        <div className="localtwin-no-scrollbar flex gap-2 overflow-x-auto py-1">
-                          {commercialLayers.map((layer) => (
-                            <Button
-                              key={layer}
-                              size="sm"
-                              variant={state.activeLayer === layer ? "default" : "outline"}
-                              className="shrink-0 rounded-full px-3 text-[11px]"
-                              onClick={() => actions.setLayer(layer)}
-                            >
-                              {layerLabels[layer]}
-                            </Button>
-                          ))}
-                        </div>
-                      </div>
-                    ) : null}
                     <div className="flex items-center gap-2">
                       <span className="w-12 shrink-0 text-[10px] font-medium text-slate-600">
-                        배후시설
+                        {mapScope === "central" ? "상권지표" : "상권분석"}
                       </span>
                       <div className="localtwin-no-scrollbar flex gap-2 overflow-x-auto py-1">
-                        {contextLayers.map((layer) => (
-                          <Button
-                            key={layer}
-                            size="sm"
-                            variant={state.activeLayer === layer ? "default" : "outline"}
-                            className="shrink-0 rounded-full px-3 text-[11px]"
-                            onClick={() => actions.setLayer(layer)}
-                          >
-                            {layerLabels[layer]}
-                          </Button>
-                        ))}
-                      </div>
-                    </div>
-                    {mapScope === "citywide" ? (
-                      <div className="flex items-center gap-2">
-                        <span className="w-12 shrink-0 text-[10px] font-medium text-slate-600">
-                          상권구조
-                        </span>
-                        <div className="localtwin-no-scrollbar flex gap-2 overflow-x-auto py-1">
-                          {citywideStructureLayers.map((layer) => (
+                        {(mapScope === "central" ? commercialLayers : citywideCommercialLayers).map(
+                          (layer) => (
                             <Button
                               key={layer}
                               size="sm"
@@ -1255,10 +1392,30 @@ export default function LocalTwinDashboard() {
                             >
                               {layerLabels[layer]}
                             </Button>
-                          ))}
-                        </div>
+                          ),
+                        )}
                       </div>
-                    ) : null}
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <span className="w-12 shrink-0 text-[10px] font-medium text-slate-600">
+                        {mapScope === "central" ? "배후시설" : "배후환경"}
+                      </span>
+                      <div className="localtwin-no-scrollbar flex gap-2 overflow-x-auto py-1">
+                        {(mapScope === "central" ? contextLayers : citywideContextLayers).map(
+                          (layer) => (
+                            <Button
+                              key={layer}
+                              size="sm"
+                              variant={state.activeLayer === layer ? "default" : "outline"}
+                              className="shrink-0 rounded-full px-3 text-[11px]"
+                              onClick={() => actions.setLayer(layer)}
+                            >
+                              {layerLabels[layer]}
+                            </Button>
+                          ),
+                        )}
+                      </div>
+                    </div>
                   </div>
                 </CardHeader>
 
@@ -1282,6 +1439,8 @@ export default function LocalTwinDashboard() {
                 {mapScope === "citywide" ? (
                   <CitywideContextPanel
                     profile={selectedCitywideContextProfile}
+                    commercialZone={selectedCitywideCommercialZone}
+                    candidateCount={citywideCandidateCount}
                     activeLayer={state.activeLayer}
                   />
                 ) : (

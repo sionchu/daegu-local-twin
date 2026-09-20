@@ -326,8 +326,8 @@
         "administrative boundary geometry"
       ],
       "limitations": [
-        "지도 렌더링 범위 제한과 시각적 경계 표시에만 사용합니다.",
-        "상권 경계나 사업성 판단 데이터가 아닙니다."
+        "대구광역시 시각적 경계 표시에만 사용하며 카메라 이동을 강제로 제한하지 않는다.",
+        "상권 경계나 사업성 판단 데이터가 아니다."
       ],
       "mode": "public-snapshot"
     },
@@ -456,6 +456,33 @@
       ],
       "mode": "official-snapshot",
       "sourceSha256": "57AA361544108FF4FC73334F87D2CED61E41FE8638DD70BCD842930F865D2386"
+    },
+    {
+      "id": "citywide-commercial-candidates",
+      "title": "대구 전역 상권잠재·상권후보 파생 레이어",
+      "provider": "LocalTwin deterministic model",
+      "url": "https://github.com/sionchu/daegu-local-twin/blob/main/scripts/ingest/derive_citywide_commercial_candidates.py",
+      "geographicLevel": "SGIS 행정동 150개 + 중앙도심 정밀 corridor 5개",
+      "sourceVersion": "commercial-candidates-v1",
+      "sourceDate": "2026-09-20",
+      "fieldsUsed": [
+        "SEMAS businessDensityScore",
+        "SEMAS businessDiversityScore",
+        "transit accessibility",
+        "retail/market accessibility",
+        "employment/public accessibility",
+        "culture/tourism accessibility",
+        "healthcare accessibility",
+        "SGIS administrative-dong geometry",
+        "central map-derived corridor geometry"
+      ],
+      "limitations": [
+        "상권잠재는 공식·공개 스냅샷에서 파생한 검토 우선순위 상대점수이며 매출·유동인구·성공확률이 아니다.",
+        "행정동 후보 polygon은 SGIS 공식 행정경계를 분석단위로 사용하지만 공식 상권 경계 또는 SEMAS storeZone 지정이 아니다.",
+        "NAVER 검색관심과 R-ONE 임대료는 전역 직접관측 커버리지가 없어 이 후보점수에 넣지 않는다.",
+        "생활인구·카드매출·방문인구·통근 OD는 승인된 집계자료가 확보될 때까지 결측 상태를 유지한다."
+      ],
+      "mode": "modelled"
     },
     {
       "id": "context-evidence-graph",
