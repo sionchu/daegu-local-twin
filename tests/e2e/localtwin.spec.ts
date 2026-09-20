@@ -48,6 +48,32 @@ test.describe("LocalTwin critical evidence path", () => {
       const centralOverlay = page.getByTestId("central-candidate-overlay");
       await expect(centralOverlay).toBeVisible({ timeout: 20_000 });
       await expect(centralOverlay).toHaveAttribute("data-candidate-count", "5");
+
+      const labelBoxes = await centralOverlay
+        .locator('[data-collision-resolved="true"]')
+        .evaluateAll((labels) =>
+          labels.map((label) => {
+            const rect = label.getBoundingClientRect();
+            return {
+              left: rect.left,
+              right: rect.right,
+              top: rect.top,
+              bottom: rect.bottom,
+            };
+          }),
+        );
+      for (let leftIndex = 0; leftIndex < labelBoxes.length; leftIndex += 1) {
+        for (let rightIndex = leftIndex + 1; rightIndex < labelBoxes.length; rightIndex += 1) {
+          const left = labelBoxes[leftIndex];
+          const right = labelBoxes[rightIndex];
+          const overlaps =
+            left.left < right.right &&
+            left.right > right.left &&
+            left.top < right.bottom &&
+            left.bottom > right.top;
+          expect(overlaps).toBe(false);
+        }
+      }
     }
     await expect(page.getByTestId("market-relation-graph")).toBeVisible();
 
@@ -310,6 +336,10 @@ test.describe("LocalTwin critical evidence path", () => {
 
     const spatialMap = page.getByTestId("spatial-map").first();
     if ((await spatialMap.getAttribute("data-map-engine")) === "vworld") {
+      await expect(spatialMap).toHaveAttribute(
+        "data-citywide-camera",
+        "candidate-bounds",
+      );
       const candidateOverlay = page.getByTestId("citywide-candidate-overlay");
       await expect(candidateOverlay).toBeVisible({ timeout: 20_000 });
       await expect
@@ -431,6 +461,16 @@ test.describe("LocalTwin critical evidence path", () => {
     expect(metadata.resident.sgisCoveragePct).toBe(100);
     expect(metadata.resident.population).toBe(2346277);
     expect(metadata.resident.populationChange).toBe(-1112);
+
+    await page.getByRole("button", { name: "중앙도심", exact: true }).click();
+    await page.getByRole("button", { name: "대구 전체", exact: true }).click();
+    const toggledMap = page.getByTestId("spatial-map").first();
+    if ((await toggledMap.getAttribute("data-map-engine")) === "vworld") {
+      await expect(toggledMap).toHaveAttribute(
+        "data-citywide-camera",
+        "candidate-bounds",
+      );
+    }
   });
 
   test("keeps official snapshot metrics readable at narrow and desktop panel widths", async ({ page }) => {
