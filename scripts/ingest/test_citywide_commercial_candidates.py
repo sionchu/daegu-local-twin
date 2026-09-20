@@ -85,6 +85,18 @@ class CitywideCommercialCandidateTest(unittest.TestCase):
         self.assertEqual(coverage["candidateCount"], 19)
         self.assertEqual(len(candidate_records), 19)
         self.assertEqual(
+            metadata["scoreCalibration"]["method"],
+            "upstream empirical percentile index",
+        )
+        self.assertEqual(metadata["scoreCalibration"]["positiveScoreRange"], [5, 95])
+        self.assertLessEqual(
+            max(row["commercialPotentialScore"] for row in candidate_records),
+            95.0,
+        )
+        self.assertFalse(
+            any(row["commercialPotentialScore"] == 100 for row in candidate_records)
+        )
+        self.assertEqual(
             {feature["properties"]["zoneId"] for feature in features},
             {row["zoneId"] for row in candidate_records},
         )

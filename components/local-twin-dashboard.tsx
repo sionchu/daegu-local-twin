@@ -882,7 +882,7 @@ function CitywideContextPanel({
                 </div>
                 <Badge variant="outline">공식 snapshot</Badge>
               </div>
-              <div className="mt-3 grid grid-cols-2 gap-2 xl:grid-cols-4" data-testid="resident-metrics">
+              <div className="mt-3 grid grid-cols-2 gap-2" data-testid="resident-metrics">
                 <MetricTile
                   label="거주인구"
                   value={profile.officialZoneSignals.residentPopulation.toLocaleString("ko-KR") + "명"}
@@ -936,7 +936,7 @@ function CitywideContextPanel({
                 </div>
                 <Badge variant="outline">공식 snapshot</Badge>
               </div>
-              <div className="mt-3 grid grid-cols-2 gap-2 xl:grid-cols-4" data-testid="workplace-metrics">
+              <div className="mt-3 grid grid-cols-2 gap-2" data-testid="workplace-metrics">
                 <MetricTile
                   label="종사자"
                   value={profile.officialZoneSignals.workplaceEmployees.toLocaleString("ko-KR") + "명"}
@@ -1086,6 +1086,10 @@ function CitywideContextPanel({
                     {Math.round(profile.businessSignals.businessDiversityScore)} / 100
                   </div>
                 </div>
+              </div>
+              <div className="mt-3 rounded-lg border border-white/6 bg-slate-950/30 px-2.5 py-2 text-[9px] leading-4 text-slate-500">
+                접근성·상업밀도 점수는 대구 150개 행정동을 공통 기준으로 한 상대 percentile index입니다.
+                양수 신호는 5~95 범위로 보정하며, 100점 절대평가나 성공확률을 뜻하지 않습니다.
               </div>
               <div className="mt-3 grid grid-cols-5 gap-1.5">
                 {(Object.keys(businessCategoryLabels) as BusinessCategory[]).map((category) => (

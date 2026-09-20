@@ -74,6 +74,28 @@ class ContextGraphTest(unittest.TestCase):
                 "blocked-until-local-population-and-flow-data",
             )
 
+        normalization = profiles["method"]["normalization"]
+        self.assertEqual(
+            normalization["method"],
+            "empirical percentile index using citywide locality reference",
+        )
+        self.assertEqual(normalization["referenceZoneKind"], "locality")
+        self.assertEqual(normalization["positiveScoreRange"], [5, 95])
+        self.assertTrue(
+            all(
+                score <= 95.0
+                for profile in profiles["records"]
+                for score in profile["scores"].values()
+            )
+        )
+        self.assertTrue(
+            all(
+                (profile.get("businessSignals") or {}).get("businessDensityScore", 0)
+                <= 95.0
+                for profile in profiles["records"]
+            )
+        )
+
         locality_profiles = [
             row for row in profiles["records"] if row["zoneKind"] == "locality"
         ]
