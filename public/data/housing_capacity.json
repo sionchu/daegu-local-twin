@@ -1,0 +1,388 @@
+{
+  "schemaVersion": 1,
+  "generatedAt": "2026-09-20T07:53:32Z",
+  "source": {
+    "provider": "한국부동산원",
+    "datasetId": "15106861",
+    "title": "공동주택 단지 식별정보_기본정보",
+    "url": "https://www.data.go.kr/data/15106861/fileData.do",
+    "sourceVersion": "2026-08-31",
+    "retrievedAt": "2026-09-20T07:53:32Z",
+    "sourceSha256": "87272863D9C2EDCD69D1A5319EB5755C288F13E8D0525DAFB92C10A54C3CB00D",
+    "encoding": "cp949",
+    "portalReportedRowCount": 44628,
+    "sourceRecordCount": 307834,
+    "portalRowCountMatchesSource": false
+  },
+  "coverage": {
+    "daeguComplexRecords": 9100,
+    "daeguHouseholds": 749768,
+    "districtCount": 9,
+    "exactNameLinkedComplexRecords": 2063,
+    "exactNameLinkedHouseholds": 246191,
+    "exactNameLinkedZoneCount": 38,
+    "rowCoveragePct": 22.67,
+    "householdCoveragePct": 32.84
+  },
+  "byDistrict": [
+    {
+      "district": "군위군",
+      "complexRecords": 55,
+      "households": 1078
+    },
+    {
+      "district": "남구",
+      "complexRecords": 917,
+      "households": 28803
+    },
+    {
+      "district": "달서구",
+      "complexRecords": 1222,
+      "households": 173031
+    },
+    {
+      "district": "달성군",
+      "complexRecords": 421,
+      "households": 91910
+    },
+    {
+      "district": "동구",
+      "complexRecords": 2115,
+      "households": 117988
+    },
+    {
+      "district": "북구",
+      "complexRecords": 1071,
+      "households": 137903
+    },
+    {
+      "district": "서구",
+      "complexRecords": 1699,
+      "households": 39489
+    },
+    {
+      "district": "수성구",
+      "complexRecords": 1332,
+      "households": 125777
+    },
+    {
+      "district": "중구",
+      "complexRecords": 268,
+      "households": 33789
+    }
+  ],
+  "exactNameLinkedZones": [
+    {
+      "zoneId": "sgis-dong:22010620",
+      "district": "중구",
+      "label": "대신동",
+      "partialComplexRecords": 13,
+      "partialHouseholds": 2646,
+      "linkQuality": "official-name-exact-partial"
+    },
+    {
+      "zoneId": "sgis-dong:22020650",
+      "district": "동구",
+      "label": "지저동",
+      "partialComplexRecords": 117,
+      "partialHouseholds": 2165,
+      "linkQuality": "official-name-exact-partial"
+    },
+    {
+      "zoneId": "sgis-dong:22020680",
+      "district": "동구",
+      "label": "방촌동",
+      "partialComplexRecords": 300,
+      "partialHouseholds": 8201,
+      "linkQuality": "official-name-exact-partial"
+    },
+    {
+      "zoneId": "sgis-dong:22040510",
+      "district": "남구",
+      "label": "이천동",
+      "partialComplexRecords": 46,
+      "partialHouseholds": 5398,
+      "linkQuality": "official-name-exact-partial"
+    },
+    {
+      "zoneId": "sgis-dong:22050700",
+      "district": "북구",
+      "label": "검단동",
+      "partialComplexRecords": 22,
+      "partialHouseholds": 2372,
+      "linkQuality": "official-name-exact-partial"
+    },
+    {
+      "zoneId": "sgis-dong:22050760",
+      "district": "북구",
+      "label": "읍내동",
+      "partialComplexRecords": 81,
+      "partialHouseholds": 8724,
+      "linkQuality": "official-name-exact-partial"
+    },
+    {
+      "zoneId": "sgis-dong:22050770",
+      "district": "북구",
+      "label": "관음동",
+      "partialComplexRecords": 11,
+      "partialHouseholds": 3583,
+      "linkQuality": "official-name-exact-partial"
+    },
+    {
+      "zoneId": "sgis-dong:22050790",
+      "district": "북구",
+      "label": "구암동",
+      "partialComplexRecords": 18,
+      "partialHouseholds": 10284,
+      "linkQuality": "official-name-exact-partial"
+    },
+    {
+      "zoneId": "sgis-dong:22050820",
+      "district": "북구",
+      "label": "동천동",
+      "partialComplexRecords": 13,
+      "partialHouseholds": 9357,
+      "linkQuality": "official-name-exact-partial"
+    },
+    {
+      "zoneId": "sgis-dong:22050830",
+      "district": "북구",
+      "label": "국우동",
+      "partialComplexRecords": 10,
+      "partialHouseholds": 7287,
+      "linkQuality": "official-name-exact-partial"
+    },
+    {
+      "zoneId": "sgis-dong:22050840",
+      "district": "북구",
+      "label": "대현동",
+      "partialComplexRecords": 46,
+      "partialHouseholds": 3979,
+      "linkQuality": "official-name-exact-partial"
+    },
+    {
+      "zoneId": "sgis-dong:22060630",
+      "district": "수성구",
+      "label": "중동",
+      "partialComplexRecords": 41,
+      "partialHouseholds": 3559,
+      "linkQuality": "official-name-exact-partial"
+    },
+    {
+      "zoneId": "sgis-dong:22060640",
+      "district": "수성구",
+      "label": "상동",
+      "partialComplexRecords": 44,
+      "partialHouseholds": 2688,
+      "linkQuality": "official-name-exact-partial"
+    },
+    {
+      "zoneId": "sgis-dong:22060650",
+      "district": "수성구",
+      "label": "파동",
+      "partialComplexRecords": 110,
+      "partialHouseholds": 7405,
+      "linkQuality": "official-name-exact-partial"
+    },
+    {
+      "zoneId": "sgis-dong:22060660",
+      "district": "수성구",
+      "label": "두산동",
+      "partialComplexRecords": 36,
+      "partialHouseholds": 3058,
+      "linkQuality": "official-name-exact-partial"
+    },
+    {
+      "zoneId": "sgis-dong:22070560",
+      "district": "달서구",
+      "label": "본리동",
+      "partialComplexRecords": 86,
+      "partialHouseholds": 8621,
+      "linkQuality": "official-name-exact-partial"
+    },
+    {
+      "zoneId": "sgis-dong:22070570",
+      "district": "달서구",
+      "label": "감삼동",
+      "partialComplexRecords": 104,
+      "partialHouseholds": 9414,
+      "linkQuality": "official-name-exact-partial"
+    },
+    {
+      "zoneId": "sgis-dong:22070580",
+      "district": "달서구",
+      "label": "죽전동",
+      "partialComplexRecords": 37,
+      "partialHouseholds": 2426,
+      "linkQuality": "official-name-exact-partial"
+    },
+    {
+      "zoneId": "sgis-dong:22070590",
+      "district": "달서구",
+      "label": "장기동",
+      "partialComplexRecords": 64,
+      "partialHouseholds": 5678,
+      "linkQuality": "official-name-exact-partial"
+    },
+    {
+      "zoneId": "sgis-dong:22070610",
+      "district": "달서구",
+      "label": "신당동",
+      "partialComplexRecords": 13,
+      "partialHouseholds": 5030,
+      "linkQuality": "official-name-exact-partial"
+    },
+    {
+      "zoneId": "sgis-dong:22070680",
+      "district": "달서구",
+      "label": "도원동",
+      "partialComplexRecords": 13,
+      "partialHouseholds": 13746,
+      "linkQuality": "official-name-exact-partial"
+    },
+    {
+      "zoneId": "sgis-dong:22070710",
+      "district": "달서구",
+      "label": "본동",
+      "partialComplexRecords": 77,
+      "partialHouseholds": 5763,
+      "linkQuality": "official-name-exact-partial"
+    },
+    {
+      "zoneId": "sgis-dong:22070750",
+      "district": "달서구",
+      "label": "성당동",
+      "partialComplexRecords": 92,
+      "partialHouseholds": 4358,
+      "linkQuality": "official-name-exact-partial"
+    },
+    {
+      "zoneId": "sgis-dong:22070780",
+      "district": "달서구",
+      "label": "진천동",
+      "partialComplexRecords": 175,
+      "partialHouseholds": 9526,
+      "linkQuality": "official-name-exact-partial"
+    },
+    {
+      "zoneId": "sgis-dong:22070790",
+      "district": "달서구",
+      "label": "유천동",
+      "partialComplexRecords": 18,
+      "partialHouseholds": 7935,
+      "linkQuality": "official-name-exact-partial"
+    },
+    {
+      "zoneId": "sgis-dong:22510110",
+      "district": "달성군",
+      "label": "화원읍",
+      "partialComplexRecords": 75,
+      "partialHouseholds": 16242,
+      "linkQuality": "official-name-exact-partial"
+    },
+    {
+      "zoneId": "sgis-dong:22510120",
+      "district": "달성군",
+      "label": "논공읍",
+      "partialComplexRecords": 101,
+      "partialHouseholds": 5955,
+      "linkQuality": "official-name-exact-partial"
+    },
+    {
+      "zoneId": "sgis-dong:22510130",
+      "district": "달성군",
+      "label": "다사읍",
+      "partialComplexRecords": 82,
+      "partialHouseholds": 32769,
+      "linkQuality": "official-name-exact-partial"
+    },
+    {
+      "zoneId": "sgis-dong:22510140",
+      "district": "달성군",
+      "label": "유가읍",
+      "partialComplexRecords": 13,
+      "partialHouseholds": 10590,
+      "linkQuality": "official-name-exact-partial"
+    },
+    {
+      "zoneId": "sgis-dong:22510150",
+      "district": "달성군",
+      "label": "옥포읍",
+      "partialComplexRecords": 22,
+      "partialHouseholds": 8713,
+      "linkQuality": "official-name-exact-partial"
+    },
+    {
+      "zoneId": "sgis-dong:22510160",
+      "district": "달성군",
+      "label": "현풍읍",
+      "partialComplexRecords": 71,
+      "partialHouseholds": 8947,
+      "linkQuality": "official-name-exact-partial"
+    },
+    {
+      "zoneId": "sgis-dong:22510310",
+      "district": "달성군",
+      "label": "가창면",
+      "partialComplexRecords": 43,
+      "partialHouseholds": 1293,
+      "linkQuality": "official-name-exact-partial"
+    },
+    {
+      "zoneId": "sgis-dong:22510320",
+      "district": "달성군",
+      "label": "하빈면",
+      "partialComplexRecords": 4,
+      "partialHouseholds": 40,
+      "linkQuality": "official-name-exact-partial"
+    },
+    {
+      "zoneId": "sgis-dong:22510360",
+      "district": "달성군",
+      "label": "구지면",
+      "partialComplexRecords": 10,
+      "partialHouseholds": 7361,
+      "linkQuality": "official-name-exact-partial"
+    },
+    {
+      "zoneId": "sgis-dong:22520111",
+      "district": "군위군",
+      "label": "군위읍",
+      "partialComplexRecords": 48,
+      "partialHouseholds": 989,
+      "linkQuality": "official-name-exact-partial"
+    },
+    {
+      "zoneId": "sgis-dong:22520312",
+      "district": "군위군",
+      "label": "효령면",
+      "partialComplexRecords": 3,
+      "partialHouseholds": 39,
+      "linkQuality": "official-name-exact-partial"
+    },
+    {
+      "zoneId": "sgis-dong:22520314",
+      "district": "군위군",
+      "label": "우보면",
+      "partialComplexRecords": 2,
+      "partialHouseholds": 18,
+      "linkQuality": "official-name-exact-partial"
+    },
+    {
+      "zoneId": "sgis-dong:22520315",
+      "district": "군위군",
+      "label": "의흥면",
+      "partialComplexRecords": 2,
+      "partialHouseholds": 32,
+      "linkQuality": "official-name-exact-partial"
+    }
+  ],
+  "limitations": [
+    "구·군 합계는 한국부동산원 공식 공동주택 세대수의 대구 전체 집계입니다.",
+    "동 단위 값은 법정동명과 SGIS 행정동명이 구·군까지 정확히 일치한 단지만 포함한 부분집계입니다.",
+    "법정동이 여러 행정동으로 분할되는 경우 임의 배분하지 않아 동 단위 커버리지가 불완전합니다.",
+    "공동주택 세대수는 주민등록인구·생활인구·실거주인구를 의미하지 않습니다.",
+    "부분연결 세대수는 상권잠재 점수나 주거생활권 최종판정에 사용하지 않습니다.",
+    "공공데이터포털 화면의 전체 행 44,628과 실제 다운로드 원문 307,834행이 일치하지 않아 원문 SHA256과 실제 파싱 행수를 우선 기록합니다."
+  ]
+}

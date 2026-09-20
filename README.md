@@ -103,6 +103,7 @@ Current product snapshots:
 - `public/data/context_graph.json`
 - `public/data/context_data_availability.json`
 - `public/data/official_context_summary.json`
+- `public/data/housing_capacity.json`
 
 Browser-based source collection is owned by the Codex Aside workflow. See
 [`docs/CRAWL_HANDOFF.md`](./docs/CRAWL_HANDOFF.md). Git-side code consumes only the
