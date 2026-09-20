@@ -56,6 +56,19 @@
       "quality": "official"
     },
     {
+      "key": "housing_capacity",
+      "status": "available-official-district-partial-zone",
+      "source": "한국부동산원 공동주택 단지 식별정보_기본정보 2026-08-31",
+      "sourceUrl": "https://www.data.go.kr/data/15106861/fileData.do",
+      "quality": "official + exact-name-partial-zone-link",
+      "officialDaeguComplexRecords": 9100,
+      "officialDaeguHouseholds": 749768,
+      "exactNameLinkedZoneCount": 38,
+      "exactNameLinkedHouseholds": 246191,
+      "output": "housing_capacity.json",
+      "limitation": "구군 합계는 공식 전체 집계, 동 단위는 법정동명=행정동명 exact-match 부분집계이며 상권잠재 점수에는 미사용"
+    },
+    {
       "key": "workplace_population",
       "status": "missing",
       "source": "SGIS/KOSIS workplace or employee statistics",

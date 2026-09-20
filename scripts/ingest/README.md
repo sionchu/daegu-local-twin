@@ -99,6 +99,11 @@ The candidate layer is modelled prioritization evidence. It is not an official c
 designation, footfall observation, revenue forecast, success probability, or replacement for
 missing citywide rent/search/living-population/card-spend observations.
 
+7. `refresh_reb_housing_capacity.py` normalizes the Korean Real Estate Board 2026-08-31
+   apartment-complex basic-information CSV. It keeps complete Daegu district household
+   totals and only exact district+dong-name matches to SGIS as partial zone evidence.
+   Ambiguous legal-dong to administrative-dong splits are never distributed by assumption.
+
 Raw national/Daegu source downloads are **not committed**. The committed snapshots contain
 only normalized data required to reproduce the product. Living-population, card-spend,
 visitor-population and commuting-OD remain controlled-data slots until an approved DIP
