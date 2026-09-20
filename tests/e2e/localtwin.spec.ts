@@ -1,6 +1,32 @@
-import { expect, test } from "@playwright/test";
+import { expect, test, type Page } from "@playwright/test";
 import { analyzeFinancials } from "../../src/model";
 import type { LocalTwinState } from "../../src/types";
+
+type RegisteredLocalTwinTool = {
+  name: string;
+  execute?: (input: unknown) => Promise<unknown>;
+};
+
+type LocalTwinToolHost = Window & {
+  __localTwinTools?: RegisteredLocalTwinTool[];
+};
+
+async function executeLocalTwinTool<T>(
+  page: Page,
+  name: string,
+  input: unknown = {},
+) {
+  return page.evaluate(
+    async ({ toolName, toolInput }) => {
+      const tool = (window as LocalTwinToolHost).__localTwinTools?.find(
+        (item) => item.name === toolName,
+      );
+      if (!tool?.execute) throw new Error(`LocalTwin WebMCP tool not registered: ${toolName}`);
+      return tool.execute(toolInput);
+    },
+    { toolName: name, toolInput: input },
+  ) as Promise<T>;
+}
 
 test.describe("LocalTwin critical evidence path", () => {
   test("loads the spatial dashboard with the simplified map surface", async ({ page }) => {
@@ -149,96 +175,54 @@ test.describe("LocalTwin critical evidence path", () => {
     );
 
     const updatedRentKrw = activeScenario.assumptions.monthlyRentKrw + 700_000;
-    await page.evaluate(
-      async ({ scenarioId, monthlyRentKrw }) => {
-        const host = window as typeof window & {
-          __localTwinTools?: Array<{
-            name: string;
-            execute?: (input: unknown) => Promise<unknown>;
-          }>;
-        };
-        const tool = host.__localTwinTools?.find(
-          (item) => item.name === "set_business_assumptions",
-        );
-        if (!tool?.execute) {
-          throw new Error("set_business_assumptions was not registered.");
-        }
-        await tool.execute({ scenarioId, monthlyRentKrw });
-      },
-      { scenarioId: activeScenario.id, monthlyRentKrw: updatedRentKrw },
-    );
+    await executeLocalTwinTool(page, "set_business_assumptions", {
+      scenarioId: activeScenario.id,
+      monthlyRentKrw: updatedRentKrw,
+    });
 
     await expect
-      .poll(async () =>
-        page.evaluate(async (scenarioId) => {
-          const host = window as typeof window & {
-            __localTwinTools?: Array<{
-              name: string;
-              execute?: (input: unknown) => Promise<unknown>;
-            }>;
-          };
-          const tool = host.__localTwinTools?.find(
-            (item) => item.name === "get_localtwin_state",
-          );
-          if (!tool?.execute) return null;
-          const state = (await tool.execute({})) as LocalTwinState;
-          return state.scenarios.find((scenario) => scenario.id === scenarioId)
-            ?.assumptions.monthlyRentKrw ?? null;
-        }, activeScenario.id),
-      )
+      .poll(async () => {
+        const state = await executeLocalTwinTool<LocalTwinState>(
+          page,
+          "get_localtwin_state",
+        );
+        return state.scenarios.find(
+          (scenario) => scenario.id === activeScenario.id,
+        )?.assumptions.monthlyRentKrw;
+      })
       .toBe(updatedRentKrw);
 
-    const mutatedSnapshot = (await page.evaluate(async (scenarioId) => {
-      const host = window as typeof window & {
-        __localTwinTools?: Array<{
-          name: string;
-          execute?: (input: unknown) => Promise<unknown>;
-        }>;
-      };
-      const stateTool = host.__localTwinTools?.find(
-        (item) => item.name === "get_localtwin_state",
-      );
-      const financialTool = host.__localTwinTools?.find(
-        (item) => item.name === "get_financial_analysis",
-      );
-      if (!stateTool?.execute || !financialTool?.execute) {
-        throw new Error("Required LocalTwin WebMCP tools were not registered.");
-      }
-      return {
-        state: await stateTool.execute({}),
-        financial: await financialTool.execute({ scenarioId }),
-      };
-    }, activeScenario.id)) as {
-      state: LocalTwinState;
-      financial: {
-        scenario: { id: string };
-        analysis: ReturnType<typeof analyzeFinancials>;
-      };
-    };
-
-    const mutatedScenario = mutatedSnapshot.state.scenarios.find(
+    const mutatedState = await executeLocalTwinTool<LocalTwinState>(
+      page,
+      "get_localtwin_state",
+    );
+    const mutatedFinancial = await executeLocalTwinTool<{
+      scenario: { id: string };
+      analysis: ReturnType<typeof analyzeFinancials>;
+    }>(page, "get_financial_analysis", { scenarioId: activeScenario.id });
+    const mutatedScenario = mutatedState.scenarios.find(
       (scenario) => scenario.id === activeScenario.id,
     );
     expect(mutatedScenario).toBeDefined();
     if (!mutatedScenario) throw new Error("Mutated scenario missing from WebMCP state.");
 
-    const mutatedCell = mutatedSnapshot.state.cells.find(
+    const mutatedCell = mutatedState.cells.find(
       (cell) => cell.cellId === mutatedScenario.locationCellId,
     );
     expect(mutatedCell).toBeDefined();
     if (!mutatedCell) throw new Error("Mutated cell missing from WebMCP state.");
 
     expect(mutatedScenario.assumptions.monthlyRentKrw).toBe(updatedRentKrw);
-    expect(mutatedSnapshot.financial.analysis).toEqual(
+    expect(mutatedFinancial.analysis).toEqual(
       analyzeFinancials(
         mutatedScenario.assumptions,
         mutatedCell.transitDemand,
         mutatedScenario.stressPreset,
       ),
     );
-    expect(
-      mutatedSnapshot.financial.analysis.monthlyBreakEvenRevenueKrw,
-    ).not.toBe(webMcpSnapshot.financial.analysis.monthlyBreakEvenRevenueKrw);
+    expect(mutatedFinancial.analysis.monthlyBreakEvenRevenueKrw).not.toBe(
+      webMcpSnapshot.financial.analysis.monthlyBreakEvenRevenueKrw,
+    );
 
     const context = await page.evaluate(async () => {
       const host = window as typeof window & {
