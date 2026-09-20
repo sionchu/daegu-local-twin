@@ -22,9 +22,8 @@ const CENTRAL_SERVICE_BOUNDS = {
   north: 35.892,
 };
 
-const MIN_CAMERA_HEIGHT_M = 220;
-const CENTRAL_MAX_CAMERA_HEIGHT_M = 16_000;
-const CITYWIDE_MAX_CAMERA_HEIGHT_M = 65_000;
+const MIN_CAMERA_HEIGHT_M = 40;
+const MAX_CAMERA_HEIGHT_M = 65_000;
 
 type AdminGeometry = {
   type: "Polygon" | "MultiPolygon";
@@ -363,81 +362,19 @@ function ringCenter(ring: number[][]) {
   return [sum[0] / ring.length, sum[1] / ring.length] as [number, number];
 }
 
-function configureSpatialLimits(
-  viewer: any,
-  Cesium: any,
-  getScope: () => "central" | "citywide",
-) {
-  const globe = viewer.scene?.globe;
+function configureCameraControls(viewer: any) {
   const controller = viewer.scene?.screenSpaceCameraController;
-  const camera = viewer.camera;
+  if (!controller) return () => undefined;
 
-  if (globe?.cartographicLimitRectangle !== undefined) {
-    globe.cartographicLimitRectangle = Cesium.Rectangle.fromDegrees(
-      DAEGU_RENDER_BOUNDS.west,
-      DAEGU_RENDER_BOUNDS.south,
-      DAEGU_RENDER_BOUNDS.east,
-      DAEGU_RENDER_BOUNDS.north,
-    );
-  }
+  controller.minimumZoomDistance = MIN_CAMERA_HEIGHT_M;
+  controller.maximumZoomDistance = MAX_CAMERA_HEIGHT_M;
+  controller.enableRotate = true;
+  controller.enableTranslate = true;
+  controller.enableZoom = true;
+  controller.enableTilt = true;
+  controller.enableLook = true;
 
-  if (controller) {
-    controller.minimumZoomDistance = MIN_CAMERA_HEIGHT_M;
-    controller.maximumZoomDistance = CITYWIDE_MAX_CAMERA_HEIGHT_M;
-  }
-
-  if (!camera?.positionCartographic) return () => undefined;
-
-  camera.percentageChanged = 0.025;
-  let adjusting = false;
-  const clampCamera = () => {
-    if (adjusting || !camera.positionCartographic) return;
-    const cartographic = camera.positionCartographic;
-    const lon = Cesium.Math.toDegrees(cartographic.longitude);
-    const lat = Cesium.Math.toDegrees(cartographic.latitude);
-    const height = cartographic.height;
-    const currentScope = getScope();
-    const bounds =
-      currentScope === "citywide" ? DAEGU_RENDER_BOUNDS : CENTRAL_SERVICE_BOUNDS;
-    const maxHeight =
-      currentScope === "citywide"
-        ? CITYWIDE_MAX_CAMERA_HEIGHT_M
-        : CENTRAL_MAX_CAMERA_HEIGHT_M;
-    const nextLon = clamp(lon, bounds.west, bounds.east);
-    const nextLat = clamp(lat, bounds.south, bounds.north);
-    const nextHeight = clamp(height, MIN_CAMERA_HEIGHT_M, maxHeight);
-
-    if (
-      Math.abs(nextLon - lon) < 0.00001 &&
-      Math.abs(nextLat - lat) < 0.00001 &&
-      Math.abs(nextHeight - height) < 1
-    ) {
-      return;
-    }
-
-    adjusting = true;
-    camera.setView({
-      destination: Cesium.Cartesian3.fromDegrees(nextLon, nextLat, nextHeight),
-      orientation: {
-        heading: camera.heading,
-        pitch: camera.pitch,
-        roll: camera.roll,
-      },
-    });
-    viewer.scene?.requestRender?.();
-    window.setTimeout(() => {
-      adjusting = false;
-    }, 0);
-  };
-
-  const removeChanged = camera.changed?.addEventListener?.(clampCamera);
-  const removeMoveEnd = camera.moveEnd?.addEventListener?.(clampCamera);
-  clampCamera();
-
-  return () => {
-    if (typeof removeChanged === "function") removeChanged();
-    if (typeof removeMoveEnd === "function") removeMoveEnd();
-  };
+  return () => undefined;
 }
 
 function addDaeguBoundaryMask(
@@ -579,11 +516,7 @@ export default function VWorldLocalTwinMap({
         viewer.shadows = false;
 
         const Cesium = window.Cesium;
-        spatialLimitCleanupRef.current = configureSpatialLimits(
-          viewer,
-          Cesium,
-          () => scopeRef.current,
-        );
+        spatialLimitCleanupRef.current = configureCameraControls(viewer);
 
         const [
           adminResponse,
@@ -1271,7 +1204,8 @@ export default function VWorldLocalTwinMap({
       data-testid="spatial-map"
       data-map-engine="vworld"
       data-buildings={buildingsReady ? "facility_build" : "unavailable"}
-      data-spatial-limited={scope === "citywide" ? "daegu-citywide" : "daegu-central"}
+      data-spatial-focus={scope === "citywide" ? "daegu-citywide" : "daegu-central"}
+      data-camera-controls="free"
       data-hovered-zone={hoveredZoneCellId ?? ""}
     >
       <div ref={containerRef} id={containerId} className="absolute inset-0 h-full w-full" />
