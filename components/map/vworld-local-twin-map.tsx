@@ -1162,12 +1162,32 @@ export default function VWorldLocalTwinMap({
       ? zoneCenter(selectedCorridor, cells)
       : [selectedCell.center.lon, selectedCell.center.lat];
 
+    const target = Cesium.Cartesian3.fromDegrees(targetLon, targetLat, 0);
+    if (
+      typeof viewer.camera.flyToBoundingSphere === "function" &&
+      Cesium.BoundingSphere &&
+      Cesium.HeadingPitchRange
+    ) {
+      viewer.camera.flyToBoundingSphere(
+        new Cesium.BoundingSphere(target, 35),
+        {
+          offset: new Cesium.HeadingPitchRange(
+            viewer.camera.heading,
+            viewer.camera.pitch,
+            1_100,
+          ),
+          duration: 0.65,
+        },
+      );
+      return;
+    }
+
     viewer.camera.flyTo({
       destination: Cesium.Cartesian3.fromDegrees(targetLon, targetLat, 1_100),
       orientation: {
         heading: viewer.camera.heading,
-        pitch: viewer.camera.pitch,
-        roll: viewer.camera.roll,
+        pitch: Cesium.Math.toRadians(-90),
+        roll: 0,
       },
       duration: 0.65,
     });
