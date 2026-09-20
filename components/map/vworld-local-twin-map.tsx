@@ -682,20 +682,38 @@ export default function VWorldLocalTwinMap({
         };
 
         const zoneCellIdFromIds = (entityIds: string[]) => {
-          const commercialEntityId = entityIds.find((id) =>
-            id.startsWith("localtwin-commercial-"),
+          const commercialGeometryId = entityIds.find(
+            (id) =>
+              id.startsWith("localtwin-commercial-") &&
+              !id.endsWith("::label"),
           );
-          if (commercialEntityId) {
+          if (commercialGeometryId) {
             return (
-              commercialEntityId
+              commercialGeometryId
                 .slice("localtwin-commercial-".length)
                 .split("::")[0] || null
             );
           }
 
           const entityId = entityIds.find((id) => id.startsWith("localtwin-zone-"));
-          if (!entityId) return null;
-          return entityId.slice("localtwin-zone-".length).split("::")[0] || null;
+          if (entityId) {
+            return entityId.slice("localtwin-zone-".length).split("::")[0] || null;
+          }
+
+          const commercialLabelIds = entityIds.filter(
+            (id) =>
+              id.startsWith("localtwin-commercial-") &&
+              id.endsWith("::label"),
+          );
+          if (commercialLabelIds.length === 1) {
+            return (
+              commercialLabelIds[0]
+                .slice("localtwin-commercial-".length)
+                .split("::")[0] || null
+            );
+          }
+
+          return null;
         };
 
         const zoneCellIdAtPosition = (position: any) => {
@@ -1203,6 +1221,12 @@ export default function VWorldLocalTwinMap({
           candidate.properties.zoneKind === "commercial_corridor"
             ? "정밀상권"
             : "상권후보";
+        const labelMaxDistance =
+          candidate.properties.zoneKind === "commercial_corridor"
+            ? 22_000
+            : (candidate.properties.candidateRank ?? Number.POSITIVE_INFINITY) <= 5
+              ? 60_000
+              : 32_000;
         const label = viewer.entities.add({
           id: `localtwin-commercial-${candidate.properties.zoneId}::label`,
           position: Cesium.Cartesian3.fromDegrees(
@@ -1226,7 +1250,10 @@ export default function VWorldLocalTwinMap({
               Cesium.HeightReference?.RELATIVE_TO_GROUND ??
               Cesium.HeightReference?.CLAMP_TO_GROUND,
             disableDepthTestDistance: Number.POSITIVE_INFINITY,
-            distanceDisplayCondition: new Cesium.DistanceDisplayCondition(0, 55_000),
+            distanceDisplayCondition: new Cesium.DistanceDisplayCondition(
+              0,
+              labelMaxDistance,
+            ),
           },
         });
         cellEntitiesRef.current.push(label);
