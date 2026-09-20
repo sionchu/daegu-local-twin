@@ -140,6 +140,29 @@ test.describe("LocalTwin critical evidence path", () => {
     await expect(page.getByTestId("ai-tool-activity")).toContainText("후보 비교 설정");
     await expect(page.getByTestId("ai-tool-activity")).toContainText("데모");
 
+    await expect
+      .poll(async () =>
+        page.evaluate(async () => {
+          const host = window as typeof window & {
+            __localTwinTools?: Array<{
+              name: string;
+              execute?: (input: unknown) => Promise<unknown>;
+            }>;
+          };
+          const tool = host.__localTwinTools?.find(
+            (item) => item.name === "get_localtwin_state",
+          );
+          const state = (await tool?.execute?.({})) as {
+            compareScenarioId?: string;
+            scenarios?: Array<{ id: string; locationCellId: string }>;
+          };
+          return state.scenarios?.find(
+            (scenario) => scenario.id === state.compareScenarioId,
+          )?.locationCellId;
+        }),
+      )
+      .toContain("gyodong");
+
     await page.getByRole("button", { name: "AI 창업분석 닫기", exact: true }).click();
     await expect(page.getByRole("heading", { name: "같은 업종, 다른 입지 조건." })).toBeVisible();
     await expect(page.getByTestId("ai-business-consultant")).toHaveCount(0);

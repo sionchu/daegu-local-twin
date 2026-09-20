@@ -41,7 +41,7 @@ type Props = {
 };
 
 const examplePrompt =
-  "카페 창업을 준비 중이야. 자기자금 5천만원, 월세 250만원 기준으로 후보 A와 B를 비교하고 수요전환율 -20% 조건도 같이 검토해줘.";
+  "카페 창업을 준비 중이야. 자기자금 5천만원, 월세 250만원 기준으로 동성로하고 교동을 비교하고 수요전환율 -20% 조건도 같이 검토해줘.";
 
 function man(value: number) {
   return Math.round(value / 10_000).toLocaleString("ko-KR") + "만원";
