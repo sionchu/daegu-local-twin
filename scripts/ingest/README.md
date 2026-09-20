@@ -116,6 +116,11 @@ missing citywide rent/search/living-population/card-spend observations.
    codes match all 150 SGIS Daegu dongs directly, so no name inference or spatial
    redistribution is required. It writes official business-location employee and business
    counts to `public/data/workplace_employment.json`.
+11. `refresh_mois_resident_population.py` normalizes the MOIS 2026-08-31 monthly
+   administrative-dong resident-population CSV to `resident_population_dong.json`.
+   All 150 SGIS zones are matched by district + dong name; the two DalSeong branch-office
+   rows are explicitly aggregated to their documented parent eups rather than treated as
+   separate analysis zones.
 
 Raw national/Daegu source downloads are **not committed**. The committed snapshots contain
 only normalized data required to reproduce the product. Living-population, card-spend,

@@ -251,8 +251,10 @@ class ContextGraphTest(unittest.TestCase):
         self.assertEqual(by_key["visitor_population"]["status"], "controlled-data-slot")
         self.assertEqual(
             by_key["resident_population"]["status"],
-            "available-district-level-only",
+            "available-official-dong-2026-08",
         )
+        self.assertEqual(by_key["resident_population"]["officialZoneRecords"], 150)
+        self.assertEqual(by_key["resident_population"]["population"], 2346277)
         self.assertTrue(by_key["school_official"]["status"].startswith("available-official"))
         self.assertTrue(by_key["factory_official"]["status"].startswith("available-official"))
         self.assertEqual(
