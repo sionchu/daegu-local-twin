@@ -163,7 +163,7 @@ class ContextGraphTest(unittest.TestCase):
             "transit": 90,
             "retail_market": 90,
             "culture_tourism": 600,
-            "parking_access": 10,
+            "parking_access": 1000,
         }.items():
             layer = json.loads(
                 (REPO_ROOT / f"public/data/context_anchors/{layer_name}.json").read_text(
