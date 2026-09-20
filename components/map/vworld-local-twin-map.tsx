@@ -1618,10 +1618,19 @@ export default function VWorldLocalTwinMap({
     };
 
     viewer.scene.postRender.addEventListener(updateOverlay);
+    viewer.scene.requestRender?.();
     updateOverlay();
+
+    const settleTimers = [350, 1_000].map((delay) =>
+      window.setTimeout(() => {
+        viewer.scene?.requestRender?.();
+        updateOverlay();
+      }, delay),
+    );
 
     return () => {
       if (frame !== null) window.cancelAnimationFrame(frame);
+      settleTimers.forEach((timer) => window.clearTimeout(timer));
       viewer.scene?.postRender?.removeEventListener?.(updateOverlay);
       setCandidateOverlayPoints([]);
     };

@@ -1598,8 +1598,12 @@ export default function LocalTwinDashboard() {
       ] as const;
       const mentionedCells = candidateAliases
         .filter(([label]) => prompt.includes(label))
-        .map(([, token]) =>
-          current.cells.find((cell) => cell.cellId.includes(token)),
+        .map(([label, token]) =>
+          current.cells.find(
+            (cell) =>
+              cell.label.includes(label) ||
+              cell.cellId.includes(token),
+          ),
         )
         .filter((cell): cell is LocationEvidence => Boolean(cell));
 
