@@ -7,6 +7,7 @@ import {
   MapPin,
   TrendingUp,
   WalletCards,
+  Sparkles,
 } from "lucide-react";
 import {
   type ReactNode,
@@ -26,6 +27,7 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
+import AiBusinessConsultant from "@/components/ai-business-consultant";
 import { createApplicationActions } from "@/src/actions";
 import {
   analyzeFinancials,
@@ -49,7 +51,11 @@ import {
   businessCategoryLabels,
   stressPresetLabels,
 } from "@/src/types";
-import { registerLocalTwinTools } from "@/src/webmcp";
+import {
+  LOCAL_TWIN_WEBMCP_TOOL_COUNT,
+  registerLocalTwinTools,
+  type LocalTwinToolActivity,
+} from "@/src/webmcp";
 
 const LocalTwinMap = dynamic(
   () => import("@/components/map/local-twin-spatial-map"),
@@ -1371,11 +1377,18 @@ export default function LocalTwinDashboard() {
   const [citywideCandidateCount, setCitywideCandidateCount] = useState(0);
   const [housingCapacity, setHousingCapacity] = useState<HousingCapacityDocument>();
   const [dataError, setDataError] = useState<string>();
+  const [aiOpen, setAiOpen] = useState(false);
+  const [webMcpSupported, setWebMcpSupported] = useState(false);
+  const [aiActivities, setAiActivities] = useState<LocalTwinToolActivity[]>([]);
 
   const actions = useMemo(
     () => createApplicationActions(dispatch, () => stateRef.current),
     [],
   );
+
+  const recordAiActivity = useCallback((activity: LocalTwinToolActivity) => {
+    setAiActivities((current) => [activity, ...current].slice(0, 20));
+  }, []);
 
   useEffect(() => {
     let alive = true;
@@ -1492,9 +1505,185 @@ export default function LocalTwinDashboard() {
     const bridge = registerLocalTwinTools({
       ...actions,
       getState: () => stateRef.current,
+      onToolActivity: recordAiActivity,
     });
-    return bridge.dispose;
-  }, [actions]);
+    setWebMcpSupported(bridge.supported);
+    return () => {
+      bridge.dispose();
+      setWebMcpSupported(false);
+    };
+  }, [actions, recordAiActivity]);
+
+  const handleAiDemoStress = useCallback(
+    (preset: StressPreset) => {
+      const scenarioId = stateRef.current.activeScenarioId;
+      if (!scenarioId) return;
+      actions.setStressPreset(scenarioId, preset);
+      recordAiActivity({
+        tool: "apply_stress_condition",
+        title: "불리조건 적용",
+        mode: "action",
+        source: "demo",
+        input: { scenarioId, preset },
+        occurredAt: new Date().toISOString(),
+      });
+    },
+    [actions, recordAiActivity],
+  );
+
+  const handleAiOpenCompare = useCallback(() => {
+    const current = stateRef.current;
+    if (!current.activeScenarioId || !current.compareScenarioId) return;
+    actions.compareScenarios(
+      current.activeScenarioId,
+      current.compareScenarioId,
+    );
+    setView("compare");
+    recordAiActivity({
+      tool: "compare_candidates",
+      title: "후보 비교 설정",
+      mode: "action",
+      source: "demo",
+      input: {
+        primaryScenarioId: current.activeScenarioId,
+        compareScenarioId: current.compareScenarioId,
+      },
+      occurredAt: new Date().toISOString(),
+    });
+  }, [actions, recordAiActivity]);
+
+  const handleAiPromptDemo = useCallback(
+    (prompt: string) => {
+      const current = stateRef.current;
+      const primaryId = current.activeScenarioId;
+      const compareId = current.compareScenarioId;
+      if (!primaryId || !compareId) return;
+
+      const categoryByKeyword: Array<[string, BusinessCategory]> = [
+        ["카페", "cafe"],
+        ["음식점", "restaurant"],
+        ["식당", "restaurant"],
+        ["소매", "retail"],
+        ["뷰티", "beauty"],
+        ["미용", "beauty"],
+        ["서비스", "service"],
+      ];
+      const category =
+        categoryByKeyword.find(([keyword]) => prompt.includes(keyword))?.[1];
+
+      const money = (pattern: RegExp) => {
+        const match = prompt.match(pattern);
+        if (!match) return undefined;
+        const value = Number(match[1].replace(/,/g, ""));
+        const unit = match[2];
+        if (!Number.isFinite(value)) return undefined;
+        if (unit === "억" || unit === "억원") return value * 100_000_000;
+        if (unit === "천만" || unit === "천만원") return value * 10_000_000;
+        return value * 10_000;
+      };
+
+      const ownerCashKrw = money(
+        /자기자금[^0-9]*([0-9,.]+)\s*(억원|억|천만원|천만|만원|만)/,
+      );
+      const monthlyRentKrw = money(
+        /월세[^0-9]*([0-9,.]+)\s*(만원|만)/,
+      );
+
+      const candidateAliases = [
+        ["동성로", "dongseongro"],
+        ["교동", "gyodong"],
+        ["북성로", "buksungro"],
+        ["중앙로", "jungangro"],
+        ["서문시장", "seomun"],
+      ] as const;
+      const mentionedCells = candidateAliases
+        .filter(([label]) => prompt.includes(label))
+        .map(([, token]) =>
+          current.cells.find((cell) => cell.cellId.includes(token)),
+        )
+        .filter((cell): cell is LocationEvidence => Boolean(cell));
+
+      if (mentionedCells[0]) {
+        actions.selectCell(mentionedCells[0].cellId, "A");
+        recordAiActivity({
+          tool: "select_localtwin_candidate",
+          title: "후보 A 선택",
+          mode: "action",
+          source: "demo",
+          input: { cellId: mentionedCells[0].cellId, slot: "A" },
+          occurredAt: new Date().toISOString(),
+        });
+      }
+      if (mentionedCells[1]) {
+        actions.selectCell(mentionedCells[1].cellId, "B");
+        recordAiActivity({
+          tool: "select_localtwin_candidate",
+          title: "후보 B 선택",
+          mode: "action",
+          source: "demo",
+          input: { cellId: mentionedCells[1].cellId, slot: "B" },
+          occurredAt: new Date().toISOString(),
+        });
+      }
+
+      if (category) {
+        actions.setCategory(primaryId, category);
+        actions.setCategory(compareId, category);
+        recordAiActivity({
+          tool: "set_business_category",
+          title: "업종 변경",
+          mode: "action",
+          source: "demo",
+          input: { primaryId, compareId, category },
+          occurredAt: new Date().toISOString(),
+        });
+      }
+
+      const patch = {
+        ...(ownerCashKrw !== undefined ? { ownerCashKrw } : {}),
+        ...(monthlyRentKrw !== undefined ? { monthlyRentKrw } : {}),
+      };
+      if (Object.keys(patch).length) {
+        actions.setAssumptions(primaryId, patch);
+        actions.setAssumptions(compareId, patch);
+        recordAiActivity({
+          tool: "set_business_assumptions",
+          title: "창업조건 변경",
+          mode: "action",
+          source: "demo",
+          input: { primaryId, compareId, patch },
+          occurredAt: new Date().toISOString(),
+        });
+      }
+
+      const stress: StressPreset =
+        /수요|매출/.test(prompt) && /20\s*%/.test(prompt)
+          ? "conversionDown"
+          : "base";
+      actions.setStressPreset(primaryId, stress);
+      actions.setStressPreset(compareId, stress);
+      recordAiActivity({
+        tool: "apply_stress_condition",
+        title: "불리조건 적용",
+        mode: "action",
+        source: "demo",
+        input: { primaryId, compareId, preset: stress },
+        occurredAt: new Date().toISOString(),
+      });
+
+      actions.compareScenarios(primaryId, compareId);
+      recordAiActivity({
+        tool: "compare_candidates",
+        title: "후보 비교 설정",
+        mode: "action",
+        source: "demo",
+        input: { primaryScenarioId: primaryId, compareScenarioId: compareId },
+        occurredAt: new Date().toISOString(),
+      });
+      setView("compare");
+    },
+    [actions, recordAiActivity],
+  );
 
   const handleMapSelect = useCallback((cellId: string) => {
     setSelectedCellId(cellId);
@@ -1622,6 +1811,15 @@ export default function LocalTwinDashboard() {
             ))}
           </nav>
 
+          <Button
+            size="sm"
+            className="shrink-0 gap-1.5 rounded-full"
+            onClick={() => setAiOpen(true)}
+            aria-label="AI 창업분석"
+          >
+            <Sparkles className="h-3.5 w-3.5" />
+            AI 창업분석
+          </Button>
         </div>
       </header>
 
@@ -2160,6 +2358,23 @@ export default function LocalTwinDashboard() {
       <footer className="border-t border-white/8 px-4 py-4 text-center text-[10px] text-slate-600">
         LocalTwin Daegu · 공식·공개자료 + 검토용 추정치 + 사용자 입력 조건 · 절대 매출·성공확률 예측이 아님
       </footer>
+
+      <AiBusinessConsultant
+        open={aiOpen}
+        webMcpSupported={webMcpSupported}
+        toolCount={LOCAL_TWIN_WEBMCP_TOOL_COUNT}
+        activeScenario={activeScenario}
+        compareScenario={compareScenario}
+        activeCell={activeCell}
+        compareCell={compareCell}
+        activeAnalysis={activeAnalysis}
+        compareAnalysis={compareAnalysis}
+        activities={aiActivities}
+        onClose={() => setAiOpen(false)}
+        onDemoStress={handleAiDemoStress}
+        onRunPromptDemo={handleAiPromptDemo}
+        onOpenCompare={handleAiOpenCompare}
+      />
     </div>
   );
 }

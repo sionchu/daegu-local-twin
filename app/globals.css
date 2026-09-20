@@ -229,3 +229,14 @@ button {
     animation: none;
   }
 }
+
+@keyframes ai-panel-in {
+  from {
+    transform: translateX(24px);
+    opacity: 0;
+  }
+  to {
+    transform: translateX(0);
+    opacity: 1;
+  }
+}

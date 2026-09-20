@@ -42,6 +42,20 @@ BEP · customers/day · required capture rate
 official support / guarantee / finance review candidates
 ```
 
+## AI business analysis
+
+LocalTwin exposes the deterministic analysis workflow to AI agents through WebMCP
+(`document.modelContext.registerTool()`). The registered tools can read state, select
+candidate A/B, change startup assumptions/category, apply stress presets, compare
+scenarios, read the `src/model.ts` financial analysis, and retrieve compact 1-hop
+context-graph evidence.
+
+The visible **AI 창업분석** drawer shows the same deterministic outputs and an execution
+log. Its built-in natural-language demo is explicitly rule-based so the public demo does
+not pretend to run an LLM without a configured model provider. A WebMCP-capable AI can
+call the registered tools directly; financial values remain model-owned rather than
+model-generated.
+
 ## Evidence boundary
 
 Every source-backed value must remain distinguishable as `observed`, `official`,
