@@ -103,6 +103,10 @@ missing citywide rent/search/living-population/card-spend observations.
    apartment-complex basic-information CSV. It keeps complete Daegu district household
    totals and only exact district+dong-name matches to SGIS as partial zone evidence.
    Ambiguous legal-dong to administrative-dong splits are never distributed by assumption.
+8. `refresh_official_parking.py` normalizes the nationwide parking standard dataset to
+   `public/data/parking.json`, retaining Daegu coordinates, supply spaces, operation/fee
+   fields and provider identity while excluding phone numbers and free-text notes. Source
+   management-number reuse is preserved and disambiguated with provider-aware canonical IDs.
 
 Raw national/Daegu source downloads are **not committed**. The committed snapshots contain
 only normalized data required to reproduce the product. Living-population, card-spend,

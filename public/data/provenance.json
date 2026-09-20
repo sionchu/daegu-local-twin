@@ -463,6 +463,41 @@
       "mode": "official-snapshot"
     },
     {
+      "id": "official-parking-standard",
+      "title": "전국주차장정보표준데이터 — 대구 주차장 공식 스냅샷",
+      "provider": "공공데이터포털 표준데이터 / 지방자치단체",
+      "url": "https://www.data.go.kr/data/15012896/standard.do",
+      "geographicLevel": "대구광역시 주차장 point",
+      "sourceVersion": "merged standard snapshot; record data dates 2026-04-14~2026-07-16",
+      "sourceDate": "2026-07-16",
+      "retrievedAt": "2026-09-20T08:16:51Z",
+      "sourceSha256": "FDABC9DD32B9DB72BA0F718A35F0271F8DB55EAE8CB48397E471B0988E127085",
+      "fieldsUsed": [
+        "주차장관리번호",
+        "주차장명",
+        "주차장구분",
+        "주차장유형",
+        "소재지도로명주소",
+        "소재지지번주소",
+        "주차구획수",
+        "운영요일",
+        "요금정보",
+        "위도",
+        "경도",
+        "데이터기준일자",
+        "제공기관코드",
+        "제공기관명"
+      ],
+      "limitations": [
+        "대구 1,086개 레코드 모두 유효 위경도를 포함하며 총 50,687면의 공급용량을 제공한다.",
+        "개별 기관 등록분을 병합한 표준데이터로 레코드별 데이터기준일자는 2026-04-14~2026-07-16 범위다.",
+        "주차구획수는 공급용량이며 실시간 빈자리 수가 아니다.",
+        "원본 주차장관리번호는 기관 간 재사용되고 1건은 동일 기관 내에서도 재사용되어 canonical ID는 제공기관코드+관리번호+충돌순번을 사용한다.",
+        "전화번호와 자유기술 특기사항은 모델 입력에 필요하지 않아 정규화 snapshot에서 제외한다."
+      ],
+      "mode": "official-snapshot"
+    },
+    {
       "id": "semas-citywide-business-2026q2",
       "title": "소상공인시장진흥공단 상가(상권)정보 — 대구 전역",
       "provider": "소상공인시장진흥공단 / 공공데이터포털",
