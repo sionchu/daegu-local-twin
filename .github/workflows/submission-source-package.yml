@@ -1,0 +1,24 @@
+name: submission-source-package
+
+on:
+  push:
+    branches:
+      - codex/submission-package-20260920
+
+jobs:
+  package:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Build clean source archive
+        run: |
+          git archive             --format=zip             --prefix=daegu-local-twin-prototype/             --output=daegu-local-twin-prototype-source.zip             152e98e8cbbe68df2e53c9a170c366f67658253b
+      - name: Upload prototype source
+        uses: actions/upload-artifact@v4
+        with:
+          name: daegu-local-twin-prototype-source
+          path: daegu-local-twin-prototype-source.zip
+          if-no-files-found: error
+          retention-days: 14
