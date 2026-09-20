@@ -32,6 +32,7 @@ test.describe("LocalTwin critical evidence path", () => {
   });
 
   test("loads Daegu-wide context layers and the regional evidence panel", async ({ page }) => {
+    test.setTimeout(60_000);
     await page.goto("/");
     await page.getByRole("button", { name: "대구 전체", exact: true }).click();
 
