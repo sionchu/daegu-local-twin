@@ -1459,6 +1459,11 @@ export default function VWorldLocalTwinMap({
     if (!ready) return;
     hoveredZoneCellIdRef.current = null;
     setHoveredZoneCellId(null);
+    if (scope === "citywide") {
+      // A scope switch should frame the full candidate set. The currently selected
+      // citywide candidate must not immediately override that framing.
+      initialContextSelectionRef.current = true;
+    }
 
     const timer = window.setTimeout(() => {
       const viewer = viewerRef.current;
