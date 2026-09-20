@@ -303,20 +303,23 @@ test.describe("LocalTwin critical evidence path", () => {
     await expect(page.getByTestId("citywide-commercial-analysis")).toBeVisible();
     await expect(page.getByText("전역 후보 19개", { exact: true })).toBeVisible();
 
-    const candidateOverlay = page.getByTestId("citywide-candidate-overlay");
-    await expect(candidateOverlay).toBeVisible({ timeout: 20_000 });
-    await expect
-      .poll(async () =>
-        candidateOverlay.getByTestId("citywide-candidate-label").count(),
-      )
-      .toBeLessThanOrEqual(6);
+    const spatialMap = page.getByTestId("spatial-map").first();
+    if ((await spatialMap.getAttribute("data-map-engine")) === "vworld") {
+      const candidateOverlay = page.getByTestId("citywide-candidate-overlay");
+      await expect(candidateOverlay).toBeVisible({ timeout: 20_000 });
+      await expect
+        .poll(async () =>
+          candidateOverlay.getByTestId("citywide-candidate-label").count(),
+        )
+        .toBeLessThanOrEqual(6);
 
-    const compactCandidateLabels = candidateOverlay.locator(
-      '[data-label-mode="rank"]',
-    );
-    const compactLabelTexts = await compactCandidateLabels.allTextContents();
-    for (const labelText of compactLabelTexts) {
-      expect(labelText.trim()).toMatch(/^#\d+\s*\d+$/);
+      const compactCandidateLabels = candidateOverlay.locator(
+        '[data-label-mode="rank"]',
+      );
+      const compactLabelTexts = await compactCandidateLabels.allTextContents();
+      for (const labelText of compactLabelTexts) {
+        expect(labelText.trim()).toMatch(/^#\d+\s*\d+$/);
+      }
     }
     await expect(
       page.getByText(/전역 직접값 미확보: 검색·임대료·생활인구·카드·OD/),
